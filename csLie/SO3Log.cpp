@@ -1,5 +1,5 @@
-#include "SO3Log.h"
-#include "Constants.h"
+#include <csLie/SO3Log.hpp>
+#include <csLie/Constants.hpp>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -12,16 +12,14 @@ namespace csLie {
   }
 
   template<typename S>
-  SO3Alg<S> log(const Rot3D<S>& Rm) {
-    const auto& R = Rm();
-
+  SO3Alg<S> log(const Rot3D<S>& R) {
     SO3Alg<S> ret;
-    ret.values()(0) = S(0.5) * (R(2, 1) - R(1, 2));
-    ret.values()(1) = S(0.5) * (R(0, 2) - R(2, 0));
-    ret.values()(2) = S(0.5) * (R(1, 0) - R(0, 1));
+    ret(0) = S(0.5) * (R(2, 1) - R(1, 2));
+    ret(1) = S(0.5) * (R(0, 2) - R(2, 0));
+    ret(2) = S(0.5) * (R(1, 0) - R(0, 1));
 
     const S ct = S(0.5) * (R.trace() - 1);
-    const S st2 = ret.values().cwiseAbs2().sum();
+    const S st2 = ret.cwiseAbs2().sum();
     const S st = std::sqrt(st2);
 
     if (ct > Constants<S>::log_cos_approx_1) {
@@ -29,12 +27,12 @@ namespace csLie {
         + st2
         * (S(1.0 / 6.0)
           + st2 * (S(3.0 / 40.0) + st2 * S(5.0 / 112.0)));
-      ret.values() *= f;
+      ret *= f;
     }
     else if (ct > Constants<S>::log_cos_approx_m1) {
       const S theta = acos(ct);
       const S f = theta / st;
-      ret.values() *= f;
+      ret *= f;
     }
     else {
       const S theta = S(M_PI) - asin(st);
@@ -51,29 +49,29 @@ namespace csLie {
       if (w00 > w11) {
 
         if (w00 > w22) {
-          ret.values()(0) = signum(ret.values()(0)) * sqrt(w00);
-          const S inv_w0 = 1 / ret.values()(0);
-          ret.values()(1) = w01 * inv_w0;
-          ret.values()(2) = w02 * inv_w0;
+          ret(0) = signum(ret(0)) * sqrt(w00);
+          const S inv_w0 = 1 / ret(0);
+          ret(1) = w01 * inv_w0;
+          ret(2) = w02 * inv_w0;
         }
         else {
-          ret.values()(2) = signum(ret.values()(2)) * sqrt(w22);
-          const S inv_w2 = 1 / ret.values()(2);
-          ret.values()(0) = w02 * inv_w2;
-          ret.values()(1) = w12 * inv_w2;
+          ret(2) = signum(ret(2)) * sqrt(w22);
+          const S inv_w2 = 1 / ret(2);
+          ret(0) = w02 * inv_w2;
+          ret(1) = w12 * inv_w2;
         }
       }
       else if (w11 > w22) {
-        ret.values()(1) = signum(ret.values()(1)) * sqrt(w11);
-        const S inv_w1 = 1 / ret.values()(1);
-        ret.values()(0) = w01 * inv_w1;
-        ret.values()(2) = w12 * inv_w1;
+        ret(1) = signum(ret(1)) * sqrt(w11);
+        const S inv_w1 = 1 / ret(1);
+        ret(0) = w01 * inv_w1;
+        ret(2) = w12 * inv_w1;
       }
       else {
-        ret.values()(2) = signum(ret.values()(2)) * sqrt(w22);
-        const S inv_w2 = 1 / ret.values()(2);
-        ret.values()(0) = w02 * inv_w2;
-        ret.values()(1) = w12 * inv_w2;
+        ret(2) = signum(ret(2)) * sqrt(w22);
+        const S inv_w2 = 1 / ret(2);
+        ret(0) = w02 * inv_w2;
+        ret(1) = w12 * inv_w2;
       }
     }
     return ret;

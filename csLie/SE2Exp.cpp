@@ -1,4 +1,4 @@
-#include "SE2Exp.h"
+#include <csLie/SE2Exp.hpp>
 
 
 namespace csLie {
@@ -7,16 +7,16 @@ namespace csLie {
   Pose2D<S> exp(const SE2Alg<S>& g) {
 
 
-    S cosTh = std::cos(g.values()(2));
-    S sinTh = std::sin(g.values()(2));
+    S cosTh = std::cos(g(2));
+    S sinTh = std::sin(g(2));
     S sinTh_Th, m1cosTh_Th;
-    if (std::abs(g.values()(2)) < Eigen::NumTraits<S>::epsilon()) {
+    if (std::abs(g(2)) < Eigen::NumTraits<S>::epsilon()) {
       sinTh_Th = 1;
       m1cosTh_Th = 0;
     }
     else {
-      sinTh_Th = sinTh / g.values()(2);
-      m1cosTh_Th = (1 - cosTh) / g.values()(2);
+      sinTh_Th = sinTh / g(2);
+      m1cosTh_Th = (1 - cosTh) / g(2);
     }
 
     Pose2D<S> ret;
@@ -25,8 +25,8 @@ namespace csLie {
     ret.linear()(1, 0) = sinTh;
     ret.linear()(1, 1) = cosTh;
 
-    ret.translation().x() = g.values().x() * sinTh_Th - g.values().y() * m1cosTh_Th;
-    ret.translation().y() = g.values().x() * m1cosTh_Th + g.values().y() * sinTh_Th;
+    ret.translation().x() = g.x() * sinTh_Th - g.y() * m1cosTh_Th;
+    ret.translation().y() = g.x() * m1cosTh_Th + g.y() * sinTh_Th;
     return ret;
 
 

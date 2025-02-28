@@ -2,8 +2,8 @@
 
 #include <Eigen/Core>
 
-#include "S2.h"
-#include "S2Alg.h"
+#include <csLie/S2.hpp>
+#include <csLie/S2Alg.hpp>
 
 namespace csLie {
 

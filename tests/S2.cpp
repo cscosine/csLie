@@ -1,8 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <csLie/S2.h>
-#include <csLie/S2Alg.h>
-#include <csLie/S2Exp.h>
+#include <csLie/S2.hpp>
+#include <csLie/S2Alg.hpp>
+#include <csLie/S2Exp.hpp>
 
 #include <Eigen/Dense>
 #include <iostream>
@@ -13,18 +13,18 @@ TEST_CASE("S2 test - base", "[S2]") {
 
   for (int i = 0; i < 10000; i++) {
     csLie::S2d v;
-    v().setRandom().normalize();
+    v.setRandom().normalize();
 
     auto R = s2toRot(v);
     //std::cout << R << std::endl;
     assert(std::abs(R.determinant() - 1) < Eigen::NumTraits<double>::dummy_precision());
 
     csLie::S2Algd delta;
-    delta().setRandom();
+    delta.setRandom();
     auto ret = exp(delta);
 
-    csLie::S2d v1 = csLie::S2d(R * ret());
-    REQUIRE(std::abs(v1().norm() - 1) < Eigen::NumTraits<double>::dummy_precision());
+    csLie::S2d v1{R * ret};
+    REQUIRE(std::abs(v1.norm() - 1) < Eigen::NumTraits<double>::dummy_precision());
 
     auto J = d_Rv_expd_d_expd0(v);
 
@@ -74,7 +74,7 @@ TEST_CASE("Normal Estimation - point plane", "[NormPPl]") {
     for (int i = 0; i < N; i++) {
       Eigen::Vector3d pd = (pointCenter - pointsNoised.col(i));
       double e = pd.dot(estNormal);
-      Eigen::Matrix<double, 1, 2> d_e_d_delta = pd.transpose() * csLie::d_Rv_expd_d_expd0(csLie::S2d(estNormal));
+      Eigen::Matrix<double, 1, 2> d_e_d_delta = pd.transpose() * csLie::d_Rv_expd_d_expd0(csLie::S2d{estNormal});
 
       double c2 = e * e;
       double w = 1;
@@ -87,7 +87,7 @@ TEST_CASE("Normal Estimation - point plane", "[NormPPl]") {
     Eigen::LDLT<Eigen::Matrix2d> ldlt;
     ldlt.compute(H);
     Eigen::Vector2d x = ldlt.solve(-b);
-    estNormal = csLie::s2toRot(csLie::S2d(estNormal))* csLie::exp(csLie::S2Algd(x))();
+    estNormal = csLie::s2toRot(csLie::S2d{estNormal})* csLie::exp(csLie::S2Algd{x});
     estNormal.normalize();
   }
 

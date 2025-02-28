@@ -1,6 +1,6 @@
 #pragma once
-#include "SE2.h"
-#include "SE2Alg.h"
+#include <csLie/SE2.hpp>
+#include <csLie/SE2Alg.hpp>
 
 namespace csLie {
 

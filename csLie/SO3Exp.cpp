@@ -1,12 +1,12 @@
-#include "SO3Exp.h"
-#include "Constants.h"
+#include <csLie/SO3Exp.hpp>
+#include <csLie/Constants.hpp>
 
 
 namespace csLie {
 
   template<typename S>
   Rot3D<S> exp(const SO3Alg<S>& g) {
-    const auto& w = g.values();
+    const auto& w = g;
     auto w2 = w.cwiseAbs2();
     const S theta_sq = w2.sum();  // sum of the squares
     const S theta = std::sqrt(theta_sq);
@@ -22,8 +22,7 @@ namespace csLie {
     }
 
 
-    Rot3D<S> ret;
-    auto& R = ret();
+    Rot3D<S> R;
 
     R(0, 0) = 1 - b * (w2(1) + w2(2));
     R(1, 1) = 1 - b * (w2(0) + w2(2));
@@ -40,7 +39,7 @@ namespace csLie {
     R(1, 2) = Bbc - a * w(0);
     R(2, 1) = Bbc + a * w(0);
 
-    return ret;
+    return R;
   }
 
   template Rot3D<double> exp<double>(const SO3Alg<double>& g);

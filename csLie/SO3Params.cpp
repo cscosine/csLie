@@ -1,9 +1,9 @@
-#include "SO3Params.h"
+#include <csLie/SO3Params.hpp>
 
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-#include "Constants.h"
+#include <csLie/Constants.hpp>
 
 
 namespace csLie {
@@ -12,9 +12,9 @@ namespace csLie {
   Rot3D<S> params2Pose(const SO3Params<S>& g) {
     Rot3D<S> R;
 
-    const S yaw_z = g.values()(0);
-    const S pitch_y = g.values()(1);
-    const S roll_x = g.values()(2);
+    const S yaw_z = g(0);
+    const S pitch_y = g(1);
+    const S roll_x = g(2);
 
     const S c_a = cos(yaw_z);
     const S s_a = sin(yaw_z);
@@ -23,27 +23,25 @@ namespace csLie {
     const S c_c = cos(roll_x);
     const S s_c = sin(roll_x);
 
-    R()(0, 0) = c_a * c_b;
-    R()(1, 0) = s_a * c_b;
-    R()(2, 0) = -s_b;
+    R(0, 0) = c_a * c_b;
+    R(1, 0) = s_a * c_b;
+    R(2, 0) = -s_b;
 
-    R()(0, 1) = c_a * s_b * s_c - s_a * c_c;
-    R()(1, 1) = s_a * s_b * s_c + c_a * c_c;
-    R()(2, 1) = c_b * s_c;
+    R(0, 1) = c_a * s_b * s_c - s_a * c_c;
+    R(1, 1) = s_a * s_b * s_c + c_a * c_c;
+    R(2, 1) = c_b * s_c;
 
-    R()(0, 2) = c_a * s_b * c_c + s_a * s_c;
-    R()(1, 2) = s_a * s_b * c_c - c_a * s_c;
-    R()(2, 2) = c_b * c_c;
+    R(0, 2) = c_a * s_b * c_c + s_a * s_c;
+    R(1, 2) = s_a * s_b * c_c - c_a * s_c;
+    R(2, 2) = c_b * c_c;
 
     return R;
   }
 
 
   template<typename S>
-  SO3Params<S> pose2Params(const Rot3D<S>& Rm) {
+  SO3Params<S> pose2Params(const Rot3D<S>& R) {
     SO3Params<S> ret;
-
-    const auto& R = Rm();
 
     const S pitch_y = std::atan2(-R(2, 0), sqrt(R(2, 1) * R(2, 1) + R(2, 2) * R(2, 2)));
     S yaw_z, roll_x;
@@ -56,7 +54,7 @@ namespace csLie {
       roll_x = std::atan2(R(0, 1), R(1, 1));
     }
 
-    return SO3Params<S>(Eigen::Matrix<S, 3, 1>(yaw_z, pitch_y, roll_x));
+    return SO3Params<S>{Eigen::Matrix<S, 3, 1>(yaw_z, pitch_y, roll_x)};
   }
 
 

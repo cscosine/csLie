@@ -1,5 +1,5 @@
-#include "SE3Exp.h"
-#include "Constants.h"
+#include <csLie/SE3Exp.hpp>
+#include <csLie/Constants.hpp>
 
 
 namespace csLie {
@@ -7,12 +7,12 @@ namespace csLie {
   template<typename S>
   Pose3D<S> exp(const SE3Alg<S>& g) {
     Pose3D<S> ret;
-    auto w2 = g.values().template tail<3>().cwiseAbs2();
+    auto w2 = g.template tail<3>().cwiseAbs2();
     const S theta_sq = w2.sum();  // sum of the squares
     const S theta = std::sqrt(theta_sq);
 
     if (theta < Constants<S>::eps) {
-      const auto& v = g.values();
+      const auto& v = g;
       S tmp5 = S(0.5) - theta_sq * (S(1.0 / 24.0) - S(1.0 / 720.0) * theta_sq);
       S tmp6 = v(3) * v(4) * tmp5;
       S tmp7 = S(1.0) - theta_sq * (S(1.0 / 120.0) * theta_sq + S(1.0 / 6.0));
@@ -42,7 +42,7 @@ namespace csLie {
 
     }
     else {
-      const auto& v = g.values();
+      const auto& v = g;
 
       S tmp5 = 1 / theta_sq;
       S tmp7 = 1 - cos(theta);

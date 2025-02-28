@@ -1,12 +1,13 @@
 #pragma once
-#include "SE3.h"
+#include <csLie/SE3.hpp>
 #include <Eigen/Core>
-#include "Tagged.h"
+#include <csLie/Tagged.hpp>
 
 namespace csLie {
 
   struct TagSE3Params {};
 
+  // TODO, do not extend, compose instead
   template <class S>
   class SE3Params : public Tagged<S, 6, 1, TagSE3Params> {
 
@@ -26,19 +27,19 @@ namespace csLie {
 
 
     Eigen::Block<Eigen::Matrix<S, 6, 1>, 3, 1> translation() {
-      return this->values().template head<3>();
+      return this->template head<3>();
     }
 
     const Eigen::Block<const Eigen::Matrix<S, 6, 1>, 3, 1> translation() const {
-      return this->values().template head<3>();
+      return this->template head<3>();
     }
 
     Eigen::Block<Eigen::Matrix<S, 6, 1>, 3, 1> eulerAngles() {
-      return this->values().template tail<3>();
+      return this->template tail<3>();
     }
 
     const Eigen::Block<const Eigen::Matrix<S, 6, 1>, 3, 1> eulerAngles() const {
-      return this->values().template tail<3>();
+      return this->template tail<3>();
     }
 
 

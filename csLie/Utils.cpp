@@ -1,5 +1,5 @@
 #include <Eigen/Core>
-#include "SkewSymm.h"
+#include <csLie/SkewSymm.hpp>
 
 
 namespace csLie {

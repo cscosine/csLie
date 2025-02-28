@@ -12,7 +12,7 @@ cs_target_sources(csLieTest
 	S2.cpp
 )
 
-cs_target_link_libraries(csLieTest PRIVATE csLie::csLie Catch2::Catch2WithMain csLieLib::csLieLibBaseInclude)
+cs_target_link_libraries(csLieTest PRIVATE csLie::csLie Catch2::Catch2WithMain)
   
 # add to tests
 catch_discover_tests(csLieTest)

@@ -18,28 +18,28 @@ cs_find_package(csLie PUBLIC Eigen3 REQUIRED CONFIG)
 # note: you can repeat target_sources_wrapper if you want to organize your files
 cs_target_sources(csLie 
 	PRIVATE_INSTALL 
-		Adjoint.h
-		Constants.h
-		SE2Alg.h
-		SE2Exp.h
-		SE2.h
-		SE2Params.h
-		SE3Alg.h
-		SE3Exp.h
-		SE3.h
-		SE3Log.h
-		SE3Params.h
-		SkewSymm.h
-		SO3Alg.h
-		SO3Exp.h
-		SO3.h
-		SO3Log.h
-		SO3Params.h
-		Utils.h
-    Tagged.h
-    S2.h
-    S2Alg.h
-    S2Exp.h
+		Adjoint.hpp
+		Constants.hpp
+		SE2Alg.hpp
+		SE2Exp.hpp
+		SE2.hpp
+		SE2Params.hpp
+		SE3Alg.hpp
+		SE3Exp.hpp
+		SE3.hpp
+		SE3Log.hpp
+		SE3Params.hpp
+		SkewSymm.hpp
+		SO3Alg.hpp
+		SO3Exp.hpp
+		SO3.hpp
+		SO3Log.hpp
+		SO3Params.hpp
+		Utils.hpp
+    	Tagged.hpp
+    	S2.hpp
+    	S2Alg.hpp
+    	S2Exp.hpp
 	PRIVATE
 		Adjoint.cpp
 		Constants.cpp
@@ -60,10 +60,8 @@ cs_target_sources(csLie
 cs_target_link_libraries(csLie
 	PUBLIC
 		Eigen3::Eigen
+		csLieLib::csLieLibBaseInclude
 )
-
-add_subdirectory(tests)
-
 
 cs_install_target(csLie csLieExport DEFAULT)
 

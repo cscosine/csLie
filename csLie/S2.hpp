@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 
-#include "Tagged.h"
+#include <csLie/Tagged.hpp>
 
 namespace csLie {
 

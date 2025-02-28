@@ -1,17 +1,17 @@
-#include "SE3Params.h"
-#include "SO3Params.h"
+#include <csLie/SE3Params.hpp>
+#include <csLie/SO3Params.hpp>
 
 
 namespace csLie {
 
   template<typename S>
   SE3Params<S>::SE3Params(S x, S y, S z, S yaw, S pitch, S roll) {
-    this->values()(0) = x;
-    this->values()(1) = y;
-    this->values()(2) = z;
-    this->values()(3) = yaw;
-    this->values()(4) = pitch;
-    this->values()(5) = roll;
+    (*this)(0) = x;
+    (*this)(1) = y;
+    (*this)(2) = z;
+    (*this)(3) = yaw;
+    (*this)(4) = pitch;
+    (*this)(5) = roll;
 
   }
 
@@ -21,7 +21,7 @@ namespace csLie {
   Pose3D<S> params2Pose(const SE3Params<S>& g) {
     Pose3D<S> T = Pose3D<S>::Identity();
     T.translation() = g.translation();
-    T.linear() = params2Pose(SO3Params<S>(g.eulerAngles()))();
+    T.linear() = params2Pose(SO3Params<S>{g.eulerAngles()});
     return T;
   }
 
@@ -30,7 +30,7 @@ namespace csLie {
   SE3Params<S> pose2Params(const Pose3D<S>& g) {
     SE3Params<S> ret;
     ret.translation() = g.translation();
-    ret.eulerAngles() = pose2Params(Rot3D<S>(g.linear()))();
+    ret.eulerAngles() = pose2Params(Rot3D<S>{g.linear()});
     return ret;
   }
 

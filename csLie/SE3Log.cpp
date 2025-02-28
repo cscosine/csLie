@@ -1,7 +1,7 @@
-#include "SE3Log.h"
-#include "Constants.h"
+#include <csLie/SE3Log.hpp>
+#include <csLie/Constants.hpp>
 
-#include "SO3Log.h"
+#include <csLie/SO3Log.hpp>
 
 
 namespace csLie {
@@ -11,11 +11,11 @@ namespace csLie {
     SE3Alg<S> ret;
 
     // SO3 log
-    Rot3D<S> pl(g.linear());
+    Rot3D<S> pl{g.linear()};
     auto vl = log(pl);
-    ret.values().template tail<3>() = vl.values();
+    ret.template tail<3>() = vl;
 
-    const S theta_sq = vl.values().cwiseAbs2().sum();
+    const S theta_sq = vl.cwiseAbs2().sum();
     const S theta = sqrt(theta_sq);
 
     S a, b, c;
@@ -44,10 +44,10 @@ namespace csLie {
       d = (b * S(0.5) - c) / a;
     }
 
-    auto wxt = vl.values().cross(g.translation());
-    auto wxwxt = vl.values().cross(wxt);
+    auto wxt = vl.cross(g.translation());
+    auto wxwxt = vl.cross(wxt);
 
-    ret.values().template head<3>() = g.translation() - 0.5 * wxt + d * wxwxt;
+    ret.template head<3>() = g.translation() - 0.5 * wxt + d * wxwxt;
 
     return ret;
   }

@@ -1,7 +1,7 @@
 #pragma once
 #include <Eigen/Core>
-#include "Tagged.h"
-#include "SO3.h"
+#include <csLie/Tagged.hpp>
+#include <csLie/SO3.hpp>
 
 namespace csLie {
 

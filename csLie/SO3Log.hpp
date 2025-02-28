@@ -1,6 +1,6 @@
 #pragma once
-#include "SO3.h"
-#include "SO3Alg.h"
+#include <csLie/SO3.hpp>
+#include <csLie/SO3Alg.hpp>
 
 namespace csLie {
 

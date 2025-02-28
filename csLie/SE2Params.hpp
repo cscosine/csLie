@@ -1,8 +1,8 @@
 #pragma once
 #include <Eigen/Core>
-#include "Tagged.h"
+#include <csLie/Tagged.hpp>
 
-#include "SE2.h"
+#include <csLie/SE2.hpp>
 
 namespace csLie {
 

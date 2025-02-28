@@ -1,6 +1,6 @@
 #include <Eigen/Core>
-#include "Adjoint.h"
-#include "SkewSymm.h"
+#include <csLie/Adjoint.hpp>
+#include <csLie/SkewSymm.hpp>
 
 
 namespace csLie {

@@ -1,4 +1,4 @@
-#include "S2Exp.h"
+#include <csLie/S2Exp.hpp>
 
 #include <array>
 
@@ -6,7 +6,7 @@ namespace csLie {
 
   template<class S>
   S2<S> exp(S2Alg<S> delta) {
-    S norm2 = delta().squaredNorm();
+    S norm2 = delta.squaredNorm();
     S cos_norm, sinc_norm;
 
     static S const taylor_0_bound = Eigen::NumTraits<double>::epsilon();
@@ -35,9 +35,9 @@ namespace csLie {
     }
 
     S2<S> ret;
-    ret()(0) = cos_norm;
-    ret()(1) = delta()(0) * sinc_norm;
-    ret()(2) = delta()(1) * sinc_norm;
+    ret(0) = cos_norm;
+    ret(1) = delta(0) * sinc_norm;
+    ret(2) = delta(1) * sinc_norm;
        
     return ret;
   }
