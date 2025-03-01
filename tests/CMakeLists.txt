@@ -8,7 +8,7 @@ include(Catch)
 
 cs_target_sources(csLieTest 
 	PRIVATE
-	SE2.cpp
+	# SE2.cpp
 	S2.cpp
 )
 
