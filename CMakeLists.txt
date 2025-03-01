@@ -12,4 +12,4 @@ add_subdirectory(tests)
 # add_subdirectory(...)
 
 # remember to add this at the end of the main cmake file
-cs_finalize_project(csLieLib)
+cs_finalize_project(csLie)

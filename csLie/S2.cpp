@@ -3,12 +3,12 @@
 namespace csLie {
 
   template <class S>
-  Eigen::Matrix<S, 3, 3> s2toRot(const S2<S>& vec) {
+  Eigen::Matrix<S, 3, 3> s2toRotationMatrix(const S2<S>& vec) {
 
-    double alpha = std::atan2(vec.z(), vec.y());
-    double r = std::sqrt(vec.z() * vec.z() + vec.y() * vec.y());
-    double c = cos(alpha);
-    double s = sin(alpha);
+    S const alpha = std::atan2(vec.z(), vec.y());
+    S const r = std::sqrt(vec.z() * vec.z() + vec.y() * vec.y());
+    S const c = cos(alpha);
+    S const s = sin(alpha);
 
     Eigen::Matrix<S, 3, 3> R;
     R.col(0) = vec;
@@ -18,8 +18,8 @@ namespace csLie {
     return R;
   }
 
-  template Eigen::Matrix<double, 3, 3> s2toRot(const S2<double>& vec);
-  template Eigen::Matrix<float, 3, 3> s2toRot(const S2<float>& vec);
+  template Eigen::Matrix<float64_t, 3, 3> s2toRotationMatrix(const S2<float64_t>& vec);
+  template Eigen::Matrix<float32_t, 3, 3> s2toRotationMatrix(const S2<float32_t>& vec);
 
 
 }
