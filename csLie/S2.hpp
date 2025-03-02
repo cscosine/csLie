@@ -3,16 +3,36 @@
 #include <Eigen/Core>
 
 #include <csCore/BasicTypes.hpp>
+#include <csLie/Types.hpp>
 
 namespace csLie {
 
-  template <class S>
-  using S2 = Eigen::Matrix<S, 3, 1>;
+  // given a unitary 3D vector v (in S2)
+  // return a rotation matrix R = [v, rx, ry], i.e., with x axis aligned with v and Rx 
+  template <class S> SO3<S> s2toZAlignedSO3(S2<S> const & v);
 
-  using S2d = S2<float64_t>;
-  using S2f = S2<float32_t>;
+  // given a s2 algebra vector delta (2D vector)
+  // return the S2 exp, i.e., a unitary 3D vector
+  template <class S> S2<S> s2Exp(S2Alg<S> const & delta);
 
-  template <class S>
-  Eigen::Matrix<S, 3, 3> s2toRotationMatrix(const S2<S> & vec);
+  // given 
+  // - a unitary 3D vector v (in S2)
+  // - a s2 algebra vector delta (2D vector)
+  // return the oplus(v, delta)
+  // equivalent to s2toZAlignedSO3(v) * s2Exp(delta)
+  // for readability rewritten as
+  // R(V) * exp(delta) 
+  template <class S> S2<S> s2OPlus(S2<S> const& v, S2Alg<S> const& delta);
+
+  // the typical operation `oplus` given v : S2 and delta : S2Alg is defined as
+  // v_p = s2toZAlignedSO3(v) * s2Exp(delta)
+  // for readability rewritten as
+  // v_p = R(V) * exp(delta) 
+  // in an optimization framework, is often need to evaluate the jacobian wrt the delta evaluated at zero
+  //  d v_p  |
+  // ------- |         
+  // d delta |delta=0
+  // this is equal to the last two column of R(v), which are returned by this function
+  template <class S> S2OPlusJac<S> s2_d_OPlus_d_delta_0(S2<S> const& v);
 
 }

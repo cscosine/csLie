@@ -9,7 +9,7 @@ include(Catch)
 cs_target_sources(csLieTest 
 	PRIVATE
 	# SE2.cpp
-	S2.cpp
+	TestS2.cpp
 )
 
 cs_target_link_libraries(csLieTest PRIVATE csLie::csLie Catch2::Catch2WithMain)

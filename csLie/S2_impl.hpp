@@ -1,0 +1,76 @@
+#pragma once
+
+#include <csLie/S2.hpp>
+
+namespace csLie {
+
+  template <class S> SO3<S> s2toZAlignedSO3(S2<S> const& v) {
+
+    // TODO(sc) here we assume atan2(0,0) = 0. This is protected with a test (testAtan2). In case the test fail on some platform, we need to handle the logic here
+    S const alpha = std::atan2(v.z(), v.y());
+    S const r = std::sqrt(v.z() * v.z() + v.y() * v.y());
+    S const c = cos(alpha);
+    S const s = sin(alpha);
+
+    Eigen::Matrix<S, 3, 3> R;
+    R.col(0) = v;
+    R.col(1) = Eigen::Matrix<S, 3, 1>(-r, v.x() * c, v.x() * s);
+    R.col(2) = Eigen::Matrix<S, 3, 1>(0, -s, c);
+
+    return R;
+  }
+
+  template <class S> S2<S> s2Exp(const S2Alg<S>& delta) {
+    S const norm2 = delta.squaredNorm();
+
+    // TODO(sc) move to static constexpr
+    static S const taylor_0_bound = Eigen::NumTraits<double>::epsilon();
+    static S const taylor_2_bound = sqrt(taylor_0_bound);
+    static S const taylor_n_bound = sqrt(taylor_2_bound);
+    //static S const test = Eigen::NumTraits<double>::dummy_precision();
+
+    // TODO(sc) verify this logic and the taylor boundary
+    S cos_norm{}, sinc_norm{};
+    if (norm2 > taylor_n_bound) {
+      S const x = std::sqrt(norm2);
+      cos_norm = std::cos(x);
+      sinc_norm = std::sin(x) / x;
+    }
+    else {
+      // TODO(sc) move to a static const expr 
+      static const std::array<S, 7>  inv = { S(1 / 3.), S(1 / 4.), S(1 / 5.), S(1 / 6.), S(1 / 7.), S(1 / 8.), S(1 / 9.) };
+      S cosi = 1.;
+      S sinci = 1.;
+      S term = -1 / 2. * norm2;
+      for (int i = 0; i < 3; ++i) {
+        cosi += term;
+        term *= inv[2 * i];
+        sinci += term;
+        term *= -inv[2 * i + 1] * norm2;
+      }
+      cos_norm = cosi;
+      sinc_norm = sinci;
+    }
+
+    S2<S> ret;
+    ret(0) = cos_norm;
+    ret(1) = delta(0) * sinc_norm;
+    ret(2) = delta(1) * sinc_norm;
+
+    return ret;
+
+  }
+
+  template <class S> S2<S> s2OPlus(S2<S> const& v, S2Alg<S> const& delta) {
+    SO3<S> const R = s2toZAlignedSO3(v);
+    S2<S> const vDelta = s2Exp(delta);
+    S2<S> const ret = R * vDelta;
+    return ret;
+  }
+
+  template <class S> S2OPlusJac<S> s2_d_OPlus_d_delta_0(S2<S> const& v) {
+    SO3<S> const R = s2toZAlignedSO3(v);
+    // TODO(sc) for a small perf impl, instead of compute R and then get columns, compute directly them
+    return R.template rightCols<2>();
+  }
+}

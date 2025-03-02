@@ -1,13 +1,20 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include <csLie/S2.hpp>
-// #include <csLie/S2Alg.hpp>
-// #include <csLie/S2Exp.hpp>
+#include <csLie/Types.hpp>
+#include <csLie/S2_impl.hpp>
 
-#include <Eigen/Dense>
 #include <iostream>
+#include <Eigen/Dense>
 
 static const int N_RANDOM = 1000;
+
+// TODO(sc) template test on float / double
+
+TEST_CASE("S2 test - assumption", "[S2]") {
+  // in s2toZAlignedSO3 we assume that atan2(0,0) = 0. This might be platform dependent. 
+  // In case this test fail, adapt the logic in s2toZAlignedSO3 to handle the edge case
+  REQUIRE(std::atan2(0, 0) == 0.0);
+}
 
 TEST_CASE("S2 test - base", "[S2]") {
 
@@ -15,20 +22,27 @@ TEST_CASE("S2 test - base", "[S2]") {
     csLie::S2d v;
     v.setRandom().normalize();
 
-    auto R = csLie::s2toRotationMatrix(v);
-    //std::cout << R << std::endl;
-    REQUIRE(std::abs(R.determinant() - 1) < Eigen::NumTraits<double>::dummy_precision());
+    csLie::SO3d Rv = csLie::s2toZAlignedSO3(v);
+    // TODO(sc) check is a proper rot matrix (add a function common for that)
+    // TODO(sc) check Rx = v
+    REQUIRE(std::abs(Rv.determinant() - 1) < Eigen::NumTraits<double>::dummy_precision());
 
-    // csLie::S2Algd delta;
-    // delta.setRandom();
-    // auto ret = exp(delta);
-    // 
-    // csLie::S2d v1{R * ret};
-    // REQUIRE(std::abs(v1.norm() - 1) < Eigen::NumTraits<double>::dummy_precision());
+    csLie::S2Algd delta;
+    delta.setRandom();
+    csLie::S2d vDelta= csLie::s2Exp(delta);
+    // TODO check edge cases (taylor expansion for small numbers)
+    REQUIRE(std::abs(vDelta.norm() - 1) < Eigen::NumTraits<double>::dummy_precision());
 
-    // auto J = d_Rv_expd_d_expd0(v);
-    // 
-    // REQUIRE((J - R.rightCols<2>()).squaredNorm() == 0);
+    // oplus(v,delta)
+    csLie::S2d v_oplus_expected{Rv * vDelta};
+    REQUIRE(std::abs(v_oplus_expected.norm() - 1) < Eigen::NumTraits<double>::dummy_precision());
+
+    // oplus computed with function, has to be equivalent
+    csLie::S2d v_oplus{csLie::s2OPlus(v, delta) };
+    REQUIRE((v_oplus - v_oplus_expected).norm() < Eigen::NumTraits<double>::dummy_precision());
+
+    csLie::S2OPlusJacd J = csLie::s2_d_OPlus_d_delta_0(v);
+    REQUIRE((J - Rv.rightCols<2>()).squaredNorm() == 0);
 
   }
 
