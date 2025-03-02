@@ -62,7 +62,7 @@ cs_target_link_libraries(csLie
 	PUBLIC
 		Eigen3::Eigen
     csCore::csCore
-		csLieLib::csLieLibBaseInclude
+		csLieLib::csLieLib_csCMakeDefault
 )
 
 cs_install_target(csLie csLieExport DEFAULT)
