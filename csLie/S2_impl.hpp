@@ -6,16 +6,11 @@ namespace csLie {
 
   template <class S> SO3<S> s2toZAlignedSO3(S2<S> const& v) {
 
-    // TODO(sc) here we assume atan2(0,0) = 0. This is protected with a test (testAtan2). In case the test fail on some platform, we need to handle the logic here
-    S const alpha = std::atan2(v.z(), v.y());
-    S const r = std::sqrt(v.z() * v.z() + v.y() * v.y());
-    S const c = cos(alpha);
-    S const s = sin(alpha);
-
-    Eigen::Matrix<S, 3, 3> R;
+    SO3<S> R;
+    // x direction aligned with v
     R.col(0) = v;
-    R.col(1) = Eigen::Matrix<S, 3, 1>(-r, v.x() * c, v.x() * s);
-    R.col(2) = Eigen::Matrix<S, 3, 1>(0, -s, c);
+    // right cols are equivalent to the jacobian
+    R.template rightCols<2>() = s2_d_OPlus_d_delta_0(v);
 
     return R;
   }
@@ -69,8 +64,15 @@ namespace csLie {
   }
 
   template <class S> S2OPlusJac<S> s2_d_OPlus_d_delta_0(S2<S> const& v) {
-    SO3<S> const R = s2toZAlignedSO3(v);
-    // TODO(sc) for a small perf impl, instead of compute R and then get columns, compute directly them
-    return R.template rightCols<2>();
+    // TODO(sc) here we assume atan2(0,0) = 0. This is protected with a test (testAtan2). In case the test fail on some platform, we need to handle the logic here
+    S const alpha = std::atan2(v.z(), v.y());
+    S const r = std::sqrt(v.z() * v.z() + v.y() * v.y());
+    S const c = cos(alpha);
+    S const s = sin(alpha);
+
+    S2OPlusJac<S> J;
+    J.col(0) = Eigen::Matrix<S, 3, 1>(-r, v.x() * c, v.x() * s);
+    J.col(1) = Eigen::Matrix<S, 3, 1>(0, -s, c);
+    return J;
   }
 }

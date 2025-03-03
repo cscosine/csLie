@@ -3,12 +3,14 @@ project(csLieTest  LANGUAGES CXX)
 cs_add_executable(csLieTest)
 
 include(CTest)
-cs_find_package(csLieTest PUBLIC Catch2 REQUIRED CONFIG)
+cs_find_package(csLieTest PUBLIC Catch2 3 REQUIRED CONFIG)
 include(Catch)
 
 cs_target_sources(csLieTest 
 	PRIVATE
 	# SE2.cpp
+  TestUtils.hpp
+  TestUtils.cpp
 	TestS2.cpp
 )
 

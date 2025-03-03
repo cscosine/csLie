@@ -6,9 +6,13 @@
 #include <csLie/Types.hpp>
 
 namespace csLie {
-
-  // given a unitary 3D vector v (in S2)
-  // return a rotation matrix R = [v, rx, ry], i.e., with x axis aligned with v and Rx 
+  
+  /**
+   * @brief transform a S2 unit vector into a SO3 rotation matrix with x aligned to the unit vector
+   * @tparam S scalar type
+   * @param v the unit vector
+   * @return a rotation matrix
+   */
   template <class S> SO3<S> s2toZAlignedSO3(S2<S> const & v);
 
   // given a s2 algebra vector delta (2D vector)
@@ -22,6 +26,7 @@ namespace csLie {
   // equivalent to s2toZAlignedSO3(v) * s2Exp(delta)
   // for readability rewritten as
   // R(V) * exp(delta) 
+  // note: repeating oplus in loops might introduce numerical errors, renormalize the vector when needed.
   template <class S> S2<S> s2OPlus(S2<S> const& v, S2Alg<S> const& delta);
 
   // the typical operation `oplus` given v : S2 and delta : S2Alg is defined as
