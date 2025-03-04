@@ -2,9 +2,12 @@
 
 #include <csLie/S2.hpp>
 
+#include <libassert/assert.hpp>
+
 namespace csLie {
 
   template <class S> SO3<S> s2toZAlignedSO3(S2<S> const& v) {
+    DEBUG_ASSERT( std::abs(v.squaredNorm() - 1.0) < Eigen::NumTraits<S>::dummy_precision(), "s2toZAlignedSO3 input vector is not unitary");
 
     SO3<S> R;
     // x direction aligned with v

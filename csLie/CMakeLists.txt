@@ -5,6 +5,7 @@ cs_add_library(csLie::csLie ALIAS csLie)
 
 cs_find_package(csLie PUBLIC Eigen3 REQUIRED CONFIG)
 cs_find_package(csLie PUBLIC csCore COMPONENTS csCore REQUIRED CONFIG)
+cs_find_package(csLie PRIVATE  libassert REQUIRED CONFIG)
 
 
 # use the target_sources_wrapper, which wrap cmake native target_sources. 
@@ -30,6 +31,7 @@ cs_target_link_libraries(csLie
 		Eigen3::Eigen
     csCore::csCore
 		csLieLib::csLieLib_csCMakeDefault
+    libassert::assert
 )
 
 cs_install_target(csLie csLieExport DEFAULT)
