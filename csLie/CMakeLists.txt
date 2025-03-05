@@ -29,9 +29,9 @@ cs_target_sources(csLie
 cs_target_link_libraries(csLie
 	INTERFACE
 		Eigen3::Eigen
-    csCore::csCore
-		csLieLib::csLieLib_csCMakeDefault
-    libassert::assert
+    	csCore::csCore
+		csLieLib::csLieLib_csCMakeBaseInclude
+    	libassert::assert
 )
 
 cs_install_target(csLie csLieExport DEFAULT)

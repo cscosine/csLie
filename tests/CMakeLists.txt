@@ -17,7 +17,8 @@ cs_target_sources(csLieTest
 cs_target_link_libraries(csLieTest 
   PRIVATE 
   csLie::csLie 
-  csLieLib::csLieLib_csCMakeDefault
+  csLieLib::csLieLib_csCMakeBaseInclude
+  csLieLib::csLieLib_csCMakeCompileOptionsDefault
   Catch2::Catch2WithMain)
   
 # add to tests
