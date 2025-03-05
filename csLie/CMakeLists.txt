@@ -21,6 +21,7 @@ cs_find_package(csLie PRIVATE  libassert REQUIRED CONFIG)
 cs_target_sources(csLie 
 	PRIVATE_INSTALL 
 		Types.hpp
+		Constants.hpp
     S2.hpp
 		S2_impl.hpp
 	PRIVATE

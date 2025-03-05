@@ -3,12 +3,14 @@
 #include <Eigen/Dense>
 #include <csCore/BasicTypes.hpp>
 
+#include <csLie/Constants.hpp>
+
 #include <catch2/catch_all.hpp>
 
 namespace csLie {
 
   template <class S> void checkValidRotationMatrix(Eigen::Matrix3<S> const& rot) {
-    S const PRECISION = Eigen::NumTraits<S>::dummy_precision();
+    S const PRECISION = Constants<S>::dummy_precision;
     // det = 1
     REQUIRE_THAT(rot.determinant(), Catch::Matchers::WithinAbs(1.0, PRECISION));
     // cols are orthogonal

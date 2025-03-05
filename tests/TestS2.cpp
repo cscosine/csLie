@@ -2,6 +2,7 @@
 
 #include <csLie/Types.hpp>
 #include <csLie/S2_impl.hpp>
+#include <csLie/Constants.hpp>
 
 #include <tests/TestUtils.hpp>
 
@@ -18,7 +19,7 @@ namespace csLie {
 
   TEMPLATE_TEST_CASE("S2 test - base", "[S2]", float32_t, float64_t) {
     using S = TestType;
-    S const PRECISION = Eigen::NumTraits<S>::dummy_precision();
+    S const PRECISION = Constants<S>::dummy_precision;
 
     // create a unit vector v
     S2<S> const v{ S2<S>::Random().normalized() };
@@ -67,7 +68,7 @@ namespace csLie {
     CAPTURE(pointsNoisedFlag, perturbedInitialization);
 
     using S = TestType;
-    S const PRECISION = Eigen::NumTraits<S>::dummy_precision();
+    S const PRECISION = Constants<S>::dummy_precision;
 
     // generate a random rotation matrix
     Eigen::Transform<S, 3, Eigen::Isometry> Rt{ Eigen::Transform<S, 3, Eigen::Isometry> ::Identity()};
