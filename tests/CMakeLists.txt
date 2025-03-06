@@ -12,6 +12,7 @@ cs_target_sources(csLieTest
   TestUtils.hpp
   TestUtils.cpp
 	TestS2.cpp
+  TestSO2.cpp
 )
 
 cs_target_link_libraries(csLieTest 

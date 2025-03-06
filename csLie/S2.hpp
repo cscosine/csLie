@@ -6,6 +6,8 @@
 #include <csLie/Types.hpp>
 
 namespace csLie {
+
+  // TODO(sceriani) actualize with eigen ::Derived, so that expression can be passed
   
   /// @brief transform a S2 unit vector into a SO3 rotation matrix with x aligned to the unit vector
   /// @tparam S scalar type
@@ -13,9 +15,6 @@ namespace csLie {
   /// @return a rotation matrix
   template <class S> SO3<S> s2toZAlignedSO3(S2<S> const & v);
 
-  // given a s2 algebra vector delta (2D vector)
-  // return the S2 exp, i.e., a unitary 3D vector
-  
   /// @brief compute the exp of a s2 algebra to a S2
   /// @tparam S scalar type
   /// @param delta a 2d vector representing the s2 algebra vector

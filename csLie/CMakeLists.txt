@@ -24,6 +24,8 @@ cs_target_sources(csLie
 		Constants.hpp
     S2.hpp
 		S2_impl.hpp
+    SO2.hpp
+		SO2_impl.hpp
 	PRIVATE
 )
 
