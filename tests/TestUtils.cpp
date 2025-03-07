@@ -1,7 +1,7 @@
 #include <tests/TestUtils.hpp>
 
 #include <Eigen/Dense>
-#include <csCore/BasicTypes.hpp>
+#include <csCore/core/BasicTypes.hpp>
 
 #include <csLie/Constants.hpp>
 

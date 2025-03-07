@@ -2,7 +2,7 @@
 
 #include <Eigen/Core>
 
-#include <csCore/BasicTypes.hpp>
+#include <csCore/core/BasicTypes.hpp>
 
 namespace csLie {
 
