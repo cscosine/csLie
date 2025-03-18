@@ -25,6 +25,6 @@ cs_target_link_libraries(csLieTest
 # add to tests
 catch_discover_tests(csLieTest)
 
-cs_install_target(csLieTest csLieTestExport DEFAULT)
+cs_install_target(csLieTest csLieTestExport)
 
 cs_finalize_target(csLieTest)
