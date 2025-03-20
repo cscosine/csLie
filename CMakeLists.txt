@@ -6,8 +6,9 @@ include(csCMake)
 
 cs_initialize_project(csLieLib)
 
-# prepare custom project asserts
+# prepare custom project asserts, note: use standard find_package
 find_package(csCore REQUIRED COMPONENTS assert CONFIG)
+
 list(APPEND CMAKE_MODULE_PATH "${csCore_BASE_DIR}/cmake/csCore/assert/")
 include(csAssert)
 csAssertGenerateProject(csLie csLie) #generate target csLie::csLieAssert
