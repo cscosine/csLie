@@ -63,7 +63,7 @@ namespace csLie {
     so2Exp(SO2Alg<S>(delta), res);
   }
 
-  template <class S, class DerivedOut, int BlockRows, int BlockCols, bool InnerPanel, class RetType = void> 
+  template <class S, class DerivedOut, int BlockRows, int BlockCols, bool InnerPanel, class RetType> 
   std::enable_if_t<std::is_floating_point<S>::value, RetType>
   so2Exp(S delta, Eigen::Block<DerivedOut, BlockRows, BlockCols, InnerPanel> res){
     _private::so2ExpImpl<S,Eigen::Block<DerivedOut, BlockRows, BlockCols, InnerPanel> >(delta, res);

@@ -15,6 +15,9 @@ cs_target_sources(csLieTest
   TestSO2.cpp
 )
 
+# add /Zc:preprocessor
+target_compile_options(csLieTest PUBLIC "$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>")  
+
 cs_target_link_libraries(csLieTest 
   PRIVATE 
   csLie::csLie 
