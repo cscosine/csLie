@@ -4,7 +4,7 @@ cs_add_library(csLie INTERFACE)
 cs_add_library(csLie::csLie ALIAS csLie)
 
 cs_find_package(csLie PUBLIC Eigen3 REQUIRED CONFIG)
-cs_find_package(csLie PUBLIC csCore COMPONENTS core REQUIRED CONFIG)
+cs_find_package(csLie PUBLIC csCore COMPONENTS core assert REQUIRED CONFIG)
 
 cs_target_sources(csLie 
 	PRIVATE_INSTALL 
@@ -21,6 +21,7 @@ cs_target_link_libraries(csLie
 	INTERFACE
 		Eigen3::Eigen
     	csCore::core
+		csCore::assert
 		csLieLib::csLieLib_csCMakeBaseInclude
 )
 
