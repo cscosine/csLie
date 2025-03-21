@@ -2,6 +2,9 @@ project(csLieTest  LANGUAGES CXX)
 
 cs_add_executable(csLieTest)
 
+cs_find_package(csLieTest PUBLIC csCore REQUIRED CONFIG)
+cs_find_package(csLie PUBLIC csCore COMPONENTS testUtils REQUIRED CONFIG)
+
 include(CTest)
 cs_find_package(csLieTest PUBLIC Catch2 3 REQUIRED CONFIG)
 include(Catch)
@@ -15,12 +18,10 @@ cs_target_sources(csLieTest
   TestSO2.cpp
 )
 
-# add /Zc:preprocessor
-target_compile_options(csLieTest PUBLIC "$<$<CXX_COMPILER_ID:MSVC>:/Zc:preprocessor>")  
-
 cs_target_link_libraries(csLieTest 
   PRIVATE 
   csLie::csLie 
+  csCore::testUtils
   csLieLib::csLieLib_csCMakeBaseInclude
   csLieLib::csLieLib_csCMakeCompileOptionsDefault
   Catch2::Catch2WithMain)

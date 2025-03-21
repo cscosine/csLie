@@ -4,7 +4,7 @@
 #include <csLie/S2_impl.hpp>
 #include <csLie/Constants.hpp>
 
-#include <tests/TestUtils.hpp>
+#include <csLie/tests/TestUtils.hpp>
 
 #include <Eigen/Dense> // for determinant
 

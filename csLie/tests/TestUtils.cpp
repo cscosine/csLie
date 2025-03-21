@@ -1,11 +1,11 @@
-#include <tests/TestUtils.hpp>
+#include <csLie/tests/TestUtils.hpp>
 
-#include <Eigen/Dense>
+#include <csCore/testUtils/AssertCatch2.hpp>
 #include <csCore/core/BasicTypes.hpp>
 
 #include <csLie/Constants.hpp>
 
-#include <catch2/catch_all.hpp>
+#include <Eigen/Dense>
 
 namespace csLie {
 

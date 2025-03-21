@@ -25,6 +25,8 @@ cs_target_link_libraries(csLie
 		csLieLib::csLieLib_csCMakeBaseInclude
 )
 
+add_subdirectory(tests)
+
 cs_install_target(csLie csLieExport DEFAULT)
 
 cs_finalize_target(csLie)

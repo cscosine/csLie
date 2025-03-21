@@ -1,10 +1,10 @@
-#include <catch2/catch_all.hpp>
+#include <csCore/testUtils/AssertCatch2.hpp>
 
 #include <csLie/Types.hpp>
 #include <csLie/SO2_impl.hpp>
 #include <csLie/Constants.hpp>
 
-#include <tests/TestUtils.hpp>
+#include <csLie/tests/TestUtils.hpp>
 
 namespace csLie {
   

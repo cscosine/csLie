@@ -17,7 +17,6 @@ list(POP_BACK CMAKE_MODULE_PATH)
 
 # add libs, executables, etc
 add_subdirectory(csLie)
-add_subdirectory(tests)
 # add_subdirectory(...)
 
 # remember to add this at the end of the main cmake file
