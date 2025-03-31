@@ -1,6 +1,9 @@
 #pragma once
 
 #include <csLie/SO2.hpp>
+#include <csLie/SO2.hpp>
+#include <csCore/eigenUtils/MatrixShape.hpp>
+#include <csLie/csLieAssert.hpp>
 
 namespace csLie {
 
@@ -22,8 +25,8 @@ namespace csLie {
   SO2<typename Derived::Scalar> so2Exp(Eigen::MatrixBase<Derived> const& delta) {
     using S = typename Derived::Scalar;
     using M11 = Eigen::Matrix<S, 1, 1>;
-    EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(Derived, M11);
-
+    CSLIE_CONTRACT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, M11()));
+    
     SO2<S> r{};
     so2Exp(delta, r);
     return r;
@@ -34,9 +37,10 @@ namespace csLie {
   {
     using S = typename DerivedIn::Scalar;
     using M11 = Eigen::Matrix<S, 1, 1>;
-    EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(DerivedIn, M11);
     using M22 = Eigen::Matrix<S, 2, 2>;
-    EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(DerivedOut, M22);
+    CSLIE_CONTRACT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, M11()));
+    CSLIE_CONTRACT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(res, M22()));
+
 
     _private::so2ExpImpl<S,Eigen::MatrixBase<DerivedOut>&>(delta(0), res);
   }

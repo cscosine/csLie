@@ -1,10 +1,20 @@
 project(csLie LANGUAGES CXX)
 
+
+# prepare custom project asserts, note: use standard find_package
+find_package(csCore REQUIRED COMPONENTS assert CONFIG)
+
+list(APPEND CMAKE_MODULE_PATH "${csCore_BASE_DIR}/cmake/csCore/assert/")
+include(csAssert)
+csAssertGenerateProject(csLie csLie) #generate target csLie::csLieAssert
+list(POP_BACK CMAKE_MODULE_PATH)
+
+# prepare standar library
 cs_add_library(csLie INTERFACE)
 cs_add_library(csLie::csLie ALIAS csLie)
 
 cs_find_package(csLie PUBLIC Eigen3 REQUIRED CONFIG)
-cs_find_package(csLie PUBLIC csCore COMPONENTS core assert REQUIRED CONFIG)
+cs_find_package(csLie PUBLIC csCore COMPONENTS core eigenUtils REQUIRED CONFIG)
 
 cs_target_sources(csLie 
 	PRIVATE_INSTALL 
@@ -21,7 +31,8 @@ cs_target_link_libraries(csLie
 	INTERFACE
 		Eigen3::Eigen
     	csCore::core
-		csCore::assert
+		csCore::eigenUtils
+		csLie::csLieAssert
 		csLieLib::csLieLib_csCMakeBaseInclude
 )
 
