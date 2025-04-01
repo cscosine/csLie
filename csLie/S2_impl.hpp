@@ -66,7 +66,7 @@ namespace csLie {
   }
 
   template <class S> S2OPlusJac<S> s2_d_OPlus_d_delta_0(S2<S> const& v) {
-    // TODO(sc) here we assume atan2(0,0) = 0. This is protected with a test (testAtan2). In case the test fail on some platform, we need to handle the logic here
+    // here we assume atan2(0,0) = 0. This is protected with a test (testAtan2). In case the test fail on some platform, we need to handle the logic here
     S const alpha = std::atan2(v.z(), v.y());
     S const r = std::sqrt(v.z() * v.z() + v.y() * v.y());
     S const c = cos(alpha);

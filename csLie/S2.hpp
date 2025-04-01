@@ -7,7 +7,7 @@
 
 namespace csLie {
 
-  // TODO(sceriani) actualize with eigen ::Derived, so that expression can be passed
+  // TODO(sc) actualize with eigen ::Derived, so that expression can be passed
   
   /// @brief transform a S2 unit vector into a SO3 rotation matrix with x aligned to the unit vector
   /// @tparam S scalar type
