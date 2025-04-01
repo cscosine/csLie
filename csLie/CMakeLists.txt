@@ -9,7 +9,7 @@ include(csAssert)
 csAssertGenerateProject(csLie csLie) #generate target csLie::csLieAssert
 list(POP_BACK CMAKE_MODULE_PATH)
 
-# prepare standar library
+# prepare standard library
 cs_add_library(csLie INTERFACE)
 cs_add_library(csLie::csLie ALIAS csLie)
 
