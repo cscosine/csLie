@@ -5,6 +5,8 @@
 #include <csCore/eigenUtils/MatrixShape.hpp>
 #include <csLie/csLieAssert.hpp>
 
+#include <Eigen/Dense>
+
 namespace csLie {
 
   template <class Derived> 
@@ -28,5 +30,44 @@ namespace csLie {
     res(1,1) = cd;
     return res;
   }
+
+  template <class Derived> 
+  bool isValidSO2RotationMatrix(Eigen::MatrixBase<Derived> const& rot, typename Derived::Scalar precision)
+  {
+    using S = typename Derived::Scalar;
+
+    using M22 = Eigen::Matrix<S, 2, 2>;
+    CSLIE_CONTRACT_DEBUG(precision >= static_cast<S>(0.0), "precision needs to be non negative");
+    CSLIE_CONTRACT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, M22()), "rot required to be 2x2");
+
+    S const det{rot.determinant()};
+    if(std::abs(det - static_cast<S>(1.0)) >= precision) {
+      return false;
+    }
+    
+    if(!(rot * rot.transpose() - Eigen::Matrix2<S>::Identity()).isZero(precision)) {
+      return false;
+    }
+
+    if(!(rot.transpose() * rot - Eigen::Matrix2<S>::Identity()).isZero(precision)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  template <class Derived>
+  typename Derived::Scalar so2Log(Eigen::MatrixBase<Derived> const& rot) 
+  {
+    using S = typename Derived::Scalar;
+
+    using M22 = Eigen::Matrix<S, 2, 2>;
+    CSLIE_CONTRACT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, M22()), "rot required to be 2x2");
+    CSLIE_CONTRACT_PARANOID(isValidSO2RotationMatrix(rot), "rot is not a valid rotation matrix");
+    
+    // atan2 (sin,cos), average of values 
+    return std::atan2(rot(1,0), rot(0,0));
+  }
+
 
 }

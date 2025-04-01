@@ -4,8 +4,6 @@
 #include <csLie/S2_impl.hpp>
 #include <csLie/Constants.hpp>
 
-#include <csLie/tests/TestUtils.hpp>
-
 #include <Eigen/Dense> // for determinant
 
 namespace csLie {
@@ -29,8 +27,8 @@ namespace csLie {
 
     // create rotation matrix from v
     SO3<S> const Rv = s2toZAlignedSO3<S>(v);
-    // check is a valid rot matrix
-    checkValidRotationMatrix<S>(Rv);
+    // check is a valid 3d rot matrix
+    // checkValidRotationMatrix<S>(Rv); TODO(sceriani) add this function in SO3
     // and its first column is v
     REQUIRE((Rv.col(0) - v).isZero());
 
