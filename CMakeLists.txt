@@ -11,7 +11,7 @@ cs_initialize_project(csLieLib
     # and the custom configurations supported by this project, 
     # specifiying on which base configuration they are based as second value, 
     # e.g. CUSTOM_CONFIG Paranoid Debug
-    CUSTOM_CONFIG Paranoid BASED_ON Debug POSTFIX "dp"
+    CUSTOM_CONFIG Paranoid BASED_ON "Debug,Release," POSTFIX "dp"
 )
 
 # add libs, executables, etc
