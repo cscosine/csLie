@@ -1,6 +1,8 @@
 #include <cmath>
 #include <csCore/testUtils/AssertCatch2.hpp>
 
+#include <csCore/eigenUtils/RotationMatrix_impl.hpp>
+
 #include <csLie/Types.hpp>
 #include <csLie/SO2_impl.hpp>
 #include <csLie/Constants.hpp>
@@ -43,7 +45,7 @@ namespace csLie {
     // randomized tests
     Eigen::VectorX<S> randoms = Eigen::VectorX<S>::Random(100) * 4 * Constants<S>::pi;
     for(size_t i = 0; i < randoms.size();i++) {
-      REQUIRE(isValidSO2RotationMatrix(so2Exp(randoms(i))));
+      REQUIRE(csCore::eigenUtils::isValidRotationMatrix2D(so2Exp(randoms(i))));
       // log(exp(d)) = d
       REQUIRE_THAT(csCore::math::angleDistance(so2Log(so2Exp(randoms(i))),randoms(i)), Catch::Matchers::WithinAbs(0.0, PRECISION));
 
@@ -71,31 +73,5 @@ namespace csLie {
     }
     
   }
-
-  TEMPLATE_TEST_CASE("SO2 test - isValidSO2RotationMatrix", "[SO2]", float32_t, float64_t) {
-    using S = TestType;
-
-    // create a identity rotation matrix
-    SO2<S> rI{ SO2<S>::Identity()};
-    REQUIRE(isValidSO2RotationMatrix(rI));
-
-    // change determinant sign
-    rI(1,1) = -1;
-    REQUIRE(!isValidSO2RotationMatrix(rI));
-
-    // scale a bit
-    rI(1,1) = 1.05;
-    REQUIRE(!isValidSO2RotationMatrix(rI));
-
-    // change precision to a big value
-    REQUIRE(isValidSO2RotationMatrix(rI, 10.0));
-
-    // contracts
-    if(csLieAsserts::isAssertDebugEnabled()) {
-      REQUIRE_ASSERT(isValidSO2RotationMatrix(rI, -10.0));
-      REQUIRE_ASSERT(isValidSO2RotationMatrix(Eigen::MatrixX<S>(3,3)));
-    }
-  }
-
 
 }
