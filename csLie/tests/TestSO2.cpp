@@ -60,7 +60,7 @@ namespace csLie {
     using S = TestType;
 
     // so2Exp(Eigen::Matrix<S,3,1>()); // does not compile
-    if(csLieAsserts::isAssertDebugEnabled()) {
+    if(csLie::Asserts::isAssertStandardEnabled()) {
       REQUIRE_NO_ASSERT(so2Exp(Eigen::MatrixX<S>(1,1))); 
       REQUIRE_ASSERT(so2Exp(Eigen::MatrixX<S>(1,2))); // throws, wrong delta size
       REQUIRE_ASSERT(so2Exp(Eigen::MatrixX<S>(2,1))); // throws, wrong delta size

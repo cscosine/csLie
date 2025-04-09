@@ -11,7 +11,7 @@ namespace csLie {
   SO2<typename Derived::Scalar> so2Exp(Eigen::MatrixBase<Derived> const& delta) {
     using S = typename Derived::Scalar;
     using M11 = Eigen::Matrix<S, 1, 1>;
-    CSLIE_CONTRACT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, M11()), "delta required to be 1x1");
+    CSLIE_CONTRACT_STANDARD(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, M11()), "delta required to be 1x1");
     return so2Exp(delta(0,0));
   }
 
@@ -35,7 +35,7 @@ namespace csLie {
     using S = typename Derived::Scalar;
 
     using M22 = Eigen::Matrix<S, 2, 2>;
-    CSLIE_CONTRACT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, M22()), "rot required to be 2x2");
+    CSLIE_CONTRACT_STANDARD(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, M22()), "rot required to be 2x2");
     CSLIE_CONTRACT_PARANOID(csCore::eigenUtils::isValidRotationMatrix2D(rot), "rot is not a valid rotation matrix");
     
     // atan2 (sin,cos), average of values 
