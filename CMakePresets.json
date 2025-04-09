@@ -1,8 +1,8 @@
 {
   "version":  10,
   "include": [
-    "${sourceParentDir}/csCMake/presets/msvc2022-x64-workflow-debug-release-relWithDebInfo.json",
-    "${sourceParentDir}/csCMake/presets/msvc2022-x64-LLVM-workflow-debug-release-relWithDebInfo.json",
+    "${sourceParentDir}/csCMake/presets/msvc2022-x64-workflow-debug-release-relWithDebInfo-paranoid.json",
+    "${sourceParentDir}/csCMake/presets/msvc2022-x64-LLVM-workflow-debug-release-relWithDebInfo-paranoid.json",
     "${sourceParentDir}/csCMake/presets/linux-ninja-workflow-debug-release-relWithDebInfo.json",
     "${sourceParentDir}/csCMake/presets/linux-ninja-multi-config-workflow-debug-release-relWithDebInfo.json"
   ]

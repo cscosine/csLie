@@ -36,7 +36,7 @@ namespace csLie {
 
     using M22 = Eigen::Matrix<S, 2, 2>;
     CSLIE_CONTRACT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, M22()), "rot required to be 2x2");
-    CSLIE_CONTRACT_PARANOID(isValidRotationMatrix2D(rot), "rot is not a valid rotation matrix");
+    CSLIE_CONTRACT_PARANOID(csCore::eigenUtils::isValidRotationMatrix2D(rot), "rot is not a valid rotation matrix");
     
     // atan2 (sin,cos), average of values 
     return std::atan2(rot(1,0), rot(0,0));
