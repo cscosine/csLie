@@ -60,7 +60,7 @@ namespace csLie {
     using S = TestType;
 
     // so2Exp(Eigen::Matrix<S,3,1>()); // does not compile
-    if(csLie::Asserts::isAssertStandardEnabled()) {
+    if(csLie::Asserts::isAssertDebugEnabled()) {
       REQUIRE_NO_ASSERT(so2Exp(Eigen::MatrixX<S>(1,1))); 
       REQUIRE_ASSERT(so2Exp(Eigen::MatrixX<S>(1,2))); // throws, wrong delta size
       REQUIRE_ASSERT(so2Exp(Eigen::MatrixX<S>(2,1))); // throws, wrong delta size
@@ -77,6 +77,18 @@ namespace csLie {
   TEMPLATE_TEST_CASE("SO2 test - log, input is not a rotation matrix", "[SO2]", float32_t, float64_t) 
   {
     using S = TestType;
+
+    if(csLie::Asserts::isAssertDebugEnabled()) {
+      // throws, wrong matrix size
+      REQUIRE_ASSERT(so2Log(Eigen::MatrixX<S>(3,3))); 
+      REQUIRE_ASSERT(so2Log(Eigen::MatrixX<S>(2,3))); 
+
+      Eigen::MatrixX<S> m10x10 =Eigen::MatrixX<S>::Identity(10,10);
+      REQUIRE_NO_ASSERT(so2Log(m10x10.block(0,0,2,2)));  //ok (is also a valid rotation matrix)!
+
+      REQUIRE_ASSERT(so2Log(Eigen::MatrixX<S>(4,4).block(0,0,3,3))); 
+      REQUIRE_ASSERT(so2Log(Eigen::MatrixX<S>(4,4).block(0,0,2,1))); 
+    }
 
     if(csLie::Asserts::isAssertParanoidEnabled()) {
       REQUIRE_ASSERT(so2Log(Eigen::Matrix2<S>::Zero())); // throws, zero is not a rotation matrix
