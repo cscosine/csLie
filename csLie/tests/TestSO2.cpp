@@ -74,4 +74,14 @@ namespace csLie {
     
   }
 
+  TEMPLATE_TEST_CASE("SO2 test - log, input is not a rotation matrix", "[SO2]", float32_t, float64_t) 
+  {
+    using S = TestType;
+
+    if(csLie::Asserts::isAssertParanoidEnabled()) {
+      REQUIRE_ASSERT(so2Log(Eigen::Matrix2<S>::Zero())); // throws, zero is not a rotation matrix
+    }
+    
+  }  
+
 }
