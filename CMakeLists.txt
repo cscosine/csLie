@@ -9,8 +9,8 @@ cs_initialize_project(csLieLib
     DEFAULT_CONFIG Debug
     DEFAULT_CONFIG Release
     DEFAULT_CONFIG_MAPPED RelWithDebInfo MAPPED_TO "RelWithDebInfo,Release,"
-    # and the custom configurations supported by this project, 
-    # specifiying on which base configuration they are based as second value, 
+    # and the custom configurations supported by this project,
+    # specifiying on which base configuration they are based as second value,
     # e.g. CUSTOM_CONFIG Paranoid Debug
     CUSTOM_CONFIG Paranoid BASED_ON "Debug,Release," POSTFIX "dp"
 )

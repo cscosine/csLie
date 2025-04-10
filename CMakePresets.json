@@ -1,5 +1,5 @@
 {
-  "version":  10,
+  "version": 10,
   "include": [
     "${sourceParentDir}/csCMake/presets/msvc2022-x64-workflow-debug-release-relWithDebInfo-paranoid.json",
     "${sourceParentDir}/csCMake/presets/msvc2022-x64-LLVM-workflow-debug-release-relWithDebInfo-paranoid.json",

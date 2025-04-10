@@ -4,7 +4,7 @@
 
 namespace csLie {
 
-  template<typename S>
-  Pose3D<S> exp(const SE3Alg<S>& g);
+template <typename S>
+Pose3D<S> exp(const SE3Alg<S>& g);
 
 }

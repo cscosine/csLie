@@ -4,7 +4,7 @@
 
 namespace csLie {
 
-  template<typename S>
-  SE3Alg<S> log(const Pose3D<S>& g);
+template <typename S>
+SE3Alg<S> log(const Pose3D<S>& g);
 
 }

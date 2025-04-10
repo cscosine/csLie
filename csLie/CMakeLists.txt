@@ -24,8 +24,8 @@ cs_add_library(csLie::csLie ALIAS csLie)
 cs_find_package(csLie PUBLIC Eigen3 REQUIRED CONFIG)
 cs_find_package(csLie PUBLIC csCore COMPONENTS core eigenUtils REQUIRED CONFIG)
 
-cs_target_sources(csLie 
-	PRIVATE_INSTALL 
+cs_target_sources(csLie
+	PRIVATE_INSTALL
 		Types.hpp
 		Constants.hpp
     S2.hpp

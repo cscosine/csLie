@@ -4,7 +4,7 @@
 
 namespace csLie {
 
-  template<typename S>
-  Pose2D<S> exp(const SE2Alg<S>& g);
+template <typename S>
+Pose2D<S> exp(const SE2Alg<S>& g);
 
 }

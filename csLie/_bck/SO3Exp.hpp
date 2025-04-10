@@ -4,7 +4,7 @@
 
 namespace csLie {
 
-  template<typename S>
-  Rot3D<S> exp(const SO3Alg<S>& g);
+template <typename S>
+Rot3D<S> exp(const SO3Alg<S>& g);
 
 }

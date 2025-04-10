@@ -3,8 +3,8 @@
 
 namespace csLie {
 
-  template<class S>
-  Eigen::Matrix<S, 3, 3> skewSymm(const Eigen::Ref<const Eigen::Matrix<S, 3, 1>>& a);
+template <class S>
+Eigen::Matrix<S, 3, 3> skewSymm(
+    const Eigen::Ref<const Eigen::Matrix<S, 3, 1>>& a);
 
 }
-
