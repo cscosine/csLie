@@ -26,7 +26,7 @@ cs_target_link_libraries(csLieTest
   Catch2::Catch2WithMain)
   
 # add to tests
-catch_discover_tests(csLieTest)
+catch_discover_tests(csLieTest DISCOVERY_MODE "PRE_TEST")
 
 cs_install_target(csLieTest csLieTestExport)
 
