@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <csCore/core/BasicTypes.hpp>
 
 namespace csLie {
 

@@ -1,5 +1,6 @@
 #include <Eigen/Dense>  // for determinant
 #include <catch2/catch_all.hpp>
+#include <csCore/testUtils/AssertCatch2.hpp>
 #include <csLie/Constants.hpp>
 #include <csLie/S2_impl.hpp>
 #include <csLie/Types.hpp>
@@ -25,7 +26,7 @@ TEMPLATE_TEST_CASE("S2 test - base", "[S2]", float32_t, float64_t) {
   REQUIRE_THAT(v.norm(), Catch::Matchers::WithinAbs(1.0, PRECISION));
 
   // create rotation matrix from v
-  SO3<S> const Rv = s2toZAlignedSO3<S>(v);
+  SO3<S> const Rv = s2toZAlignedSO3(v);
   // check is a valid 3d rot matrix
   // checkValidRotationMatrix<S>(Rv); TODO(sceriani) add this function in SO3
   // and its first column is v
@@ -35,7 +36,7 @@ TEMPLATE_TEST_CASE("S2 test - base", "[S2]", float32_t, float64_t) {
   S2Alg<S> const delta{S2Alg<S>::Random()};
 
   // create a unit vector vd as exp of delta
-  S2<S> const vd = s2Exp<S>(delta);
+  S2<S> const vd = s2Exp(delta);
   // TODO(sc) check edge cases (taylor expansion for small numbers)
   REQUIRE_THAT(vd.norm(), Catch::Matchers::WithinAbs(1.0, PRECISION));
 
@@ -44,15 +45,15 @@ TEMPLATE_TEST_CASE("S2 test - base", "[S2]", float32_t, float64_t) {
   // verify voe is a unit vector
   REQUIRE_THAT(voe.norm(), Catch::Matchers::WithinAbs(1.0, PRECISION));
 
-  // compute oplus(v,delta) with s2OPlus in vo
-  S2<S> const vo{s2OPlus<S>(v, delta)};
+  // compute oplus(v,delta) with s2oplus in vo
+  S2<S> const vo{s2oplus(v, delta)};
   // verify vo is a unit vector
   REQUIRE_THAT(vo.norm(), Catch::Matchers::WithinAbs(1.0, PRECISION));
   // verify vo is equivalent to voe
   REQUIRE((vo - voe).isZero());
 
   // compute the jacobian of oplus(v,delta) wrt delta, evalauted in delta = 0
-  S2OPlusJac<S> const J = s2_d_OPlus_d_delta_0<S>(v);
+  s2oplusJac<S> const J = s2_d_oplus_d_delta_0(v);
   // verify is equivalent to the first two columns of Rv
   REQUIRE((J - Rv.template rightCols<2>()).isZero());
 }
@@ -107,7 +108,7 @@ TEMPLATE_TEST_CASE("S2 test - plane fitting", "[S2]", float32_t, float64_t) {
   Eigen::Vector3<S> estNormal = normalGT;
   if (perturbedInitialization) {
     // eventually, add noise to initial estimation
-    estNormal = s2OPlus<S>(estNormal, Eigen::Vector2<S>::Random() * 0.01);
+    estNormal = s2oplus(estNormal, Eigen::Vector2<S>::Random() * 0.01);
     estNormal.normalize();
   }
   Eigen::Vector3<S> const estNormalInitial = estNormal;
@@ -122,7 +123,7 @@ TEMPLATE_TEST_CASE("S2 test - plane fitting", "[S2]", float32_t, float64_t) {
   // the point plane error e is  e = p dot pi = [p 1] dot [n d] = p^t n + d =
   // p^t n -c^t n = (p - c)^t * n the derivative d_e_d_delta evaluated in zero,
   // computed on (p - c)^t * oplus(n, delta), is (p - c)^t *
-  // s2_d_OPlus_d_delta_0(n)
+  // s2_d_oplus_d_delta_0(n)
 
   // perform a standard Gauss Newton optimization loop
   S chi2 = 0;
@@ -139,7 +140,7 @@ TEMPLATE_TEST_CASE("S2 test - plane fitting", "[S2]", float32_t, float64_t) {
       S const e = pd.dot(estNormal);
       // and the jacobian
       Eigen::Matrix<S, 1, 2> d_e_d_delta =
-          pd.transpose() * s2_d_OPlus_d_delta_0(estNormal);
+          pd.transpose() * s2_d_oplus_d_delta_0(estNormal);
 
       // cumulate terms
       S const c2 = e * e;
@@ -158,7 +159,7 @@ TEMPLATE_TEST_CASE("S2 test - plane fitting", "[S2]", float32_t, float64_t) {
     ldlt.compute(H);
     Eigen::Vector2<S> x = ldlt.solve(-b);
     // update the estimate
-    estNormal = s2OPlus<S>(estNormal, x);
+    estNormal = s2oplus(estNormal, x);
     estNormal.normalize();
   }
 
@@ -184,4 +185,95 @@ TEMPLATE_TEST_CASE("S2 test - plane fitting", "[S2]", float32_t, float64_t) {
     REQUIRE(dotFinal > dotInitial);
   }
 }
+
+TEMPLATE_TEST_CASE("S2 test - assertions", "[S2]", float32_t, float64_t) {
+  using S = TestType;
+
+  // s2Exp(Eigen::Matrix<S,3,1>()); // does not compile
+  if (csLie::Asserts::isAssertDebugEnabled()) {
+    REQUIRE_NO_ASSERT(s2Exp(Eigen::MatrixX<S>(2, 1)));
+    REQUIRE_ASSERT(s2Exp(Eigen::MatrixX<S>(1, 2)));  // throws, wrong delta size
+    REQUIRE_ASSERT(s2Exp(Eigen::MatrixX<S>(2, 2)));  // throws, wrong delta size
+    REQUIRE_ASSERT(s2Exp(Eigen::MatrixX<S>(3, 2)));  // throws, wrong delta size
+
+    REQUIRE_NO_ASSERT(s2Exp(Eigen::MatrixX<S>(2, 2).block(0, 0, 2, 1)));
+    REQUIRE_NO_ASSERT(s2Exp(Eigen::VectorX<S>(10).segment(0, 2)));
+    REQUIRE_ASSERT(s2Exp(Eigen::MatrixX<S>(4, 3).block(0, 0, 1, 2)));
+    REQUIRE_ASSERT(s2Exp(Eigen::MatrixX<S>(4, 3).block(0, 0, 3, 1)));
+    REQUIRE_ASSERT(s2Exp(Eigen::MatrixX<S>(4, 3).block(0, 0, 3, 3)));
+    REQUIRE_ASSERT(s2Exp(Eigen::VectorX<S>(10).segment(0, 3)));
+    REQUIRE_ASSERT(s2Exp(Eigen::VectorX<S>(10).segment(0, 1)));
+  }
+
+  // s2toZAlignedSO3(Eigen::Matrix<S,2,1>()); // does not compile
+  // s2_d_oplus_d_delta_0(Eigen::Matrix<S,2,1>()); // does not compile
+  if (csLie::Asserts::isAssertDebugEnabled()) {
+    Eigen::MatrixX<S> m31(3, 1);
+    m31.setZero();
+    m31(0, 0) = 1;
+    REQUIRE_NO_ASSERT(s2toZAlignedSO3(m31));
+    REQUIRE_NO_ASSERT(s2_d_oplus_d_delta_0(m31));
+
+    Eigen::VectorX<S> v3(3);
+    v3.setZero();
+    v3(2) = 1;
+    REQUIRE_NO_ASSERT(s2toZAlignedSO3(v3));
+    REQUIRE_NO_ASSERT(s2_d_oplus_d_delta_0(v3));
+
+    Eigen::MatrixX<S> m21(2, 1);
+    REQUIRE_ASSERT(s2toZAlignedSO3(m21));
+    REQUIRE_ASSERT(s2_d_oplus_d_delta_0(m21));
+
+    Eigen::VectorX<S> v4(4);
+    REQUIRE_ASSERT(s2toZAlignedSO3(v4));
+    REQUIRE_ASSERT(s2_d_oplus_d_delta_0(v4));
+
+    Eigen::VectorX<S> v10(10);
+    v10(0) = 1;
+    REQUIRE_NO_ASSERT(s2toZAlignedSO3(v10.segment(0, 3)));
+    REQUIRE_ASSERT(s2toZAlignedSO3(v10.segment(0, 4)));
+    REQUIRE_NO_ASSERT(s2_d_oplus_d_delta_0(v10.segment(0, 3)));
+    REQUIRE_ASSERT(s2_d_oplus_d_delta_0(v10.segment(0, 4)));
+  }
+  if (csLie::Asserts::isAssertParanoidEnabled()) {
+    REQUIRE_NO_ASSERT(s2toZAlignedSO3(Eigen::Vector3<S>::UnitX()));
+    REQUIRE_ASSERT(s2toZAlignedSO3(Eigen::Vector3<S>::UnitX() * 2));
+    REQUIRE_ASSERT(s2toZAlignedSO3(Eigen::Vector3<S>::Zero()));
+
+    REQUIRE_NO_ASSERT(s2_d_oplus_d_delta_0(Eigen::Vector3<S>::UnitX()));
+    REQUIRE_ASSERT(s2_d_oplus_d_delta_0(Eigen::Vector3<S>::UnitX() * 2));
+    REQUIRE_ASSERT(s2_d_oplus_d_delta_0(Eigen::Vector3<S>::Zero()));
+  }
+
+  // s2oplus(Eigen::Matrix<S,10,1>(), Eigen::Matrix<S,2,1>()) // does not
+  // compile s2oplus(Eigen::Matrix<S,3,1>(), Eigen::Matrix<S,10,1>()) // does
+  // not compile
+  if (csLie::Asserts::isAssertDebugEnabled()) {
+    Eigen::MatrixX<S> m31(3, 1);
+    m31.setZero();
+    m31(0, 0) = 1;
+    Eigen::MatrixX<S> m21(2, 1);
+    m21.setZero();
+
+    REQUIRE_NO_ASSERT(s2oplus(m31, m21));
+
+    Eigen::MatrixX<S> m51(5, 1);
+    m51.setZero();
+    m51(0, 0) = 1;
+
+    REQUIRE_ASSERT(s2oplus(m51, m21));
+    REQUIRE_ASSERT(s2oplus(m31, m51));
+  }
+  if (csLie::Asserts::isAssertParanoidEnabled()) {
+    Eigen::MatrixX<S> m31(3, 1);
+    m31.setZero();
+    m31(0, 0) = 1;
+    Eigen::MatrixX<S> m21(2, 1);
+    m21.setZero();
+    REQUIRE_NO_ASSERT(s2oplus(m31, m21));
+    REQUIRE_ASSERT(s2oplus(m31 * 2.0, m21));
+    REQUIRE_ASSERT(s2oplus(m31 * 0., m21));
+  }
+}
+
 }  // namespace csLie

@@ -1,15 +1,13 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <csCore/core/BasicTypes.hpp>
-#include <csLie/Constants.hpp>
 #include <csLie/Types.hpp>
 #include <type_traits>
 
 namespace csLie {
 
 /// @brief compute the exp of a so2 algebra to a SO2, version with return type
-/// @tparam S scalar type
+/// @tparam Derived template to support generic matrix
 /// @param delta a 1d vector representing the so2 algebra vector
 /// @return the rotation matrix in SO2 from the algebra vector in so2
 /// @throw if delta is not a 1x1 matrix
@@ -26,6 +24,7 @@ std::enable_if_t<std::is_floating_point<S>::value, RetType> so2Exp(S delta);
 
 /// @brief check if a matrix is a valid rotation matrix, i.e., det(R) = 1, R*R^T
 /// = I and R^T*R = I, withing a tolerance
+/// @tparam Derived template to support generic matrix
 /// @param rot the rotation matrix
 /// @throw if rot is not a 2x2 matrix (DEBUG only), if rot is not a rotation
 /// matrix within default precision (PARANOID)

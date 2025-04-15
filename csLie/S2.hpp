@@ -1,27 +1,25 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <csCore/core/BasicTypes.hpp>
 #include <csLie/Types.hpp>
 
 namespace csLie {
 
-// TODO(sc) actualize with eigen ::Derived, so that expression can be passed
+/// @brief compute the exp of a s2 algebra to a S2
+/// @tparam Derived template to support generic matrix
+/// @param delta a 2d vector representing the s2 algebra vector
+/// @return the unit vector in S2 from the algebra vector in s2
+template <class Derived>
+S2<typename Derived::Scalar> s2Exp(Eigen::MatrixBase<Derived> const& delta);
 
 /// @brief transform a S2 unit vector into a SO3 rotation matrix with x aligned
 /// to the unit vector
-/// @tparam S scalar type
+/// @tparam Derived template to support generic matrix
 /// @param v the unit vector
 /// @return a rotation matrix
-template <class S>
-SO3<S> s2toZAlignedSO3(S2<S> const& v);
-
-/// @brief compute the exp of a s2 algebra to a S2
-/// @tparam S scalar type
-/// @param delta a 2d vector representing the s2 algebra vector
-/// @return the unit vector in S2 from the algebra vector in s2
-template <class S>
-S2<S> s2Exp(S2Alg<S> const& delta);
+template <class Derived>
+SO3<typename Derived::Scalar> s2toZAlignedSO3(
+    Eigen::MatrixBase<Derived> const& v);
 
 /// @brief perform the "oplus" addition of a S2 element with the exp of a s2
 /// algebra vector given
@@ -35,11 +33,14 @@ S2<S> s2Exp(S2Alg<S> const& delta);
 /// the vector when needed.
 ///
 /// @tparam S the scalar type
-/// @param v the S2 element
+/// @tparam Derived1 template to support generic matrix
+/// @tparam Derived2 template to support generic matrix
+/// @param v a 3d unit vector representing the s2
 /// @param delta a 2d vector representing the s2 algebra vector
 /// @return the result of the oplus, namely s2toZAlignedSO3(V) * s2Exp(delta)
-template <class S>
-S2<S> s2OPlus(S2<S> const& v, S2Alg<S> const& delta);
+template <class Derived1, class Derived2>
+S2<typename Derived1::Scalar> s2oplus(Eigen::MatrixBase<Derived1> const& v,
+                                      Eigen::MatrixBase<Derived2> const& delta);
 
 /// @brief compute the jacobian of the oplus operation when delta is zero
 ///
@@ -58,7 +59,8 @@ S2<S> s2OPlus(S2<S> const& v, S2Alg<S> const& delta);
 /// @tparam S the scalar type
 /// @param v the S2 element
 /// @return the jacobians of the oplus(v, delta) evaluated in delta = 0
-template <class S>
-S2OPlusJac<S> s2_d_OPlus_d_delta_0(S2<S> const& v);
+template <class Derived>
+s2oplusJac<typename Derived::Scalar> s2_d_oplus_d_delta_0(
+    Eigen::MatrixBase<Derived> const& v);
 
 }  // namespace csLie
