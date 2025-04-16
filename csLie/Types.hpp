@@ -62,6 +62,24 @@ using SO2Algd = SO2Alg<float64_t>;
 /// @brief convenient typedef for float32_t
 using SO2Algf = SO2Alg<float32_t>;
 
+// ------------ SE2 ------------
+
+template <class S>
+using SE2 = Eigen::Transform<S, 2, Eigen::Isometry>;
+/// @brief convenient typedef for float64_t
+using SE2d = SE2<float64_t>;
+/// @brief convenient typedef for float32_t
+using SE2f = SE2<float32_t>;
+
+/// @brief SE2 algebra, a 3D vector
+/// @tparam S the scalar type
+template <class S>
+using SE2Alg = Eigen::Matrix<S, 3, 1>;
+/// @brief convenient typedef for float64_t
+using SE2Algd = SE2Alg<float64_t>;
+/// @brief convenient typedef for float32_t
+using SE2Algf = SE2Alg<float32_t>;
+
 // ------------ SO3 ------------
 
 /// @brief SO3 = 3D rotation matrix, a 3x3 matrix orthogonal with det = 1

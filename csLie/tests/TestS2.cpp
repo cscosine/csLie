@@ -28,7 +28,7 @@ TEMPLATE_TEST_CASE("S2 test - base", "[S2]", float32_t, float64_t) {
   // create rotation matrix from v
   SO3<S> const Rv = s2toZAlignedSO3(v);
   // check is a valid 3d rot matrix
-  // checkValidRotationMatrix<S>(Rv); TODO(sceriani) add this function in SO3
+  // checkValidRotationMatrix<S>(Rv); TODO(sc) add this function in SO3
   // and its first column is v
   REQUIRE((Rv.col(0) - v).isZero());
 

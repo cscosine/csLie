@@ -54,6 +54,8 @@ TEMPLATE_TEST_CASE("SO2 test - base", "[SO2]", float32_t, float64_t) {
   }
 }
 
+// TODO(sc) add a test with optimization in SO2
+
 TEMPLATE_TEST_CASE("SO2 test - exp, delta wrong size", "[SO2]", float32_t,
                    float64_t) {
   using S = TestType;
