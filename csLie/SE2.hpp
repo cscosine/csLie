@@ -27,4 +27,30 @@ template <class Derived>
 typename Derived::Scalar se2Log(Eigen::MatrixBase<Derived> const& trans);
 */
 
+/// @brief create a SE2 transformation from translation (x y) and angle (Y)
+/// @tparam Derived template to support generic matrix
+/// @param xyY a 3d vector representing the xy translation and the Y angle (YAW,
+/// is around Z axis)
+/// @return the rototranslation matrix in SE2
+/// @throw if xyY is not a 3x1 matrix
+template <class Derived>
+SE2<typename Derived::Scalar> xyYTose2(Eigen::MatrixBase<Derived> const& xyY);
+
+/// @brief extract translation (x y) and angle (Y) from a se2
+/// @tparam Derived template to support generic matrix
+/// @param transf a 3x3 matrix representing a isometry
+/// @return the xyY vector, with a two element translation foloowed by the angle
+/// @throw if transf is not a 3x3 valid isometry transformation
+template <class Derived>
+Eigen::Vector3<typename Derived::Scalar> se2ToxyY(
+    Eigen::MatrixBase<Derived> const& transf);
+
+/// @brief extract translation (x y) and angle (Y) from a se2
+/// @tparam S the scalar type
+/// @param transf a SE2, i.e., a Eigen::Transform<2, Isometry>
+/// @return the xyY vector, with a two element translation foloowed by the angle
+/// @throw if transf is not a 3x3 valid isometry transformation
+template <class S>
+Eigen::Vector3<S> se2ToxyY(SE2<S> const& transf);
+
 }  // namespace csLie

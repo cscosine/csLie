@@ -1,5 +1,6 @@
 #pragma once
 
+#include <csCore/eigenUtils/IsometryMatrix_impl.hpp>
 #include <csCore/eigenUtils/MatrixShape_impl.hpp>
 #include <csLie/SE2.hpp>
 #include <csLie/SO2_impl.hpp>
@@ -10,6 +11,7 @@ namespace csLie {
 template <class Derived>
 SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<Derived> const& delta) {
   using S = typename Derived::Scalar;
+
   CSLIE_ASSERT_DEBUG(
       csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SE2Alg<S>()),
       "delta required to be 3x1");
@@ -20,7 +22,6 @@ SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<Derived> const& delta) {
   S const theta{delta(2, 0)};
   Rt.linear() = so2Exp<S>(theta);
 
-  //
   S sinTh_Th{};
   S m1cosTh_Th{};
   if (std::abs(theta) < Eigen::NumTraits<S>::epsilon()) {
@@ -43,6 +44,57 @@ SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<Derived> const& delta) {
   Rt(2, 1) = 0;
   Rt(2, 2) = 1;
   return Rt;
+}
+
+template <class Derived>
+SE2<typename Derived::Scalar> xyYTose2(Eigen::MatrixBase<Derived> const& xyY) {
+  using S = typename Derived::Scalar;
+
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(
+                         xyY, Eigen::Matrix<S, 3, 1>()),
+                     "xyY required to be 3x1");
+
+  SE2<S> Rt{};
+
+  // rotation
+  S const theta{xyY(2, 0)};
+  Rt.linear() = so2Exp<S>(theta);
+
+  // translation
+  Rt(0, 2) = xyY(0, 0);
+  Rt(1, 2) = xyY(1, 0);
+  // bottom row
+  Rt(2, 0) = 0;
+  Rt(2, 1) = 0;
+  Rt(2, 2) = 1;
+  return Rt;
+}
+
+template <class Derived>
+Eigen::Vector3<typename Derived::Scalar> se2ToxyY(
+    Eigen::MatrixBase<Derived> const& transf) {
+  using S = typename Derived::Scalar;
+
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(
+                         transf, Eigen::Matrix<S, 3, 3>()),
+                     "transf required to be 3x3");
+
+  CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix2D(transf),
+                        "transf is not a valid isometry matrix");
+
+  Eigen::Vector3<S> xyY{transf(0, 2), transf(1, 2),
+                        so2Log(transf.template topLeftCorner<2, 2>())};
+  return xyY;
+}
+
+/// @brief extract translation (x y) and angle (Y) from a se2
+/// @tparam S the scalar type
+/// @param transf a SE2, i.e., a Eigen::Transform<2, Isometry>
+/// @return the xyY vector, with a two element translation foloowed by the angle
+/// @throw if transf is not a 3x3 valid isometry transformation
+template <class S>
+Eigen::Vector3<S> se2ToxyY(SE2<S> const& transf) {
+  return se2ToxyY(transf.matrix());
 }
 
 }  // namespace csLie
