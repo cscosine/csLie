@@ -1,6 +1,7 @@
 #pragma once
 
 #include <csCore/eigenUtils/MatrixShape_impl.hpp>
+#include <csCore/eigenUtils/RotationMatrix_impl.hpp>
 #include <csLie/SO2.hpp>
 #include <csLie/csLieAssert.hpp>
 

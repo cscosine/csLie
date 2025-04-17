@@ -34,7 +34,7 @@ typename Derived::Scalar se2Log(Eigen::MatrixBase<Derived> const& trans);
 /// @return the rototranslation matrix in SE2
 /// @throw if xyY is not a 3x1 matrix
 template <class Derived>
-SE2<typename Derived::Scalar> xyYTose2(Eigen::MatrixBase<Derived> const& xyY);
+SE2<typename Derived::Scalar> xyYToSe2(Eigen::MatrixBase<Derived> const& xyY);
 
 /// @brief extract translation (x y) and angle (Y) from a se2
 /// @tparam Derived template to support generic matrix

@@ -1,5 +1,4 @@
 #include <cmath>
-#include <csCore/eigenUtils/RotationMatrix_impl.hpp>
 #include <csCore/math/Angles.hpp>
 #include <csCore/testUtils/AssertCatch2.hpp>
 #include <csLie/Constants.hpp>

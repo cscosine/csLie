@@ -1,5 +1,6 @@
 #pragma once
 
+#include <csCore/eigenUtils/IsometryMatrix.hpp>
 #include <csCore/eigenUtils/IsometryMatrix_impl.hpp>
 #include <csCore/eigenUtils/MatrixShape_impl.hpp>
 #include <csLie/SE2.hpp>
@@ -47,7 +48,7 @@ SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<Derived> const& delta) {
 }
 
 template <class Derived>
-SE2<typename Derived::Scalar> xyYTose2(Eigen::MatrixBase<Derived> const& xyY) {
+SE2<typename Derived::Scalar> xyYToSe2(Eigen::MatrixBase<Derived> const& xyY) {
   using S = typename Derived::Scalar;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(

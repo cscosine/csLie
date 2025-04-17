@@ -1,5 +1,4 @@
 #include <cmath>
-#include <csCore/eigenUtils/RotationMatrix_impl.hpp>
 #include <csCore/math/Angles.hpp>
 #include <csCore/testUtils/AssertCatch2.hpp>
 #include <csLie/Constants.hpp>
@@ -51,7 +50,7 @@ TEMPLATE_TEST_CASE("SE2 test - from/to xyY", "[SE2]", float32_t, float64_t) {
   transf_gt.translation() << x, y;
   transf_gt.linear() << 0, -1, 1, 0;
 
-  SE2<S> transf = xyYTose2(xyY_gt);
+  SE2<S> transf = xyYToSe2(xyY_gt);
 
   Eigen::Vector3<S> xyY = se2ToxyY(transf_gt);
   Eigen::Vector3<S> xyY_transf = se2ToxyY(transf_gt.matrix());
@@ -83,25 +82,25 @@ TEMPLATE_TEST_CASE("SE2 test - exp, delta wrong size", "[SE2]", float32_t,
   }
 }
 
-TEMPLATE_TEST_CASE("SE2 test - xyYTose2, xyY wrong size", "[SE2]", float32_t,
+TEMPLATE_TEST_CASE("SE2 test - xyYToSe2, xyY wrong size", "[SE2]", float32_t,
                    float64_t) {
   using S = TestType;
 
-  // xyYTose2(Eigen::Matrix<S,4,1>()); // does not compile
+  // xyYToSe2(Eigen::Matrix<S,4,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
-    REQUIRE_NO_ASSERT(xyYTose2(Eigen::MatrixX<S>(3, 1)));
-    REQUIRE_ASSERT(xyYTose2(Eigen::MatrixX<S>(1, 2)));  // throws, wrong size
-    REQUIRE_ASSERT(xyYTose2(Eigen::MatrixX<S>(2, 1)));  // throws, wrong size
+    REQUIRE_NO_ASSERT(xyYToSe2(Eigen::MatrixX<S>(3, 1)));
+    REQUIRE_ASSERT(xyYToSe2(Eigen::MatrixX<S>(1, 2)));  // throws, wrong size
+    REQUIRE_ASSERT(xyYToSe2(Eigen::MatrixX<S>(2, 1)));  // throws, wrong size
 
-    REQUIRE_NO_ASSERT(xyYTose2(Eigen::MatrixX<S>(4, 5).block(0, 0, 3, 1)));
-    REQUIRE_NO_ASSERT(xyYTose2(Eigen::VectorX<S>(10).segment(0, 3)));
-    REQUIRE_ASSERT(xyYTose2(Eigen::MatrixX<S>(6, 10).block(0, 0, 1, 2)));
-    REQUIRE_ASSERT(xyYTose2(Eigen::MatrixX<S>(2, 2).block(0, 0, 2, 1)));
-    REQUIRE_ASSERT(xyYTose2(Eigen::VectorX<S>(10).segment(0, 2)));
+    REQUIRE_NO_ASSERT(xyYToSe2(Eigen::MatrixX<S>(4, 5).block(0, 0, 3, 1)));
+    REQUIRE_NO_ASSERT(xyYToSe2(Eigen::VectorX<S>(10).segment(0, 3)));
+    REQUIRE_ASSERT(xyYToSe2(Eigen::MatrixX<S>(6, 10).block(0, 0, 1, 2)));
+    REQUIRE_ASSERT(xyYToSe2(Eigen::MatrixX<S>(2, 2).block(0, 0, 2, 1)));
+    REQUIRE_ASSERT(xyYToSe2(Eigen::VectorX<S>(10).segment(0, 2)));
   }
 }
 
-TEMPLATE_TEST_CASE("SE2 test - xyYTose2, xyY wrong", "[SE2]", float32_t,
+TEMPLATE_TEST_CASE("SE2 test - se2ToxyY, se2 wrong", "[SE2]", float32_t,
                    float64_t) {
   using S = TestType;
 
