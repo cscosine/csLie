@@ -150,4 +150,46 @@ TEMPLATE_TEST_CASE("SO3 test - from/to RPY", "[SO3]", float32_t, float64_t) {
   }
 }
 
+TEMPLATE_TEST_CASE("SO3 test - from RPY, input is not a 3d vector", "[SO3]",
+                   float32_t, float64_t) {
+  using S = TestType;
+
+  if (csLie::Asserts::isAssertDebugEnabled()) {
+    // throws, wrong matrix size
+    REQUIRE_ASSERT(rpyToSo3(Eigen::MatrixX<S>(3, 2)));
+    REQUIRE_ASSERT(rpyToSo3(Eigen::MatrixX<S>(1, 3)));
+    REQUIRE_ASSERT(rpyToSo3(Eigen::MatrixX<S>(2, 1)));
+
+    Eigen::MatrixX<S> m10x10 = Eigen::MatrixX<S>::Identity(10, 10);
+    REQUIRE_NO_ASSERT(rpyToSo3(
+        m10x10.block(0, 0, 3, 1)));  // ok (is also a valid rotation matrix)!
+
+    REQUIRE_ASSERT(rpyToSo3(Eigen::MatrixX<S>(4, 4).block(0, 0, 3, 2)));
+    REQUIRE_ASSERT(rpyToSo3(Eigen::MatrixX<S>(4, 4).block(0, 0, 1, 3)));
+  }
+}
+
+TEMPLATE_TEST_CASE("SO3 test - to RPY, input is not a rotation matrix", "[SO3]",
+                   float32_t, float64_t) {
+  using S = TestType;
+
+  if (csLie::Asserts::isAssertDebugEnabled()) {
+    // throws, wrong matrix size
+    REQUIRE_ASSERT(so3ToRPY(Eigen::MatrixX<S>(3, 4)));
+    REQUIRE_ASSERT(so3ToRPY(Eigen::MatrixX<S>(2, 3)));
+
+    Eigen::MatrixX<S> m10x10 = Eigen::MatrixX<S>::Identity(10, 10);
+    REQUIRE_NO_ASSERT(so3ToRPY(
+        m10x10.block(0, 0, 3, 3)));  // ok (is also a valid rotation matrix)!
+
+    REQUIRE_ASSERT(so3ToRPY(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 3)));
+    REQUIRE_ASSERT(so3ToRPY(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 1)));
+  }
+
+  if (csLie::Asserts::isAssertParanoidEnabled()) {
+    REQUIRE_ASSERT(so3ToRPY(
+        Eigen::Matrix3<S>::Zero()));  // throws, zero is not a rotation matrix
+  }
+}
+
 }  // namespace csLie
