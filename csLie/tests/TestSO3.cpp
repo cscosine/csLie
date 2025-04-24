@@ -150,6 +150,68 @@ TEMPLATE_TEST_CASE("SO3 test - from/to RPY", "[SO3]", float32_t, float64_t) {
   }
 }
 
+// reference for RPY conversion
+// https://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
+
+TEMPLATE_TEST_CASE("SO3 test - Gymbal lock", "[SO3]", float32_t, float64_t) {
+  using S = TestType;
+
+  // 90 deg
+  {
+    Eigen::Vector3<S> vy(csCore::math::degToRad(10.0),
+                         csCore::math::degToRad(90.0),
+                         csCore::math::degToRad(-20.0));
+    SO3<S> r1{rpyToSo3(vy)};
+
+    // gymbal on yaw - roll
+
+    vy(0) = csCore::math::degToRad(30.0);
+    vy(2) = csCore::math::degToRad(0.0);
+    SO3<S> r2{rpyToSo3(vy)};
+
+    vy(0) = csCore::math::degToRad(0.0);
+    vy(2) = csCore::math::degToRad(-30.0);
+    SO3<S> r3{rpyToSo3(vy)};
+
+    vy(0) = csCore::math::degToRad(-10.0);
+    vy(2) = csCore::math::degToRad(-40.0);
+    SO3<S> r4{rpyToSo3(vy)};
+
+    REQUIRE((r1 * r2.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+    REQUIRE((r1 * r3.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+    REQUIRE((r1 * r4.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+  }
+
+  // -90 deg
+  {
+    Eigen::Vector3<S> vy(csCore::math::degToRad(10.0),
+                         csCore::math::degToRad(-90.0),
+                         csCore::math::degToRad(20.0));
+    SO3<S> r1{rpyToSo3(vy)};
+
+    // gymbal on yaw + roll
+
+    vy(0) = csCore::math::degToRad(30.0);
+    vy(2) = csCore::math::degToRad(0.0);
+    SO3<S> r2{rpyToSo3(vy)};
+
+    std::cout << "r1 " << std::endl << r1 << std::endl;
+    std::cout << "r2 " << std::endl << r2 << std::endl;
+
+    vy(0) = csCore::math::degToRad(0.0);
+    vy(2) = csCore::math::degToRad(30.0);
+    SO3<S> r3{rpyToSo3(vy)};
+
+    vy(0) = csCore::math::degToRad(-10.0);
+    vy(2) = csCore::math::degToRad(40.0);
+    SO3<S> r4{rpyToSo3(vy)};
+
+    REQUIRE((r1 * r2.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+    REQUIRE((r1 * r3.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+    REQUIRE((r1 * r4.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+  }
+}
+
 TEMPLATE_TEST_CASE("SO3 test - from RPY, input is not a 3d vector", "[SO3]",
                    float32_t, float64_t) {
   using S = TestType;
