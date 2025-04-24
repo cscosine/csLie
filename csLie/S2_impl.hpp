@@ -36,10 +36,10 @@ S2<typename Derived::Scalar> s2Exp(Eigen::MatrixBase<Derived> const& delta) {
     static constexpr size_t N{7};
     static constexpr size_t HALF_N{N / 2};
     static_assert(HALF_N == 3, "check N / 2 = 3 failed... did you changed it?");
-    // TODO(sc) move to a static const expr
-    static const std::array<S, N> inv = {S(1 / 3.), S(1 / 4.), S(1 / 5.),
-                                         S(1 / 6.), S(1 / 7.), S(1 / 8.),
-                                         S(1 / 9.)};
+
+    static constexpr std::array<S, N> inv = {S(1 / 3.), S(1 / 4.), S(1 / 5.),
+                                             S(1 / 6.), S(1 / 7.), S(1 / 8.),
+                                             S(1 / 9.)};
     S cosi = 1.;
     S sinci = 1.;
     S term = -1 / 2. * norm2;

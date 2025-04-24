@@ -1,5 +1,6 @@
 #include <Eigen/Dense>  // for determinant
 #include <catch2/catch_all.hpp>
+#include <csCore/eigenUtils/RotationMatrix_impl.hpp>
 #include <csCore/testUtils/AssertCatch2.hpp>
 #include <csLie/Constants.hpp>
 #include <csLie/S2_impl.hpp>
@@ -28,7 +29,7 @@ TEMPLATE_TEST_CASE("S2 test - base", "[S2]", float32_t, float64_t) {
   // create rotation matrix from v
   SO3<S> const Rv = s2toZAlignedSO3(v);
   // check is a valid 3d rot matrix
-  // checkValidRotationMatrix<S>(Rv); TODO(sc) add this function in SO3
+  REQUIRE(csCore::eigenUtils::isValidRotationMatrix3D(Rv));
   // and its first column is v
   REQUIRE((Rv.col(0) - v).isZero());
 

@@ -16,13 +16,6 @@ SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<Derived> const& delta);
 
 /*
 TODO(sc) implement log in SE2
-/// @brief check if a matrix is a valid rotation matrix, i.e., det(R) = 1, R*R^T
-/// = I and R^T*R = I, withing a tolerance
-/// @tparam Derived template to support generic matrix
-/// @param rot the rotation matrix
-/// @throw if rotation part of the transformation is not a 2x2 matrix (DEBUG
-only), if rotation part of the transformation is  not a rotation
-/// matrix within default precision (PARANOID)
 template <class Derived>
 typename Derived::Scalar se2Log(Eigen::MatrixBase<Derived> const& trans);
 */
