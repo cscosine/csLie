@@ -94,4 +94,13 @@ using SO3d = SO3<float64_t>;
 /// @brief convenient typedef for float32_t
 using SO3f = SO3<float32_t>;
 
+/// @brief SO3 algebra, a 3D vector
+/// @tparam S the scalar type
+template <class S>
+using SO3Alg = Eigen::Matrix<S, 3, 1>;
+/// @brief convenient typedef for float64_t
+using SO3Algd = SO3Alg<float64_t>;
+/// @brief convenient typedef for float32_t
+using SO3Algf = SO3Alg<float32_t>;
+
 }  // namespace csLie

@@ -178,9 +178,9 @@ TEMPLATE_TEST_CASE("S2 test - plane fitting", "[S2]", float32_t, float64_t) {
     REQUIRE(chi2 < initial_chi2);
   }
 
-  if (perturbedInitialization) {
-    // if the init is perturbed, we expect that the final estimation is closer
-    // to GT
+  if (perturbedInitialization && !pointsNoisedFlag) {
+    // if the init is perturbed, but no noise on points, we expect that the
+    // final estimation is closer to GT
     S const dotInitial = estNormalInitial.dot(normalGT);
     S const dotFinal = estNormal.dot(normalGT);
     REQUIRE(dotFinal > dotInitial);

@@ -8,6 +8,137 @@
 
 namespace csLie {
 
+template <class Derived>
+SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const& delta) {
+  using S = typename Derived::Scalar;
+  CSLIE_ASSERT_DEBUG(
+      csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()),
+      "delta required to be 3x1");
+
+  SO3Alg<S> const w2 = delta.cwiseAbs2();
+  S const theta_sq = w2.sum();  // sum of the squares
+  S const theta = std::sqrt(theta_sq);
+
+  S a, b;
+  if (theta < Constants<S>::epsilon) {
+    a = static_cast<S>(1.0) -
+        theta_sq * (static_cast<S>(1.0 / 6.0) +
+                    theta_sq * static_cast<S>(1.0 / 120.0));
+    b = static_cast<S>(0.5) -
+        theta_sq * (static_cast<S>(1.0 / 24.0) -
+                    theta_sq * static_cast<S>(1.0 / 720.0));
+  } else {
+    a = sin(theta) / theta;
+    b = (static_cast<S>(1.0) - cos(theta)) / theta_sq;
+  }
+
+  SO3<S> R;
+
+  R(0, 0) = 1 - b * (w2(1) + w2(2));
+  R(1, 1) = 1 - b * (w2(0) + w2(2));
+  R(2, 2) = 1 - b * (w2(0) + w2(1));
+
+  const S Bab = b * delta(0, 0) * delta(1, 0);
+  const S Bac = b * delta(0, 0) * delta(2, 0);
+  const S Bbc = b * delta(1, 0) * delta(2, 0);
+
+  R(0, 1) = Bab - a * delta(2, 0);
+  R(1, 0) = Bab + a * delta(2, 0);
+  R(0, 2) = Bac + a * delta(1, 0);
+  R(2, 0) = Bac - a * delta(1, 0);
+  R(1, 2) = Bbc - a * delta(0, 0);
+  R(2, 1) = Bbc + a * delta(0, 0);
+
+  return R;
+}
+
+namespace detail {
+template <typename T>
+int signum(T val) {
+  return (static_cast<T>(0) < val) - (val < static_cast<T>(0));
+}
+}  // namespace detail
+
+// TODO(sc) references for better impl
+// https://pettni.github.io/smooth/index.html
+// https://github.com/strasdat/Sophus
+// https://github.com/farm-ng/farm-ng-core/tree/cygnet-dev (aka Sophus 2.0)
+
+template <class Derived>
+Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(
+    Eigen::MatrixBase<Derived> const& rot) {
+  using S = typename Derived::Scalar;
+
+  CSLIE_ASSERT_DEBUG(
+      csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO3<S>()),
+      "rot required to be 3x3");
+  CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidRotationMatrix3D(rot),
+                        "rot is not a valid rotation matrix");
+
+  SO3Alg<S> ret;
+  ret(0) = S(0.5) * (rot(2, 1) - rot(1, 2));
+  ret(1) = S(0.5) * (rot(0, 2) - rot(2, 0));
+  ret(2) = S(0.5) * (rot(1, 0) - rot(0, 1));
+
+  S const ct = static_cast<S>(0.5) * (rot.trace() - 1);
+  S const st2 = ret.cwiseAbs2().sum();
+  S const st = std::sqrt(st2);
+
+  // TODO(sc) find better constants / better impl
+  static constexpr S almostOne{0.999856};
+  static constexpr S almostMinusOne{-0.999856};
+
+  if (ct > almostOne) {
+    // special case at 1
+    const S f = 1 + st2 * (static_cast<S>(1.0 / 6.0) +
+                           st2 * (static_cast<S>(3.0 / 40.0) +
+                                  st2 * static_cast<S>(5.0 / 112.0)));
+    ret *= f;
+  } else if (ct > almostMinusOne) {
+    // standard case
+    const S theta = std::acos(ct);
+    const S f = theta / st;
+    ret *= f;
+  } else {
+    // special case at -1
+    const S theta = Constants<S>::pi - std::asin(st);
+    const S invB = (theta * theta) / (1 - ct);
+
+    const S w00 = invB * (rot(0, 0) - ct);
+    const S w11 = invB * (rot(1, 1) - ct);
+    const S w22 = invB * (rot(2, 2) - ct);
+
+    const S w01 = invB * S(0.5) * (rot(1, 0) + rot(0, 1));
+    const S w02 = invB * S(0.5) * (rot(2, 0) + rot(0, 2));
+    const S w12 = invB * S(0.5) * (rot(2, 1) + rot(1, 2));
+
+    if (w00 > w11) {
+      if (w00 > w22) {
+        ret(0) = detail::signum(ret(0)) * std::sqrt(w00);
+        const S inv_w0 = 1.0 / ret(0);
+        ret(1) = w01 * inv_w0;
+        ret(2) = w02 * inv_w0;
+      } else {
+        ret(2) = detail::signum(ret(2)) * std::sqrt(w22);
+        const S inv_w2 = 1 / ret(2);
+        ret(0) = w02 * inv_w2;
+        ret(1) = w12 * inv_w2;
+      }
+    } else if (w11 > w22) {
+      ret(1) = detail::signum(ret(1)) * std::sqrt(w11);
+      const S inv_w1 = 1 / ret(1);
+      ret(0) = w01 * inv_w1;
+      ret(2) = w12 * inv_w1;
+    } else {
+      ret(2) = detail::signum(ret(2)) * std::sqrt(w22);
+      const S inv_w2 = 1 / ret(2);
+      ret(0) = w02 * inv_w2;
+      ret(1) = w12 * inv_w2;
+    }
+  }
+  return ret;
+}
+
 // reference for RPY conversion
 // https://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
 template <class Derived>

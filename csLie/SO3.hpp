@@ -5,12 +5,29 @@
 
 namespace csLie {
 
+/// @brief compute the exp of a so3 algebra to a SO3
+/// @tparam Derived template to support generic matrix
+/// @param delta a 3d vector representing the so2 algebra vector
+/// @return the rotation matrix in SO3 from the algebra vector in so3
+/// @throw if delta is not a 3x1 matrix
+template <class Derived>
+SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const& delta);
+
+/// @brief compute the log of a SO3 rotation to a so3 vector
+/// @tparam Derived template to support generic matrix
+/// @param rot the rotation matrix
+/// @throw if rot is not a 3x3 matrix (DEBUG only), if rot is not a rotation
+/// matrix within default precision (PARANOID)
+template <class Derived>
+Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(
+    Eigen::MatrixBase<Derived> const& rot);
+
 /// @brief compute the RPY (roll pitch yaw) angles of a SO3 rotation
 /// RPY are expressed as Euler angles so that R = rotZ(yaw) * rotY(pitch) *
 /// rotY(roll)
 /// Note: there are always two valid RPY for a rotation matrix,
 /// this function returns the solution of so3ToRPYPair with pitch extracted as
-/// asin(R(2,0)). In case a gymbal lock is detected, the solution with roll=0.
+/// asin(R(2,0)). In case a gymbal lock is detected, the solution with yaw=0.
 /// is returned.
 /// @tparam Derived template to support generic matrix
 /// @param rot the rotation matrix
