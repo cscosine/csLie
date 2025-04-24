@@ -229,7 +229,7 @@ TEMPLATE_TEST_CASE("S2 test - assertions", "[S2]", float32_t, float64_t) {
     REQUIRE_ASSERT(s2toZAlignedSO3(v4));
     REQUIRE_ASSERT(s2_d_oplus_d_delta_0(v4));
 
-    Eigen::VectorX<S> v10(10);
+    Eigen::VectorX<S> v10 = Eigen::VectorX<S>::Zero(10);
     v10(0) = 1;
     REQUIRE_NO_ASSERT(s2toZAlignedSO3(v10.segment(0, 3)));
     REQUIRE_ASSERT(s2toZAlignedSO3(v10.segment(0, 4)));
