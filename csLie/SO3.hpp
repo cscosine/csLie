@@ -2,14 +2,16 @@
 
 #include <Eigen/Core>
 #include <csLie/Types.hpp>
-#include <type_traits>
 
 namespace csLie {
 
 /// @brief compute the RPY (roll pitch yaw) angles of a SO3 rotation
 /// RPY are expressed as Euler angles so that R = rotZ(yaw) * rotY(pitch) *
-/// rotY(roll) note, in case a gymbal lock is detected, the solution with roll=0
-/// is returned
+/// rotY(roll)
+/// Note: there are always two valid RPY for a rotation matrix,
+/// this function returns the solution of so3ToRPYPair with pitch extracted as
+/// asin(R(2,0)). In case a gymbal lock is detected, the solution with roll=0.
+/// is returned.
 /// @tparam Derived template to support generic matrix
 /// @param rot the rotation matrix
 /// @throw if rot is not a 3x3 matrix (DEBUG only), if rot is not a rotation

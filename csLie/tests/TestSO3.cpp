@@ -128,9 +128,13 @@ TEMPLATE_TEST_CASE("SO3 test - from/to RPY", "[SO3]", float32_t, float64_t) {
     Eigen::Vector3<S> vy = so3ToRPY(ry);
     Eigen::Vector3<S> vx = so3ToRPY(rx);
 
-    REQUIRE((vz_gt - vz).isZero());
-    REQUIRE((vy_gt - vy).isZero());
-    REQUIRE((vx_gt - vx).isZero());
+    SO3<S> rvz{rpyToSo3(vz)};
+    SO3<S> rvy{rpyToSo3(vy)};
+    SO3<S> rvx{rpyToSo3(vx)};
+
+    REQUIRE((rz_gt - rvz).isZero());
+    REQUIRE((ry_gt - rvy).isZero());
+    REQUIRE((rx_gt - rvx).isZero());
   }
   // 3 axis
   {
@@ -139,19 +143,17 @@ TEMPLATE_TEST_CASE("SO3 test - from/to RPY", "[SO3]", float32_t, float64_t) {
                         csCore::math::degToRad(82.0));
     SO3<S> r{rpyToSo3(a)};
     Eigen::Vector3<S> a_r{so3ToRPY(r)};
+    SO3<S> r_a_r{rpyToSo3(a_r)};
 
     SO3<S> r_e;
     r_e = Eigen::AngleAxis<S>(a(2), Eigen::Vector3<S>::UnitZ()) *
           Eigen::AngleAxis<S>(a(1), Eigen::Vector3<S>::UnitY()) *
           Eigen::AngleAxis<S>(a(0), Eigen::Vector3<S>::UnitX());
 
-    REQUIRE((a - a_r).isZero());
+    REQUIRE((r_a_r - r).isZero());
     REQUIRE((r - r_e).isZero());
   }
 }
-
-// reference for RPY conversion
-// https://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
 
 TEMPLATE_TEST_CASE("SO3 test - Gymbal lock", "[SO3]", float32_t, float64_t) {
   using S = TestType;
@@ -180,6 +182,22 @@ TEMPLATE_TEST_CASE("SO3 test - Gymbal lock", "[SO3]", float32_t, float64_t) {
     REQUIRE((r1 * r2.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
     REQUIRE((r1 * r3.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
     REQUIRE((r1 * r4.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+
+    Eigen::Vector3<S> v1{so3ToRPY(r1)};
+    SO3<S> rv1{rpyToSo3(v1)};
+    REQUIRE((rv1 * r1.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+
+    Eigen::Vector3<S> v2{so3ToRPY(r2)};
+    SO3<S> rv2{rpyToSo3(v2)};
+    REQUIRE((rv2 * r2.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+
+    Eigen::Vector3<S> v3{so3ToRPY(r3)};
+    SO3<S> rv3{rpyToSo3(v3)};
+    REQUIRE((rv3 * r3.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+
+    Eigen::Vector3<S> v4{so3ToRPY(r4)};
+    SO3<S> rv4{rpyToSo3(v4)};
+    REQUIRE((rv4 * r4.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
   }
 
   // -90 deg
@@ -195,9 +213,6 @@ TEMPLATE_TEST_CASE("SO3 test - Gymbal lock", "[SO3]", float32_t, float64_t) {
     vy(2) = csCore::math::degToRad(0.0);
     SO3<S> r2{rpyToSo3(vy)};
 
-    std::cout << "r1 " << std::endl << r1 << std::endl;
-    std::cout << "r2 " << std::endl << r2 << std::endl;
-
     vy(0) = csCore::math::degToRad(0.0);
     vy(2) = csCore::math::degToRad(30.0);
     SO3<S> r3{rpyToSo3(vy)};
@@ -209,6 +224,22 @@ TEMPLATE_TEST_CASE("SO3 test - Gymbal lock", "[SO3]", float32_t, float64_t) {
     REQUIRE((r1 * r2.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
     REQUIRE((r1 * r3.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
     REQUIRE((r1 * r4.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+
+    Eigen::Vector3<S> v1{so3ToRPY(r1)};
+    SO3<S> rv1{rpyToSo3(v1)};
+    REQUIRE((rv1 * r1.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+
+    Eigen::Vector3<S> v2{so3ToRPY(r2)};
+    SO3<S> rv2{rpyToSo3(v2)};
+    REQUIRE((rv2 * r2.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+
+    Eigen::Vector3<S> v3{so3ToRPY(r3)};
+    SO3<S> rv3{rpyToSo3(v3)};
+    REQUIRE((rv3 * r3.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
+
+    Eigen::Vector3<S> v4{so3ToRPY(r4)};
+    SO3<S> rv4{rpyToSo3(v4)};
+    REQUIRE((rv4 * r4.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
   }
 }
 

@@ -8,6 +8,8 @@
 
 namespace csLie {
 
+// reference for RPY conversion
+// https://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
 template <class Derived>
 Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(
     Eigen::MatrixBase<Derived> const& rot) {
@@ -19,20 +21,31 @@ Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidRotationMatrix3D(rot),
                         "rot is not a valid rotation matrix");
 
-  const S pitch_y = std::atan2(
-      -rot(2, 0), sqrt(rot(2, 1) * rot(2, 1) + rot(2, 2) * rot(2, 2)));
-  S yaw_z, roll_x;
-  if ((Constants<S>::pi - std::abs(pitch_y)) > Constants<S>::epsilon) {
-    // no singularity!
-    yaw_z = std::atan2(rot(1, 0), rot(0, 0));
-    roll_x = std::atan2(rot(2, 1), rot(2, 2));
+  const S sin_pitch{rot(2, 0)};
+  if (std::abs(std::abs(sin_pitch) - static_cast<S>(1.0)) >
+      Constants<S>::epsilon) {
+    const S pitch{-std::asin(rot(2, 0))};
+    const S cos_pitch{std::cos(pitch)};  // can we extract it from the matrix?
+
+    const S roll{std::atan2(rot(2, 1) / cos_pitch, rot(2, 2) / cos_pitch)};
+    const S yaw{std::atan2(rot(1, 0) / cos_pitch, rot(0, 0) / cos_pitch)};
+    return Eigen::Matrix<S, 3, 1>(roll, pitch, yaw);
   } else {
-    // singularity at gymbal lock, set yaw at zero and compute roll
-    yaw_z = 0;
-    roll_x = std::atan2(rot(0, 1), rot(1, 1));
+    if (sin_pitch < 0) {  // ~= -1
+      const S pitch{Constants<S>::pi / static_cast<S>(2.0)};
+      const S yaw = 0;
+      const S roll = std::atan2(rot(0, 1), rot(0, 2));
+      return Eigen::Matrix<S, 3, 1>(roll, pitch, yaw);
+    } else {  // ~= 1
+      const S pitch{-Constants<S>::pi / static_cast<S>(2.0)};
+      const S yaw = 0;
+      const S roll = std::atan2(-rot(0, 1), -rot(0, 2));
+      return Eigen::Matrix<S, 3, 1>(roll, pitch, yaw);
+    }
   }
 
-  return Eigen::Matrix<S, 3, 1>(roll_x, pitch_y, yaw_z);
+  CSLIE_ASSERT_PARANOID(
+      "csLie::so3ToRPY this is a unreachable code, how did you ended up here?");
 }
 
 template <class Derived>
