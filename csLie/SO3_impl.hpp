@@ -175,6 +175,7 @@ Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(
     }
   }
 
+  // TODO(sc) why I cannot use UNREACHABLE here? it does not compile...
   CSLIE_ASSERT_PARANOID(
       "csLie::so3ToRPY this is a unreachable code, how did you ended up here?");
 }
@@ -211,6 +212,22 @@ SO3<typename Derived::Scalar> rpyToSo3(Eigen::MatrixBase<Derived> const& rpy) {
   R(0, 2) = c_a * s_b * c_c + s_a * s_c;
   R(1, 2) = s_a * s_b * c_c - c_a * s_c;
   R(2, 2) = c_b * c_c;
+
+  return R;
+}
+
+template <class Derived>
+Eigen::Matrix<typename Derived::Scalar, 3, 3> skewSymm(
+    Eigen::MatrixBase<Derived> const& v) {
+  using S = typename Derived::Scalar;
+
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(
+                         v, Eigen::Matrix<S, 3, 1>()),
+                     "v required to be 3x1");
+
+  Eigen::Matrix<S, 3, 3> R;
+
+  R << 0, -v(2, 0), v(1, 0), v(2, 0), 0, -v(0, 0), -v(1, 0), v(0, 0), 0;
 
   return R;
 }

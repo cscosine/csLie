@@ -37,7 +37,7 @@ template <class Derived>
 Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(
     Eigen::MatrixBase<Derived> const& rot);
 
-/// @brief compute a SO3 rotation matrxi from RPY (roll pitch yaw) angles
+/// @brief compute a SO3 rotation matrix from RPY (roll pitch yaw) angles
 /// RPY are expressed as Euler angles so that R = rotZ(yaw) * rotY(pitch) *
 /// rotY(roll)
 /// @tparam Derived template to support generic matrix
@@ -45,5 +45,13 @@ Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(
 /// @throw if rpy is not a 3x1 matrix
 template <class Derived>
 SO3<typename Derived::Scalar> rpyToSo3(Eigen::MatrixBase<Derived> const& rpy);
+
+/// @brief return the skew symmetric matrix of a 3d vector
+/// @tparam Derived template to support generic matrix
+/// @param v the vector
+/// @throw if v is not a 3x1 matrix
+template <class Derived>
+Eigen::Matrix<typename Derived::Scalar, 3, 3> skewSymm(
+    Eigen::MatrixBase<Derived> const& v);
 
 }  // namespace csLie
