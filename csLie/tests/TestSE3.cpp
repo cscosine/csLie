@@ -50,6 +50,31 @@ TEMPLATE_TEST_CASE("SE3 test - base", "[SE3]", float32_t, float64_t) {
   // TODO(sc) cover log and exp limit cases
 }
 
+TEMPLATE_TEST_CASE("SE3 test - adjoint", "[SE3]", float32_t, float64_t) {
+  using S = TestType;
+  for (size_t i = 0; i < 100; i++) {
+    SE3Alg<S> const v = SE3Alg<S>::Random();
+    SE3Alg<S> const t = SE3Alg<S>::Random();
+
+    SE3<S> const V = se3Exp(v);
+    SE3<S> const T = se3Exp(t);
+
+    SE3Adj<S> const AdT = se3Adjoint(T);
+
+    SE3<S> const TV = T * V;
+    SE3<S> const expAdTVT = se3Exp(AdT * v) * T;
+
+    SE3<S> expected_eye =
+        expAdTVT *
+        Eigen::Transform<S, 3, Eigen::Isometry>(TV).inverse().matrix();
+    INFO("expAdTVT\n"
+         << expAdTVT << "\n\nTV\n"
+         << TV << "\n\nEye\n"
+         << expected_eye);
+    REQUIRE((expected_eye - SE3<S>::Identity()).isZero());
+  }
+}
+
 // TODO(sc) add a test with optimization in SE3
 
 TEMPLATE_TEST_CASE("SE3 test - exp, delta wrong size", "[SE3]", float32_t,
@@ -92,6 +117,30 @@ TEMPLATE_TEST_CASE("SE3 test - log, input is not a transformation matrix",
   if (csLie::Asserts::isAssertParanoidEnabled()) {
     REQUIRE_ASSERT(se3Log(Eigen::Matrix4<S>::Zero()));  // throws, zero is not a
                                                         // transformation matrix
+  }
+}
+
+TEMPLATE_TEST_CASE("SE3 test - adjoint, input is not a transformation matrix",
+                   "[SE3]", float32_t, float64_t) {
+  using S = TestType;
+
+  if (csLie::Asserts::isAssertDebugEnabled()) {
+    // throws, wrong matrix size
+    REQUIRE_ASSERT(se3Adjoint(Eigen::MatrixX<S>(2, 2)));
+    REQUIRE_ASSERT(se3Adjoint(Eigen::MatrixX<S>(4, 5)));
+
+    Eigen::MatrixX<S> m10x10 = Eigen::MatrixX<S>::Identity(10, 10);
+    REQUIRE_NO_ASSERT(se3Adjoint(m10x10.block(
+        0, 0, 4, 4)));  // ok (is also a valid transformation matrix)!
+
+    REQUIRE_ASSERT(se3Adjoint(Eigen::MatrixX<S>(4, 4).block(0, 0, 4, 3)));
+    REQUIRE_ASSERT(se3Adjoint(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 1)));
+  }
+
+  if (csLie::Asserts::isAssertParanoidEnabled()) {
+    REQUIRE_ASSERT(
+        se3Adjoint(Eigen::Matrix4<S>::Zero()));  // throws, zero is not a
+                                                 // transformation matrix
   }
 }
 

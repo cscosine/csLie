@@ -98,7 +98,7 @@ SE3<typename Derived::Scalar> se3Exp(Eigen::MatrixBase<Derived> const& delta) {
 }
 
 template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 6, 1> se3Log(
+SE3Alg<typename Derived::Scalar> se3Log(
     Eigen::MatrixBase<Derived> const& transf) {
   using S = typename Derived::Scalar;
 
@@ -106,10 +106,10 @@ Eigen::Matrix<typename Derived::Scalar, 6, 1> se3Log(
       csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE3<S>()),
       "transf required to be 4x4");
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix3D(transf),
-                        "rot is not a valid isometry matrix");
+                        "transf is not a valid isometry matrix");
 
   // SO3 log
-  Eigen::Matrix<typename Derived::Scalar, 6, 1> ret;
+  SE3Alg<S> ret;
   ret.template tail<3>() = so3Log(transf.template topLeftCorner<3, 3>());
 
   const S theta_sq = ret.template tail<3>().cwiseAbs2().sum();
@@ -156,4 +156,24 @@ Eigen::Matrix<typename Derived::Scalar, 6, 1> se3Log(
   return ret;
 }
 
+template <class Derived>
+SE3Adj<typename Derived::Scalar> se3Adjoint(
+    Eigen::MatrixBase<Derived> const& transf) {
+  using S = typename Derived::Scalar;
+
+  CSLIE_ASSERT_DEBUG(
+      csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE3<S>()),
+      "transf required to be 4x4");
+  CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix3D(transf),
+                        "transf is not a valid isometry matrix");
+
+  SE3Adj<S> ad;
+  ad.template topLeftCorner<3, 3>() = transf.template topLeftCorner<3, 3>();
+  ad.template topRightCorner<3, 3>() =
+      skewSymm(transf.template topRightCorner<3, 1>()) *
+      transf.template topLeftCorner<3, 3>();
+  ad.template bottomRightCorner<3, 3>() = transf.template topLeftCorner<3, 3>();
+  ad.template bottomLeftCorner<3, 3>().setZero();
+  return ad;
+}
 }  // namespace csLie

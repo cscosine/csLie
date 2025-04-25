@@ -125,6 +125,15 @@ using SE3Algd = SE3Alg<float64_t>;
 /// @brief convenient typedef for float32_t
 using SE3Algf = SE3Alg<float32_t>;
 
+/// @brief SE3 andjoint matrix, a 6x6 vector
+/// @tparam S the scalar type
+template <class S>
+using SE3Adj = Eigen::Matrix<S, 6, 6>;
+/// @brief convenient typedef for float64_t
+using SE3Adjd = SE3Adj<float64_t>;
+/// @brief convenient typedef for float32_t
+using SE3Adjf = SE3Adj<float32_t>;
+
 // ------------ Utils ------------
 
 /// @brief a struct containing a unit vector and the jacobian computed to
