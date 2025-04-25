@@ -103,4 +103,19 @@ using SO3Algd = SO3Alg<float64_t>;
 /// @brief convenient typedef for float32_t
 using SO3Algf = SO3Alg<float32_t>;
 
+// ------------ Utils ------------
+
+/// @brief a struct containing a unit vector and the jacobian computed to
+/// normalize the input vector, used as return type of
+/// normalize3dVectorWithJacobians
+template <class S>
+struct UnitVector3dWithJacobians {
+  Eigen::Matrix<S, 3, 1> vo;
+  Eigen::Matrix<S, 3, 3> d_vo_d_v;
+};
+/// @brief convenient typedef for float64_t
+using UnitVector3dWithJacobiansd = UnitVector3dWithJacobians<float64_t>;
+/// @brief convenient typedef for float32_t
+using UnitVector3dWithJacobiansf = UnitVector3dWithJacobians<float32_t>;
+
 }  // namespace csLie
