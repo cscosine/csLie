@@ -65,12 +65,25 @@ using SO2Algf = SO2Alg<float32_t>;
 
 // ------------ SE2 ------------
 
+/// @brief SE2 = 2D transformation matrix, inside it is a 3x3 matrix, top left
+/// 2x2 rotation, last column translation, last row 0 0 1 note, there are no
+/// guarantees that SE2 is a proper rotation matrix, is up to the user to keep
+/// it coherent
+/// @tparam S the scalar type
 template <class S>
 using SE2 = Eigen::Transform<S, 2, Eigen::Isometry>;
 /// @brief convenient typedef for float64_t
 using SE2d = SE2<float64_t>;
 /// @brief convenient typedef for float32_t
 using SE2f = SE2<float32_t>;
+
+/// @brief SE2 in matrix form
+template <class S>
+using SE2Matrix = Eigen::Matrix<S, 3, 3>;
+/// @brief convenient typedef for float64_t
+using SE2Matrixd = SE2Matrix<float64_t>;
+/// @brief convenient typedef for float32_t
+using SE2Matrixf = SE2Matrix<float32_t>;
 
 /// @brief SE2 algebra, a 3D vector
 /// @tparam S the scalar type
@@ -110,11 +123,19 @@ using SO3Algf = SO3Alg<float32_t>;
 /// is a proper rotation matrix, is up to the user to keep it coherent
 /// @tparam S the scalar type
 template <class S>
-using SE3 = Eigen::Matrix<S, 4, 4>;
+using SE3 = Eigen::Transform<S, 3, Eigen::Isometry>;
 /// @brief convenient typedef for float64_t
 using SE3d = SE3<float64_t>;
 /// @brief convenient typedef for float32_t
 using SE3f = SE3<float32_t>;
+
+/// @brief SE3 in matrix form
+template <class S>
+using SE3Matrix = Eigen::Matrix<S, 4, 4>;
+/// @brief convenient typedef for float64_t
+using SE3Matrixd = SE3Matrix<float64_t>;
+/// @brief convenient typedef for float32_t
+using SE3Matrixf = SE3Matrix<float32_t>;
 
 /// @brief SE3 algebra, a 6D vector
 /// @tparam S the scalar type

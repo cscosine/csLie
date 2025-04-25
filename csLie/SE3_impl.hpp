@@ -91,7 +91,7 @@ SE3<typename Derived::Scalar> se3Exp(Eigen::MatrixBase<Derived> const& delta) {
                    tmp14 * tmp5 * tmp7 + delta(2, 0);
   }
 
-  transf.row(3).template head<3>().setZero();
+  transf.matrix().row(3).template head<3>().setZero();
   transf(3, 3) = 1;
 
   return transf;
@@ -103,7 +103,7 @@ SE3Alg<typename Derived::Scalar> se3Log(
   using S = typename Derived::Scalar;
 
   CSLIE_ASSERT_DEBUG(
-      csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE3<S>()),
+      csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE3Matrix<S>()),
       "transf required to be 4x4");
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix3D(transf),
                         "transf is not a valid isometry matrix");
@@ -156,13 +156,18 @@ SE3Alg<typename Derived::Scalar> se3Log(
   return ret;
 }
 
+template <class S>
+SE3Alg<S> se3Log(SE3<S> const& transf) {
+  return se3Log(transf.matrix());
+}
+
 template <class Derived>
 SE3Adj<typename Derived::Scalar> se3Adjoint(
     Eigen::MatrixBase<Derived> const& transf) {
   using S = typename Derived::Scalar;
 
   CSLIE_ASSERT_DEBUG(
-      csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE3<S>()),
+      csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE3Matrix<S>()),
       "transf required to be 4x4");
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix3D(transf),
                         "transf is not a valid isometry matrix");
@@ -176,4 +181,10 @@ SE3Adj<typename Derived::Scalar> se3Adjoint(
   ad.template bottomLeftCorner<3, 3>().setZero();
   return ad;
 }
+
+template <class S>
+SE3Adj<S> se3Adjoint(SE3<S> const& transf) {
+  return se3Adjoint(transf.matrix());
+}
+
 }  // namespace csLie

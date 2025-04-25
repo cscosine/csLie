@@ -32,7 +32,7 @@ SE2<typename Derived::Scalar> xyYToSe2(Eigen::MatrixBase<Derived> const& xyY);
 /// @brief extract translation (x y) and angle (Y) from a se2
 /// @tparam Derived template to support generic matrix
 /// @param transf a 3x3 matrix representing a isometry
-/// @return the xyY vector, with a two element translation foloowed by the angle
+/// @return the xyY vector, with a two element translation followed by the angle
 /// @throw if transf is not a 3x3 valid isometry transformation
 template <class Derived>
 Eigen::Vector3<typename Derived::Scalar> se2ToxyY(
@@ -41,7 +41,7 @@ Eigen::Vector3<typename Derived::Scalar> se2ToxyY(
 /// @brief extract translation (x y) and angle (Y) from a se2
 /// @tparam S the scalar type
 /// @param transf a SE2, i.e., a Eigen::Transform<2, Isometry>
-/// @return the xyY vector, with a two element translation foloowed by the angle
+/// @return the xyY vector, with a two element translation followed by the angle
 /// @throw if transf is not a 3x3 valid isometry transformation
 template <class S>
 Eigen::Vector3<S> se2ToxyY(SE2<S> const& transf);

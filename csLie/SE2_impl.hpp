@@ -76,9 +76,9 @@ Eigen::Vector3<typename Derived::Scalar> se2ToxyY(
     Eigen::MatrixBase<Derived> const& transf) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(
-                         transf, Eigen::Matrix<S, 3, 3>()),
-                     "transf required to be 3x3");
+  CSLIE_ASSERT_DEBUG(
+      csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE2Matrix<S>()),
+      "transf required to be 3x3");
 
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix2D(transf),
                         "transf is not a valid isometry matrix");
@@ -88,11 +88,6 @@ Eigen::Vector3<typename Derived::Scalar> se2ToxyY(
   return xyY;
 }
 
-/// @brief extract translation (x y) and angle (Y) from a se2
-/// @tparam S the scalar type
-/// @param transf a SE2, i.e., a Eigen::Transform<2, Isometry>
-/// @return the xyY vector, with a two element translation foloowed by the angle
-/// @throw if transf is not a 3x3 valid isometry transformation
 template <class S>
 Eigen::Vector3<S> se2ToxyY(SE2<S> const& transf) {
   return se2ToxyY(transf.matrix());

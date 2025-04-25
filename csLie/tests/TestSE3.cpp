@@ -18,7 +18,7 @@ TEMPLATE_TEST_CASE("SE3 test - base", "[SE3]", float32_t, float64_t) {
 
   // exp the zero algebra, it has to be the identity matrix
   SE3<S> const exp0{se3Exp(d0)};
-  REQUIRE((exp0 - rI).isZero());
+  REQUIRE((exp0.matrix() - rI.matrix()).isZero());
 
   S const PRECISION = Constants<S>::dummy_precision;
 
@@ -31,19 +31,18 @@ TEMPLATE_TEST_CASE("SE3 test - base", "[SE3]", float32_t, float64_t) {
 
     SE3<S> const R = se3Exp(randV);
 
-    REQUIRE(csCore::eigenUtils::isValidIsometryMatrix3D(R));
+    REQUIRE(csCore::eigenUtils::isValidIsometryMatrix3D(R.matrix()));
 
     // log(exp(d)) = d
     SE3Alg<S> const logV = se3Log(R);
 
     SE3<S> const RlogV = se3Exp(logV);
-    INFO(RlogV << "\n\n" << R << "\n\n" << R - RlogV);
-    REQUIRE((RlogV - R).isZero());
+    REQUIRE((RlogV.matrix() - R.matrix()).isZero());
 
     // exp(log(exp(d))) * exp(d)^T = I
     Eigen::Transform<S, 3, Eigen::Isometry> check{se3Exp(randV)};
-    REQUIRE(((se3Exp(se3Log(se3Exp(randV))) * check.inverse().matrix()) -
-             SE3<S>::Identity())
+    REQUIRE(((se3Exp(se3Log(se3Exp(randV))) * check.inverse()).matrix() -
+             SE3<S>::Identity().matrix())
                 .isZero());
   }
 
@@ -65,13 +64,8 @@ TEMPLATE_TEST_CASE("SE3 test - adjoint", "[SE3]", float32_t, float64_t) {
     SE3<S> const expAdTVT = se3Exp(AdT * v) * T;
 
     SE3<S> expected_eye =
-        expAdTVT *
-        Eigen::Transform<S, 3, Eigen::Isometry>(TV).inverse().matrix();
-    INFO("expAdTVT\n"
-         << expAdTVT << "\n\nTV\n"
-         << TV << "\n\nEye\n"
-         << expected_eye);
-    REQUIRE((expected_eye - SE3<S>::Identity()).isZero());
+        expAdTVT * Eigen::Transform<S, 3, Eigen::Isometry>(TV).inverse();
+    REQUIRE((expected_eye.matrix() - SE3<S>::Identity().matrix()).isZero());
   }
 }
 

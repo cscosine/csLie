@@ -19,8 +19,15 @@ SE3<typename Derived::Scalar> se3Exp(Eigen::MatrixBase<Derived> const& delta);
 /// @throw if transf is not a 4x4 matrix (DEBUG only), if transf is not a
 /// isometry matrix within default precision (PARANOID)
 template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 6, 1> se3Log(
+SE3Alg<typename Derived::Scalar> se3Log(
     Eigen::MatrixBase<Derived> const& transf);
+
+/// @brief se3Log, but accepting a SE3<S> i.e., a Eigen::Transform<3, Isometry>
+/// @tparam S the scalar type
+/// @param transf a SE3, i.e., a Eigen::Transform<3, Isometry>
+/// @throw if transf is not a 3x3 valid isometry transformation
+template <class S>
+SE3Alg<S> se3Log(SE3<S> const& transf);
 
 /// @brief compute the adjoint of a SE3 transformation
 /// @tparam Derived template to support generic matrix
@@ -28,7 +35,12 @@ Eigen::Matrix<typename Derived::Scalar, 6, 1> se3Log(
 /// @throw if transf is not a 4x4 matrix (DEBUG only), if transf is not a
 /// isometry matrix within default precision (PARANOID)
 template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 6, 6> se3Adjoint(
+SE3Adj<typename Derived::Scalar> se3Adjoint(
     Eigen::MatrixBase<Derived> const& transf);
+
+/// @brief se3Adjoint, but accepting a SE3<S> i.e., a Eigen::Transform<3,
+/// Isometry>
+template <class S>
+SE3Adj<S> se3Adjoint(SE3<S> const& transf);
 
 }  // namespace csLie
