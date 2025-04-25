@@ -18,6 +18,8 @@ TEMPLATE_TEST_CASE("SE2 test - base", "[SE2]", float32_t, float64_t) {
 
   // exp the zero algebra, it has to be the identity matrix
   SE2<S> const exp0{se2Exp(d0)};
+  REQUIRE(csCore::eigenUtils::isValidIsometryMatrix2D(exp0));
+
   REQUIRE((exp0.matrix() - rI.matrix()).isZero());
 
   // exp the 90deg (M_PI / 2) with a transl, expect [0 -1; 1 0] in rotation
@@ -25,6 +27,8 @@ TEMPLATE_TEST_CASE("SE2 test - base", "[SE2]", float32_t, float64_t) {
   S const y = 20;
   S const theta = csCore::math::degToRad(90.0);
   SE2<S> const exp90{se2Exp(SE2Alg<S>(x, y, theta))};
+  REQUIRE(csCore::eigenUtils::isValidIsometryMatrix2D(exp90));
+
   SE2<S> exp90_gt{};
 
   S const sinTh_Th = 1.0 / theta;

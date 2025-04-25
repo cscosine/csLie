@@ -29,15 +29,15 @@ TEMPLATE_TEST_CASE("SE3 test - base", "[SE3]", float32_t, float64_t) {
   for (size_t i = 0; i < 100; i++) {
     SE3Alg<S> const randV = SE3Alg<S>::Random() * 4 * Constants<S>::pi;
 
-    SE3<S> const R = se3Exp(randV);
-
-    REQUIRE(csCore::eigenUtils::isValidIsometryMatrix3D(R.matrix()));
+    SE3<S> const T = se3Exp(randV);
+    REQUIRE(csCore::eigenUtils::isValidIsometryMatrix3D(T));
 
     // log(exp(d)) = d
-    SE3Alg<S> const logV = se3Log(R);
+    SE3Alg<S> const logV = se3Log(T);
 
-    SE3<S> const RlogV = se3Exp(logV);
-    REQUIRE((RlogV.matrix() - R.matrix()).isZero());
+    SE3<S> const TlogV = se3Exp(logV);
+    REQUIRE(csCore::eigenUtils::isValidIsometryMatrix3D(TlogV));
+    REQUIRE((TlogV.matrix() - T.matrix()).isZero());
 
     // exp(log(exp(d))) * exp(d)^T = I
     Eigen::Transform<S, 3, Eigen::Isometry> check{se3Exp(randV)};
@@ -56,7 +56,9 @@ TEMPLATE_TEST_CASE("SE3 test - adjoint", "[SE3]", float32_t, float64_t) {
     SE3Alg<S> const t = SE3Alg<S>::Random();
 
     SE3<S> const V = se3Exp(v);
+    REQUIRE(csCore::eigenUtils::isValidIsometryMatrix3D(V));
     SE3<S> const T = se3Exp(t);
+    REQUIRE(csCore::eigenUtils::isValidIsometryMatrix3D(T));
 
     SE3Adj<S> const AdT = se3Adjoint(T);
 
