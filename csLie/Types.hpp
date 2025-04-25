@@ -107,6 +107,35 @@ using SO3d = SO3<float64_t>;
 /// @brief convenient typedef for float32_t
 using SO3f = SO3<float32_t>;
 
+/// @brief SO3J a 3x3 matrix
+/// @tparam S the scalar type
+template <class S>
+using SO3J = Eigen::Matrix<S, 3, 3>;
+/// @brief convenient typedef for float64_t
+using SO3Jd = SO3J<float64_t>;
+/// @brief convenient typedef for float32_t
+using SO3Jf = SO3J<float32_t>;
+
+/// @brief SO3J a 3x3 matrix
+/// @tparam S the scalar type
+template <class S>
+using SO3Jinv = Eigen::Matrix<S, 3, 3>;
+/// @brief convenient typedef for float64_t
+using SO3Jinvd = SO3Jinv<float64_t>;
+/// @brief convenient typedef for float32_t
+using SO3Jinvf = SO3Jinv<float32_t>;
+
+/// @brief SO3 = 3D rotation matrix, a 3x3 matrix orthogonal with det = 1
+/// note, there are no guarantees that SO3 is a proper rotation matrix, is up to
+/// the user to keep it coherent
+/// @tparam S the scalar type
+template <class S>
+using SO3 = Eigen::Matrix<S, 3, 3>;
+/// @brief convenient typedef for float64_t
+using SO3d = SO3<float64_t>;
+/// @brief convenient typedef for float32_t
+using SO3f = SO3<float32_t>;
+
 /// @brief SO3 algebra, a 3D vector
 /// @tparam S the scalar type
 template <class S>

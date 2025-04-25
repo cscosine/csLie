@@ -37,7 +37,7 @@ TEMPLATE_TEST_CASE("SO3 test - base", "[SO3]", float32_t, float64_t) {
 
   // randomized tests
   for (size_t i = 0; i < 100; i++) {
-    SO3Alg<S> const randV = SO3Alg<S>::Random() * 4 * Constants<S>::pi;
+    SO3Alg<S> const randV = SO3Alg<S>::Random();
 
     SO3<S> const R = so3Exp(randV);
 
@@ -47,19 +47,33 @@ TEMPLATE_TEST_CASE("SO3 test - base", "[SO3]", float32_t, float64_t) {
     SO3Alg<S> const logV = so3Log(R);
 
     SO3<S> const RlogV = so3Exp(logV);
-    INFO(RlogV << "\n\n" << R << "\n\n" << R - RlogV);
     REQUIRE((RlogV - R).isZero());
 
     // exp(log(exp(d))) * exp(d)^T = I
     REQUIRE((so3Exp(so3Log(so3Exp(randV))) * so3Exp(randV).transpose() -
              SO3<S>::Identity())
                 .isZero());
+
+    // exp(v) = eye + skewSymm(v)*J
+    SO3<S> const RJ =
+        Eigen::Matrix<S, 3, 3>::Identity() + skewSymm(randV) * so3J(randV);
+    REQUIRE(((R * RJ.transpose()).matrix() - SO3<S>::Identity()).isZero());
+
+    // check J and Jinv
+    SO3J<S> const J{so3J(randV)};
+    SO3Jinv<S> const Jinv{so3Jinv(randV)};
+    INFO("J\n"
+         << J << "\n\nJinv\n"
+         << Jinv << "\n\nexpected eye\n"
+         << J * Jinv);
+    REQUIRE((J * Jinv - Eigen::Matrix<S, 3, 3>::Identity()).isZero());
   }
 
   // TODO(sc) cover log and exp limit cases
 }
 
 // TODO(sc) add a test with optimization in SO3
+// TODO(sc) add a test with optimization in SO3 using J and Jinv
 
 TEMPLATE_TEST_CASE("SO3 test - from/to RPY", "[SO3]", float32_t, float64_t) {
   using S = TestType;
@@ -216,7 +230,7 @@ TEMPLATE_TEST_CASE("SO3 test - exp, delta wrong size", "[SO3]", float32_t,
                    float64_t) {
   using S = TestType;
 
-  // so3Exp(Eigen::Matrix<S,3,1>()); // does not compile
+  // so3Exp(Eigen::Matrix<S,4,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
     REQUIRE_NO_ASSERT(so3Exp(Eigen::MatrixX<S>(3, 1)));
     REQUIRE_ASSERT(
@@ -229,6 +243,44 @@ TEMPLATE_TEST_CASE("SO3 test - exp, delta wrong size", "[SO3]", float32_t,
     REQUIRE_ASSERT(so3Exp(Eigen::MatrixX<S>(2, 2).block(0, 0, 1, 2)));
     REQUIRE_ASSERT(so3Exp(Eigen::MatrixX<S>(2, 2).block(0, 0, 2, 1)));
     REQUIRE_ASSERT(so3Exp(Eigen::VectorX<S>(10).segment(0, 2)));
+  }
+}
+
+TEMPLATE_TEST_CASE("SO3 test - SO3J, delta wrong size", "[SO3]", float32_t,
+                   float64_t) {
+  using S = TestType;
+
+  // so3J(Eigen::Matrix<S,4,1>()); // does not compile
+  if (csLie::Asserts::isAssertDebugEnabled()) {
+    REQUIRE_NO_ASSERT(so3J(Eigen::MatrixX<S>(3, 1)));
+    REQUIRE_ASSERT(so3J(Eigen::MatrixX<S>(1, 2)));  // throws, wrong delta size
+    REQUIRE_ASSERT(so3J(Eigen::MatrixX<S>(2, 1)));  // throws, wrong delta size
+
+    REQUIRE_NO_ASSERT(so3J(Eigen::MatrixX<S>(5, 7).block(0, 0, 3, 1)));
+    REQUIRE_NO_ASSERT(so3J(Eigen::VectorX<S>(10).segment(0, 3)));
+    REQUIRE_ASSERT(so3J(Eigen::MatrixX<S>(2, 2).block(0, 0, 1, 2)));
+    REQUIRE_ASSERT(so3J(Eigen::MatrixX<S>(2, 2).block(0, 0, 2, 1)));
+    REQUIRE_ASSERT(so3J(Eigen::VectorX<S>(10).segment(0, 2)));
+  }
+}
+
+TEMPLATE_TEST_CASE("SO3 test - so3Jinv, delta wrong size", "[SO3]", float32_t,
+                   float64_t) {
+  using S = TestType;
+
+  // so3J(Eigen::Matrix<S,4,1>()); // does not compile
+  if (csLie::Asserts::isAssertDebugEnabled()) {
+    REQUIRE_NO_ASSERT(so3Jinv(Eigen::MatrixX<S>(3, 1)));
+    REQUIRE_ASSERT(
+        so3Jinv(Eigen::MatrixX<S>(1, 2)));  // throws, wrong delta size
+    REQUIRE_ASSERT(
+        so3Jinv(Eigen::MatrixX<S>(2, 1)));  // throws, wrong delta size
+
+    REQUIRE_NO_ASSERT(so3Jinv(Eigen::MatrixX<S>(5, 7).block(0, 0, 3, 1)));
+    REQUIRE_NO_ASSERT(so3Jinv(Eigen::VectorX<S>(10).segment(0, 3)));
+    REQUIRE_ASSERT(so3Jinv(Eigen::MatrixX<S>(2, 2).block(0, 0, 1, 2)));
+    REQUIRE_ASSERT(so3Jinv(Eigen::MatrixX<S>(2, 2).block(0, 0, 2, 1)));
+    REQUIRE_ASSERT(so3Jinv(Eigen::VectorX<S>(10).segment(0, 2)));
   }
 }
 

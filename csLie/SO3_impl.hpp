@@ -52,6 +52,54 @@ SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const& delta) {
   return R;
 }
 
+template <class Derived>
+SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<Derived> const& delta) {
+  using S = typename Derived::Scalar;
+  CSLIE_ASSERT_DEBUG(
+      csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()),
+      "delta required to be 3x1");
+
+  S const th = delta.norm();
+
+  if (th > Constants<S>::epsilon) {
+    SO3J<S> ret;
+
+    Eigen::Matrix<S, 3, 1> const a = delta.array() / th;
+
+    const S sinth = std::sin(th);
+    const S costh = std::cos(th);
+
+    S tmp1 = 1.0 / th;
+    S tmp2 = sinth * tmp1;
+    S tmp3 = 1 - sinth * tmp1;
+    S tmp4 = 1 - costh;
+    S tmp5 = a(0) * a(1) * tmp3;
+    S tmp6 = a(0) * a(2) * tmp3;
+    S tmp7 = a(1) * a(2) * tmp3;
+
+    ret(0, 0) = a(0) * a(0) * tmp3 + tmp2;
+    ret(0, 1) = tmp5 - a(2) * tmp4 * tmp1;
+    ret(0, 2) = tmp6 + a(1) * tmp4 * tmp1;
+    ret(1, 0) = tmp5 + a(2) * tmp4 * tmp1;
+    ret(1, 1) = a(1) * a(1) * tmp3 + tmp2;
+    ret(1, 2) = tmp7 - a(0) * tmp4 * tmp1;
+    ret(2, 0) = tmp6 - a(1) * tmp4 * tmp1;
+    ret(2, 1) = tmp7 + a(0) * tmp4 * tmp1;
+    ret(2, 2) = a(2) * a(2) * tmp3 + tmp2;
+
+    return ret;
+  } else {
+    SO3J<S> ret;
+
+    ret = Eigen::Matrix<S, 3, 3>::Identity() + 0.5 * skewSymm(delta);
+
+    return ret;
+  }
+  // TODO(sc) why I cannot use UNREACHABLE here? it does not compile...
+  CSLIE_ASSERT_PARANOID(
+      "csLie::so3J this is a unreachable code, how did you ended up here?");
+}
+
 namespace detail {
 template <typename T>
 int signum(T val) {
@@ -137,6 +185,56 @@ Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(
     }
   }
   return ret;
+}
+
+template <class Derived>
+SO3Jinv<typename Derived::Scalar> so3Jinv(
+    Eigen::MatrixBase<Derived> const& delta) {
+  using S = typename Derived::Scalar;
+  CSLIE_ASSERT_DEBUG(
+      csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()),
+      "delta required to be 3x1");
+
+  S const th = delta.norm();
+
+  if (th > Constants<S>::epsilon) {
+    SO3Jinv<S> ret;
+
+    Eigen::Matrix<S, 3, 1> const a = delta.array() / th;
+
+    S const sinth = std::sin(th);
+    S const costh = std::cos(th);
+
+    S const tmp1 = costh + 1;
+    S const tmp2 = 1 / sinth;
+    S const tmp3 = tmp1 * tmp2 * th / 2;
+    S const tmp4 = 1 - tmp1 * tmp2 * th / 2;
+    S const tmp5 = a(0) * a(1) * tmp4;
+    S const tmp6 = a(0) * a(2) * tmp4;
+    S const tmp7 = a(1) * a(2) * tmp4;
+
+    ret(0, 0) = a(0) * a(0) * tmp4 + tmp3;
+    ret(0, 1) = tmp5 + a(2) * th / 2;
+    ret(0, 2) = tmp6 - a(1) * th / 2;
+    ret(1, 0) = tmp5 - a(2) * th / 2;
+    ret(1, 1) = a(1) * a(1) * tmp4 + tmp3;
+    ret(1, 2) = tmp7 + a(0) * th / 2;
+    ret(2, 0) = tmp6 + a(1) * th / 2;
+    ret(2, 1) = tmp7 - a(0) * th / 2;
+    ret(2, 2) = a(2) * a(2) * tmp4 + tmp3;
+
+    return ret;
+  } else {
+    SO3Jinv<S> ret;
+
+    ret = Eigen::Matrix<S, 3, 3>::Identity() - 0.5 * skewSymm(delta);
+
+    return ret;
+  }
+
+  // TODO(sc) why I cannot use UNREACHABLE here? it does not compile...
+  CSLIE_ASSERT_PARANOID(
+      "csLie::so3Jinv this is a unreachable code, how did you ended up here?");
 }
 
 // reference for RPY conversion
