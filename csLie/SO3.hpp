@@ -7,7 +7,7 @@ namespace csLie {
 
 /// @brief compute the exp of a so3 algebra to a SO3
 /// @tparam Derived template to support generic matrix
-/// @param delta a 3d vector representing the so2 algebra vector
+/// @param delta a 3d vector representing the so3 algebra vector
 /// @return the rotation matrix in SO3 from the algebra vector in so3
 /// @throw if delta is not a 3x1 matrix
 template <class Derived>

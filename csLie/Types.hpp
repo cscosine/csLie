@@ -103,6 +103,28 @@ using SO3Algd = SO3Alg<float64_t>;
 /// @brief convenient typedef for float32_t
 using SO3Algf = SO3Alg<float32_t>;
 
+// ------------ SE3 ------------
+
+/// @brief SE3 = 3D transformation matrix, a 4x4 matrix with top left rotation
+/// and translation vector in last column note, there are no guarantees that SE3
+/// is a proper rotation matrix, is up to the user to keep it coherent
+/// @tparam S the scalar type
+template <class S>
+using SE3 = Eigen::Matrix<S, 4, 4>;
+/// @brief convenient typedef for float64_t
+using SE3d = SE3<float64_t>;
+/// @brief convenient typedef for float32_t
+using SE3f = SE3<float32_t>;
+
+/// @brief SE3 algebra, a 6D vector
+/// @tparam S the scalar type
+template <class S>
+using SE3Alg = Eigen::Matrix<S, 6, 1>;
+/// @brief convenient typedef for float64_t
+using SE3Algd = SE3Alg<float64_t>;
+/// @brief convenient typedef for float32_t
+using SE3Algf = SE3Alg<float32_t>;
+
 // ------------ Utils ------------
 
 /// @brief a struct containing a unit vector and the jacobian computed to

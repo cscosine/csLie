@@ -32,6 +32,8 @@ cs_target_sources(csLie
 		S2_impl.hpp
     	SE2.hpp
 		SE2_impl.hpp
+    	SE3.hpp
+		SE3_impl.hpp
     	SO2.hpp
 		SO2_impl.hpp
     	SO3.hpp
