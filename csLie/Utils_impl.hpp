@@ -8,16 +8,13 @@
 namespace csLie {
 
 template <class Derived>
-UnitVector3dWithJacobians<typename Derived::Scalar>
-normalize3dVectorWithJacobians(Eigen::MatrixBase<Derived> const& v) {
+UnitVector3dWithJacobians<typename Derived::Scalar> normalize3dVectorWithJacobians(Eigen::MatrixBase<Derived> const& v) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(
-                         v, Eigen::Matrix<S, 3, 1>()),
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, Eigen::Matrix<S, 3, 1>()),
                      "normalize3dVectorWithJacobians, v required to be 3x1");
 
-  CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm()) >= Constants<S>::epsilon,
-                        "normalize3dVectorWithJacobians, input vector is zero");
+  CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm()) >= Constants<S>::epsilon, "normalize3dVectorWithJacobians, input vector is zero");
 
   UnitVector3dWithJacobians<typename Derived::Scalar> out;
 
@@ -42,4 +39,4 @@ normalize3dVectorWithJacobians(Eigen::MatrixBase<Derived> const& v) {
 
   return out;
 }
-}  // namespace csLie
+} // namespace csLie

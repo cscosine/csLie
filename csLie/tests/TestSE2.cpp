@@ -68,15 +68,14 @@ TEMPLATE_TEST_CASE("SE2 test - from/to xyY", "[SE2]", float32_t, float64_t) {
 // TODO(sc) add test of log in SE2, after adding log
 // TODO(sc) add a test with optimization in SE2
 
-TEMPLATE_TEST_CASE("SE2 test - exp, delta wrong size", "[SE2]", float32_t,
-                   float64_t) {
+TEMPLATE_TEST_CASE("SE2 test - exp, delta wrong size", "[SE2]", float32_t, float64_t) {
   using S = TestType;
 
   // se2Exp(Eigen::Matrix<S,4,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
     REQUIRE_NO_ASSERT(se2Exp(Eigen::MatrixX<S>(3, 1)));
-    REQUIRE_ASSERT(se2Exp(Eigen::MatrixX<S>(1, 2)));  // throws, wrong size
-    REQUIRE_ASSERT(se2Exp(Eigen::MatrixX<S>(2, 1)));  // throws, wrong size
+    REQUIRE_ASSERT(se2Exp(Eigen::MatrixX<S>(1, 2))); // throws, wrong size
+    REQUIRE_ASSERT(se2Exp(Eigen::MatrixX<S>(2, 1))); // throws, wrong size
 
     REQUIRE_NO_ASSERT(se2Exp(Eigen::MatrixX<S>(4, 5).block(0, 0, 3, 1)));
     REQUIRE_NO_ASSERT(se2Exp(Eigen::VectorX<S>(10).segment(0, 3)));
@@ -86,15 +85,14 @@ TEMPLATE_TEST_CASE("SE2 test - exp, delta wrong size", "[SE2]", float32_t,
   }
 }
 
-TEMPLATE_TEST_CASE("SE2 test - xyYToSe2, xyY wrong size", "[SE2]", float32_t,
-                   float64_t) {
+TEMPLATE_TEST_CASE("SE2 test - xyYToSe2, xyY wrong size", "[SE2]", float32_t, float64_t) {
   using S = TestType;
 
   // xyYToSe2(Eigen::Matrix<S,4,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
     REQUIRE_NO_ASSERT(xyYToSe2(Eigen::MatrixX<S>(3, 1)));
-    REQUIRE_ASSERT(xyYToSe2(Eigen::MatrixX<S>(1, 2)));  // throws, wrong size
-    REQUIRE_ASSERT(xyYToSe2(Eigen::MatrixX<S>(2, 1)));  // throws, wrong size
+    REQUIRE_ASSERT(xyYToSe2(Eigen::MatrixX<S>(1, 2))); // throws, wrong size
+    REQUIRE_ASSERT(xyYToSe2(Eigen::MatrixX<S>(2, 1))); // throws, wrong size
 
     REQUIRE_NO_ASSERT(xyYToSe2(Eigen::MatrixX<S>(4, 5).block(0, 0, 3, 1)));
     REQUIRE_NO_ASSERT(xyYToSe2(Eigen::VectorX<S>(10).segment(0, 3)));
@@ -104,15 +102,14 @@ TEMPLATE_TEST_CASE("SE2 test - xyYToSe2, xyY wrong size", "[SE2]", float32_t,
   }
 }
 
-TEMPLATE_TEST_CASE("SE2 test - se2ToxyY, se2 wrong", "[SE2]", float32_t,
-                   float64_t) {
+TEMPLATE_TEST_CASE("SE2 test - se2ToxyY, se2 wrong", "[SE2]", float32_t, float64_t) {
   using S = TestType;
 
   // se2ToxyY(Eigen::Matrix<S,4,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
     REQUIRE_NO_ASSERT(se2ToxyY(Eigen::MatrixX<S>::Identity(3, 3)));
-    REQUIRE_ASSERT(se2ToxyY(Eigen::MatrixX<S>(1, 2)));  // throws, wrong size
-    REQUIRE_ASSERT(se2ToxyY(Eigen::MatrixX<S>(2, 1)));  // throws, wrong size
+    REQUIRE_ASSERT(se2ToxyY(Eigen::MatrixX<S>(1, 2))); // throws, wrong size
+    REQUIRE_ASSERT(se2ToxyY(Eigen::MatrixX<S>(2, 1))); // throws, wrong size
 
     Eigen::MatrixX<S> m44 = Eigen::MatrixX<S>::Identity(4, 4);
     REQUIRE_NO_ASSERT(se2ToxyY(m44.block(0, 0, 3, 3)));
@@ -127,4 +124,4 @@ TEMPLATE_TEST_CASE("SE2 test - se2ToxyY, se2 wrong", "[SE2]", float32_t,
   }
 }
 
-}  // namespace csLie
+} // namespace csLie

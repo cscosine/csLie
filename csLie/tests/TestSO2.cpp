@@ -32,40 +32,30 @@ TEMPLATE_TEST_CASE("SO2 test - base", "[SO2]", float32_t, float64_t) {
   REQUIRE_THAT(so2Log(rI), Catch::Matchers::WithinAbs(0.0, PRECISION));
 
   // log of exp90 is 90
-  REQUIRE_THAT(so2Log(exp90), Catch::Matchers::WithinAbs(
-                                  csCore::math::degToRad(90.0), PRECISION));
+  REQUIRE_THAT(so2Log(exp90), Catch::Matchers::WithinAbs(csCore::math::degToRad(90.0), PRECISION));
 
   // randomized tests
-  Eigen::VectorX<S> randoms =
-      Eigen::VectorX<S>::Random(100) * 4 * Constants<S>::pi;
+  Eigen::VectorX<S> randoms = Eigen::VectorX<S>::Random(100) * 4 * Constants<S>::pi;
   for (size_t i = 0; i < randoms.size(); i++) {
     REQUIRE(csCore::eigenUtils::isValidRotationMatrix2D(so2Exp(randoms(i))));
     // log(exp(d)) = d
-    REQUIRE_THAT(
-        csCore::math::angleDistance(so2Log(so2Exp(randoms(i))), randoms(i)),
-        Catch::Matchers::WithinAbs(0.0, PRECISION));
+    REQUIRE_THAT(csCore::math::angleDistance(so2Log(so2Exp(randoms(i))), randoms(i)), Catch::Matchers::WithinAbs(0.0, PRECISION));
 
     // exp(log(exp(d))) * exp(d)^T = I
-    REQUIRE(
-        (so2Exp(so2Log(so2Exp(randoms(i)))) * so2Exp(randoms(i)).transpose() -
-         SO2<S>::Identity())
-            .isZero());
+    REQUIRE((so2Exp(so2Log(so2Exp(randoms(i)))) * so2Exp(randoms(i)).transpose() - SO2<S>::Identity()).isZero());
   }
 }
 
 // TODO(sc) add a test with optimization in SO2
 
-TEMPLATE_TEST_CASE("SO2 test - exp, delta wrong size", "[SO2]", float32_t,
-                   float64_t) {
+TEMPLATE_TEST_CASE("SO2 test - exp, delta wrong size", "[SO2]", float32_t, float64_t) {
   using S = TestType;
 
   // so2Exp(Eigen::Matrix<S,3,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
     REQUIRE_NO_ASSERT(so2Exp(Eigen::MatrixX<S>(1, 1)));
-    REQUIRE_ASSERT(
-        so2Exp(Eigen::MatrixX<S>(1, 2)));  // throws, wrong delta size
-    REQUIRE_ASSERT(
-        so2Exp(Eigen::MatrixX<S>(2, 1)));  // throws, wrong delta size
+    REQUIRE_ASSERT(so2Exp(Eigen::MatrixX<S>(1, 2))); // throws, wrong delta size
+    REQUIRE_ASSERT(so2Exp(Eigen::MatrixX<S>(2, 1))); // throws, wrong delta size
 
     REQUIRE_NO_ASSERT(so2Exp(Eigen::MatrixX<S>(2, 2).block(0, 0, 1, 1)));
     REQUIRE_NO_ASSERT(so2Exp(Eigen::VectorX<S>(10).segment(0, 1)));
@@ -75,8 +65,7 @@ TEMPLATE_TEST_CASE("SO2 test - exp, delta wrong size", "[SO2]", float32_t,
   }
 }
 
-TEMPLATE_TEST_CASE("SO2 test - log, input is not a rotation matrix", "[SO2]",
-                   float32_t, float64_t) {
+TEMPLATE_TEST_CASE("SO2 test - log, input is not a rotation matrix", "[SO2]", float32_t, float64_t) {
   using S = TestType;
 
   if (csLie::Asserts::isAssertDebugEnabled()) {
@@ -85,17 +74,15 @@ TEMPLATE_TEST_CASE("SO2 test - log, input is not a rotation matrix", "[SO2]",
     REQUIRE_ASSERT(so2Log(Eigen::MatrixX<S>(2, 3)));
 
     Eigen::MatrixX<S> m10x10 = Eigen::MatrixX<S>::Identity(10, 10);
-    REQUIRE_NO_ASSERT(so2Log(
-        m10x10.block(0, 0, 2, 2)));  // ok (is also a valid rotation matrix)!
+    REQUIRE_NO_ASSERT(so2Log(m10x10.block(0, 0, 2, 2))); // ok (is also a valid rotation matrix)!
 
     REQUIRE_ASSERT(so2Log(Eigen::MatrixX<S>(4, 4).block(0, 0, 3, 3)));
     REQUIRE_ASSERT(so2Log(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 1)));
   }
 
   if (csLie::Asserts::isAssertParanoidEnabled()) {
-    REQUIRE_ASSERT(so2Log(
-        Eigen::Matrix2<S>::Zero()));  // throws, zero is not a rotation matrix
+    REQUIRE_ASSERT(so2Log(Eigen::Matrix2<S>::Zero())); // throws, zero is not a rotation matrix
   }
 }
 
-}  // namespace csLie
+} // namespace csLie

@@ -8,7 +8,7 @@ namespace csLie {
 /// @tparam S the scalar type
 template <typename S>
 class Constants {
- public:
+public:
   /// @brief the machine epsilon, i.e. the minium number that makes (1 + epsilon
   /// == 1) true
   static constexpr S epsilon{Eigen::NumTraits<S>::epsilon()};
@@ -21,4 +21,4 @@ class Constants {
   static constexpr S pi{static_cast<S>(EIGEN_PI)};
 };
 
-}  // namespace csLie
+} // namespace csLie

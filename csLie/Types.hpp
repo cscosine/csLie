@@ -199,4 +199,4 @@ using UnitVector3dWithJacobiansd = UnitVector3dWithJacobians<float64_t>;
 /// @brief convenient typedef for float32_t
 using UnitVector3dWithJacobiansf = UnitVector3dWithJacobians<float32_t>;
 
-}  // namespace csLie
+} // namespace csLie

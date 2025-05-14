@@ -41,9 +41,7 @@ TEMPLATE_TEST_CASE("SE3 test - base", "[SE3]", float32_t, float64_t) {
 
     // exp(log(exp(d))) * exp(d)^T = I
     Eigen::Transform<S, 3, Eigen::Isometry> check{se3Exp(randV)};
-    REQUIRE(((se3Exp(se3Log(se3Exp(randV))) * check.inverse()).matrix() -
-             SE3<S>::Identity().matrix())
-                .isZero());
+    REQUIRE(((se3Exp(se3Log(se3Exp(randV))) * check.inverse()).matrix() - SE3<S>::Identity().matrix()).isZero());
   }
 
   // TODO(sc) cover log and exp limit cases
@@ -65,25 +63,21 @@ TEMPLATE_TEST_CASE("SE3 test - adjoint", "[SE3]", float32_t, float64_t) {
     SE3<S> const TV = T * V;
     SE3<S> const expAdTVT = se3Exp(AdT * v) * T;
 
-    SE3<S> expected_eye =
-        expAdTVT * Eigen::Transform<S, 3, Eigen::Isometry>(TV).inverse();
+    SE3<S> expected_eye = expAdTVT * Eigen::Transform<S, 3, Eigen::Isometry>(TV).inverse();
     REQUIRE((expected_eye.matrix() - SE3<S>::Identity().matrix()).isZero());
   }
 }
 
 // TODO(sc) add a test with optimization in SE3
 
-TEMPLATE_TEST_CASE("SE3 test - exp, delta wrong size", "[SE3]", float32_t,
-                   float64_t) {
+TEMPLATE_TEST_CASE("SE3 test - exp, delta wrong size", "[SE3]", float32_t, float64_t) {
   using S = TestType;
 
   // se3Exp(Eigen::Matrix<S,3,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
     REQUIRE_NO_ASSERT(se3Exp(Eigen::MatrixX<S>(6, 1)));
-    REQUIRE_ASSERT(
-        se3Exp(Eigen::MatrixX<S>(1, 2)));  // throws, wrong delta size
-    REQUIRE_ASSERT(
-        se3Exp(Eigen::MatrixX<S>(2, 1)));  // throws, wrong delta size
+    REQUIRE_ASSERT(se3Exp(Eigen::MatrixX<S>(1, 2))); // throws, wrong delta size
+    REQUIRE_ASSERT(se3Exp(Eigen::MatrixX<S>(2, 1))); // throws, wrong delta size
 
     REQUIRE_NO_ASSERT(se3Exp(Eigen::MatrixX<S>(9, 7).block(0, 0, 6, 1)));
     REQUIRE_NO_ASSERT(se3Exp(Eigen::VectorX<S>(10).segment(0, 6)));
@@ -93,8 +87,7 @@ TEMPLATE_TEST_CASE("SE3 test - exp, delta wrong size", "[SE3]", float32_t,
   }
 }
 
-TEMPLATE_TEST_CASE("SE3 test - log, input is not a transformation matrix",
-                   "[SE3]", float32_t, float64_t) {
+TEMPLATE_TEST_CASE("SE3 test - log, input is not a transformation matrix", "[SE3]", float32_t, float64_t) {
   using S = TestType;
 
   if (csLie::Asserts::isAssertDebugEnabled()) {
@@ -103,21 +96,19 @@ TEMPLATE_TEST_CASE("SE3 test - log, input is not a transformation matrix",
     REQUIRE_ASSERT(se3Log(Eigen::MatrixX<S>(4, 5)));
 
     Eigen::MatrixX<S> m10x10 = Eigen::MatrixX<S>::Identity(10, 10);
-    REQUIRE_NO_ASSERT(se3Log(m10x10.block(
-        0, 0, 4, 4)));  // ok (is also a valid transformation matrix)!
+    REQUIRE_NO_ASSERT(se3Log(m10x10.block(0, 0, 4, 4))); // ok (is also a valid transformation matrix)!
 
     REQUIRE_ASSERT(se3Log(Eigen::MatrixX<S>(4, 4).block(0, 0, 4, 3)));
     REQUIRE_ASSERT(se3Log(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 1)));
   }
 
   if (csLie::Asserts::isAssertParanoidEnabled()) {
-    REQUIRE_ASSERT(se3Log(Eigen::Matrix4<S>::Zero()));  // throws, zero is not a
-                                                        // transformation matrix
+    REQUIRE_ASSERT(se3Log(Eigen::Matrix4<S>::Zero())); // throws, zero is not a
+                                                       // transformation matrix
   }
 }
 
-TEMPLATE_TEST_CASE("SE3 test - adjoint, input is not a transformation matrix",
-                   "[SE3]", float32_t, float64_t) {
+TEMPLATE_TEST_CASE("SE3 test - adjoint, input is not a transformation matrix", "[SE3]", float32_t, float64_t) {
   using S = TestType;
 
   if (csLie::Asserts::isAssertDebugEnabled()) {
@@ -126,18 +117,16 @@ TEMPLATE_TEST_CASE("SE3 test - adjoint, input is not a transformation matrix",
     REQUIRE_ASSERT(se3Adjoint(Eigen::MatrixX<S>(4, 5)));
 
     Eigen::MatrixX<S> m10x10 = Eigen::MatrixX<S>::Identity(10, 10);
-    REQUIRE_NO_ASSERT(se3Adjoint(m10x10.block(
-        0, 0, 4, 4)));  // ok (is also a valid transformation matrix)!
+    REQUIRE_NO_ASSERT(se3Adjoint(m10x10.block(0, 0, 4, 4))); // ok (is also a valid transformation matrix)!
 
     REQUIRE_ASSERT(se3Adjoint(Eigen::MatrixX<S>(4, 4).block(0, 0, 4, 3)));
     REQUIRE_ASSERT(se3Adjoint(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 1)));
   }
 
   if (csLie::Asserts::isAssertParanoidEnabled()) {
-    REQUIRE_ASSERT(
-        se3Adjoint(Eigen::Matrix4<S>::Zero()));  // throws, zero is not a
-                                                 // transformation matrix
+    REQUIRE_ASSERT(se3Adjoint(Eigen::Matrix4<S>::Zero())); // throws, zero is not a
+                                                           // transformation matrix
   }
 }
 
-}  // namespace csLie
+} // namespace csLie

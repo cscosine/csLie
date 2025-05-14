@@ -11,22 +11,16 @@ namespace csLie {
 template <class Derived>
 SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const& delta) {
   using S = typename Derived::Scalar;
-  CSLIE_ASSERT_DEBUG(
-      csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()),
-      "delta required to be 3x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
 
   SO3Alg<S> const w2 = delta.cwiseAbs2();
-  S const theta_sq = w2.sum();  // sum of the squares
+  S const theta_sq = w2.sum(); // sum of the squares
   S const theta = std::sqrt(theta_sq);
 
   S a, b;
   if (theta < Constants<S>::epsilon) {
-    a = static_cast<S>(1.0) -
-        theta_sq * (static_cast<S>(1.0 / 6.0) +
-                    theta_sq * static_cast<S>(1.0 / 120.0));
-    b = static_cast<S>(0.5) -
-        theta_sq * (static_cast<S>(1.0 / 24.0) -
-                    theta_sq * static_cast<S>(1.0 / 720.0));
+    a = static_cast<S>(1.0) - theta_sq * (static_cast<S>(1.0 / 6.0) + theta_sq * static_cast<S>(1.0 / 120.0));
+    b = static_cast<S>(0.5) - theta_sq * (static_cast<S>(1.0 / 24.0) - theta_sq * static_cast<S>(1.0 / 720.0));
   } else {
     a = sin(theta) / theta;
     b = (static_cast<S>(1.0) - cos(theta)) / theta_sq;
@@ -55,9 +49,7 @@ SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const& delta) {
 template <class Derived>
 SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<Derived> const& delta) {
   using S = typename Derived::Scalar;
-  CSLIE_ASSERT_DEBUG(
-      csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()),
-      "delta required to be 3x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
 
   S const th = delta.norm();
 
@@ -96,8 +88,7 @@ SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<Derived> const& delta) {
     return ret;
   }
   // TODO(sc) why I cannot use UNREACHABLE here? it does not compile...
-  CSLIE_ASSERT_PARANOID(
-      "csLie::so3J this is a unreachable code, how did you ended up here?");
+  CSLIE_ASSERT_PARANOID("csLie::so3J this is a unreachable code, how did you ended up here?");
 }
 
 namespace detail {
@@ -105,7 +96,7 @@ template <typename T>
 int signum(T val) {
   return (static_cast<T>(0) < val) - (val < static_cast<T>(0));
 }
-}  // namespace detail
+} // namespace detail
 
 // TODO(sc) references for better impl
 // https://pettni.github.io/smooth/index.html
@@ -113,15 +104,11 @@ int signum(T val) {
 // https://github.com/farm-ng/farm-ng-core/tree/cygnet-dev (aka Sophus 2.0)
 
 template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(
-    Eigen::MatrixBase<Derived> const& rot) {
+Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Eigen::MatrixBase<Derived> const& rot) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(
-      csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO3<S>()),
-      "rot required to be 3x3");
-  CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidRotationMatrix3D(rot),
-                        "rot is not a valid rotation matrix");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO3<S>()), "rot required to be 3x3");
+  CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidRotationMatrix3D(rot), "rot is not a valid rotation matrix");
 
   SO3Alg<S> ret;
   ret(0) = S(0.5) * (rot(2, 1) - rot(1, 2));
@@ -138,9 +125,7 @@ Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(
 
   if (ct > almostOne) {
     // special case at 1
-    const S f = 1 + st2 * (static_cast<S>(1.0 / 6.0) +
-                           st2 * (static_cast<S>(3.0 / 40.0) +
-                                  st2 * static_cast<S>(5.0 / 112.0)));
+    const S f = 1 + st2 * (static_cast<S>(1.0 / 6.0) + st2 * (static_cast<S>(3.0 / 40.0) + st2 * static_cast<S>(5.0 / 112.0)));
     ret *= f;
   } else if (ct > almostMinusOne) {
     // standard case
@@ -188,12 +173,9 @@ Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(
 }
 
 template <class Derived>
-SO3Jinv<typename Derived::Scalar> so3Jinv(
-    Eigen::MatrixBase<Derived> const& delta) {
+SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::MatrixBase<Derived> const& delta) {
   using S = typename Derived::Scalar;
-  CSLIE_ASSERT_DEBUG(
-      csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()),
-      "delta required to be 3x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
 
   S const th = delta.norm();
 
@@ -233,39 +215,33 @@ SO3Jinv<typename Derived::Scalar> so3Jinv(
   }
 
   // TODO(sc) why I cannot use UNREACHABLE here? it does not compile...
-  CSLIE_ASSERT_PARANOID(
-      "csLie::so3Jinv this is a unreachable code, how did you ended up here?");
+  CSLIE_ASSERT_PARANOID("csLie::so3Jinv this is a unreachable code, how did you ended up here?");
 }
 
 // reference for RPY conversion
 // https://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
 template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(
-    Eigen::MatrixBase<Derived> const& rot) {
+Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(Eigen::MatrixBase<Derived> const& rot) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(
-      csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO3<S>()),
-      "rot required to be 3x3");
-  CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidRotationMatrix3D(rot),
-                        "rot is not a valid rotation matrix");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO3<S>()), "rot required to be 3x3");
+  CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidRotationMatrix3D(rot), "rot is not a valid rotation matrix");
 
   const S sin_pitch{rot(2, 0)};
-  if (std::abs(std::abs(sin_pitch) - static_cast<S>(1.0)) >
-      Constants<S>::epsilon) {
+  if (std::abs(std::abs(sin_pitch) - static_cast<S>(1.0)) > Constants<S>::epsilon) {
     const S pitch{-std::asin(rot(2, 0))};
-    const S cos_pitch{std::cos(pitch)};  // can we extract it from the matrix?
+    const S cos_pitch{std::cos(pitch)}; // can we extract it from the matrix?
 
     const S roll{std::atan2(rot(2, 1) / cos_pitch, rot(2, 2) / cos_pitch)};
     const S yaw{std::atan2(rot(1, 0) / cos_pitch, rot(0, 0) / cos_pitch)};
     return Eigen::Matrix<S, 3, 1>(roll, pitch, yaw);
   } else {
-    if (sin_pitch < 0) {  // ~= -1
+    if (sin_pitch < 0) { // ~= -1
       const S pitch{Constants<S>::pi / static_cast<S>(2.0)};
       const S yaw = 0;
       const S roll = std::atan2(rot(0, 1), rot(0, 2));
       return Eigen::Matrix<S, 3, 1>(roll, pitch, yaw);
-    } else {  // ~= 1
+    } else { // ~= 1
       const S pitch{-Constants<S>::pi / static_cast<S>(2.0)};
       const S yaw = 0;
       const S roll = std::atan2(-rot(0, 1), -rot(0, 2));
@@ -274,17 +250,14 @@ Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(
   }
 
   // TODO(sc) why I cannot use UNREACHABLE here? it does not compile...
-  CSLIE_ASSERT_PARANOID(
-      "csLie::so3ToRPY this is a unreachable code, how did you ended up here?");
+  CSLIE_ASSERT_PARANOID("csLie::so3ToRPY this is a unreachable code, how did you ended up here?");
 }
 
 template <class Derived>
 SO3<typename Derived::Scalar> rpyToSo3(Eigen::MatrixBase<Derived> const& rpy) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(
-                         rpy, Eigen::Matrix<S, 3, 1>()),
-                     "rpy required to be 3x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rpy, Eigen::Matrix<S, 3, 1>()), "rpy required to be 3x1");
 
   SO3<S> R;
 
@@ -315,13 +288,10 @@ SO3<typename Derived::Scalar> rpyToSo3(Eigen::MatrixBase<Derived> const& rpy) {
 }
 
 template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 3, 3> skewSymm(
-    Eigen::MatrixBase<Derived> const& v) {
+Eigen::Matrix<typename Derived::Scalar, 3, 3> skewSymm(Eigen::MatrixBase<Derived> const& v) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(
-                         v, Eigen::Matrix<S, 3, 1>()),
-                     "v required to be 3x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, Eigen::Matrix<S, 3, 1>()), "v required to be 3x1");
 
   Eigen::Matrix<S, 3, 3> R;
 
@@ -330,4 +300,4 @@ Eigen::Matrix<typename Derived::Scalar, 3, 3> skewSymm(
   return R;
 }
 
-}  // namespace csLie
+} // namespace csLie

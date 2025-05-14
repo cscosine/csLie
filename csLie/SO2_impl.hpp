@@ -10,9 +10,7 @@ namespace csLie {
 template <class Derived>
 SO2<typename Derived::Scalar> so2Exp(Eigen::MatrixBase<Derived> const& delta) {
   using S = typename Derived::Scalar;
-  CSLIE_ASSERT_DEBUG(
-      csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO2Alg<S>()),
-      "delta required to be 1x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO2Alg<S>()), "delta required to be 1x1");
   // note: to be able to use both eigen matrix and vector, it is required to use
   // always two indices
   return so2Exp(delta(0, 0));
@@ -35,14 +33,11 @@ template <class Derived>
 typename Derived::Scalar so2Log(Eigen::MatrixBase<Derived> const& rot) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(
-      csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO2<S>()),
-      "rot required to be 2x2");
-  CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidRotationMatrix2D(rot),
-                        "rot is not a valid rotation matrix");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO2<S>()), "rot required to be 2x2");
+  CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidRotationMatrix2D(rot), "rot is not a valid rotation matrix");
 
   // atan2 (sin,cos), average of values
   return std::atan2(rot(1, 0), rot(0, 0));
 }
 
-}  // namespace csLie
+} // namespace csLie

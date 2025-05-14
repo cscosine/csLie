@@ -50,22 +50,16 @@ TEMPLATE_TEST_CASE("SO3 test - base", "[SO3]", float32_t, float64_t) {
     REQUIRE((RlogV - R).isZero());
 
     // exp(log(exp(d))) * exp(d)^T = I
-    REQUIRE((so3Exp(so3Log(so3Exp(randV))) * so3Exp(randV).transpose() -
-             SO3<S>::Identity())
-                .isZero());
+    REQUIRE((so3Exp(so3Log(so3Exp(randV))) * so3Exp(randV).transpose() - SO3<S>::Identity()).isZero());
 
     // exp(v) = eye + skewSymm(v)*J
-    SO3<S> const RJ =
-        Eigen::Matrix<S, 3, 3>::Identity() + skewSymm(randV) * so3J(randV);
+    SO3<S> const RJ = Eigen::Matrix<S, 3, 3>::Identity() + skewSymm(randV) * so3J(randV);
     REQUIRE(((R * RJ.transpose()).matrix() - SO3<S>::Identity()).isZero());
 
     // check J and Jinv
     SO3J<S> const J{so3J(randV)};
     SO3Jinv<S> const Jinv{so3Jinv(randV)};
-    INFO("J\n"
-         << J << "\n\nJinv\n"
-         << Jinv << "\n\nexpected eye\n"
-         << J * Jinv);
+    INFO("J\n" << J << "\n\nJinv\n" << Jinv << "\n\nexpected eye\n" << J * Jinv);
     REQUIRE((J * Jinv - Eigen::Matrix<S, 3, 3>::Identity()).isZero());
   }
 
@@ -113,16 +107,13 @@ TEMPLATE_TEST_CASE("SO3 test - from/to RPY", "[SO3]", float32_t, float64_t) {
   }
   // 3 axis
   {
-    Eigen::Vector3<S> a(csCore::math::degToRad(23.0),
-                        csCore::math::degToRad(57.0),
-                        csCore::math::degToRad(82.0));
+    Eigen::Vector3<S> a(csCore::math::degToRad(23.0), csCore::math::degToRad(57.0), csCore::math::degToRad(82.0));
     SO3<S> r{rpyToSo3(a)};
     Eigen::Vector3<S> a_r{so3ToRPY(r)};
     SO3<S> r_a_r{rpyToSo3(a_r)};
 
     SO3<S> r_e;
-    r_e = Eigen::AngleAxis<S>(a(2), Eigen::Vector3<S>::UnitZ()) *
-          Eigen::AngleAxis<S>(a(1), Eigen::Vector3<S>::UnitY()) *
+    r_e = Eigen::AngleAxis<S>(a(2), Eigen::Vector3<S>::UnitZ()) * Eigen::AngleAxis<S>(a(1), Eigen::Vector3<S>::UnitY()) *
           Eigen::AngleAxis<S>(a(0), Eigen::Vector3<S>::UnitX());
 
     REQUIRE((r_a_r - r).isZero());
@@ -135,9 +126,7 @@ TEMPLATE_TEST_CASE("SO3 test - Gymbal lock", "[SO3]", float32_t, float64_t) {
 
   // 90 deg
   {
-    Eigen::Vector3<S> vy(csCore::math::degToRad(10.0),
-                         csCore::math::degToRad(90.0),
-                         csCore::math::degToRad(-20.0));
+    Eigen::Vector3<S> vy(csCore::math::degToRad(10.0), csCore::math::degToRad(90.0), csCore::math::degToRad(-20.0));
     SO3<S> r1{rpyToSo3(vy)};
 
     // gymbal on yaw - roll
@@ -177,9 +166,7 @@ TEMPLATE_TEST_CASE("SO3 test - Gymbal lock", "[SO3]", float32_t, float64_t) {
 
   // -90 deg
   {
-    Eigen::Vector3<S> vy(csCore::math::degToRad(10.0),
-                         csCore::math::degToRad(-90.0),
-                         csCore::math::degToRad(20.0));
+    Eigen::Vector3<S> vy(csCore::math::degToRad(10.0), csCore::math::degToRad(-90.0), csCore::math::degToRad(20.0));
     SO3<S> r1{rpyToSo3(vy)};
 
     // gymbal on yaw + roll
@@ -226,17 +213,14 @@ TEMPLATE_TEST_CASE("SO3 test - SkewSymm", "[SO3]", float32_t, float64_t) {
   REQUIRE((s + s.transpose()).isZero(0));
 }
 
-TEMPLATE_TEST_CASE("SO3 test - exp, delta wrong size", "[SO3]", float32_t,
-                   float64_t) {
+TEMPLATE_TEST_CASE("SO3 test - exp, delta wrong size", "[SO3]", float32_t, float64_t) {
   using S = TestType;
 
   // so3Exp(Eigen::Matrix<S,4,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
     REQUIRE_NO_ASSERT(so3Exp(Eigen::MatrixX<S>(3, 1)));
-    REQUIRE_ASSERT(
-        so3Exp(Eigen::MatrixX<S>(1, 2)));  // throws, wrong delta size
-    REQUIRE_ASSERT(
-        so3Exp(Eigen::MatrixX<S>(2, 1)));  // throws, wrong delta size
+    REQUIRE_ASSERT(so3Exp(Eigen::MatrixX<S>(1, 2))); // throws, wrong delta size
+    REQUIRE_ASSERT(so3Exp(Eigen::MatrixX<S>(2, 1))); // throws, wrong delta size
 
     REQUIRE_NO_ASSERT(so3Exp(Eigen::MatrixX<S>(5, 7).block(0, 0, 3, 1)));
     REQUIRE_NO_ASSERT(so3Exp(Eigen::VectorX<S>(10).segment(0, 3)));
@@ -246,15 +230,14 @@ TEMPLATE_TEST_CASE("SO3 test - exp, delta wrong size", "[SO3]", float32_t,
   }
 }
 
-TEMPLATE_TEST_CASE("SO3 test - SO3J, delta wrong size", "[SO3]", float32_t,
-                   float64_t) {
+TEMPLATE_TEST_CASE("SO3 test - SO3J, delta wrong size", "[SO3]", float32_t, float64_t) {
   using S = TestType;
 
   // so3J(Eigen::Matrix<S,4,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
     REQUIRE_NO_ASSERT(so3J(Eigen::MatrixX<S>(3, 1)));
-    REQUIRE_ASSERT(so3J(Eigen::MatrixX<S>(1, 2)));  // throws, wrong delta size
-    REQUIRE_ASSERT(so3J(Eigen::MatrixX<S>(2, 1)));  // throws, wrong delta size
+    REQUIRE_ASSERT(so3J(Eigen::MatrixX<S>(1, 2))); // throws, wrong delta size
+    REQUIRE_ASSERT(so3J(Eigen::MatrixX<S>(2, 1))); // throws, wrong delta size
 
     REQUIRE_NO_ASSERT(so3J(Eigen::MatrixX<S>(5, 7).block(0, 0, 3, 1)));
     REQUIRE_NO_ASSERT(so3J(Eigen::VectorX<S>(10).segment(0, 3)));
@@ -264,17 +247,14 @@ TEMPLATE_TEST_CASE("SO3 test - SO3J, delta wrong size", "[SO3]", float32_t,
   }
 }
 
-TEMPLATE_TEST_CASE("SO3 test - so3Jinv, delta wrong size", "[SO3]", float32_t,
-                   float64_t) {
+TEMPLATE_TEST_CASE("SO3 test - so3Jinv, delta wrong size", "[SO3]", float32_t, float64_t) {
   using S = TestType;
 
   // so3J(Eigen::Matrix<S,4,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
     REQUIRE_NO_ASSERT(so3Jinv(Eigen::MatrixX<S>(3, 1)));
-    REQUIRE_ASSERT(
-        so3Jinv(Eigen::MatrixX<S>(1, 2)));  // throws, wrong delta size
-    REQUIRE_ASSERT(
-        so3Jinv(Eigen::MatrixX<S>(2, 1)));  // throws, wrong delta size
+    REQUIRE_ASSERT(so3Jinv(Eigen::MatrixX<S>(1, 2))); // throws, wrong delta size
+    REQUIRE_ASSERT(so3Jinv(Eigen::MatrixX<S>(2, 1))); // throws, wrong delta size
 
     REQUIRE_NO_ASSERT(so3Jinv(Eigen::MatrixX<S>(5, 7).block(0, 0, 3, 1)));
     REQUIRE_NO_ASSERT(so3Jinv(Eigen::VectorX<S>(10).segment(0, 3)));
@@ -284,8 +264,7 @@ TEMPLATE_TEST_CASE("SO3 test - so3Jinv, delta wrong size", "[SO3]", float32_t,
   }
 }
 
-TEMPLATE_TEST_CASE("SO3 test - log, input is not a rotation matrix", "[SO3]",
-                   float32_t, float64_t) {
+TEMPLATE_TEST_CASE("SO3 test - log, input is not a rotation matrix", "[SO3]", float32_t, float64_t) {
   using S = TestType;
 
   if (csLie::Asserts::isAssertDebugEnabled()) {
@@ -294,21 +273,18 @@ TEMPLATE_TEST_CASE("SO3 test - log, input is not a rotation matrix", "[SO3]",
     REQUIRE_ASSERT(so3Log(Eigen::MatrixX<S>(4, 5)));
 
     Eigen::MatrixX<S> m10x10 = Eigen::MatrixX<S>::Identity(10, 10);
-    REQUIRE_NO_ASSERT(so3Log(
-        m10x10.block(0, 0, 3, 3)));  // ok (is also a valid rotation matrix)!
+    REQUIRE_NO_ASSERT(so3Log(m10x10.block(0, 0, 3, 3))); // ok (is also a valid rotation matrix)!
 
     REQUIRE_ASSERT(so3Log(Eigen::MatrixX<S>(4, 4).block(0, 0, 4, 3)));
     REQUIRE_ASSERT(so3Log(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 1)));
   }
 
   if (csLie::Asserts::isAssertParanoidEnabled()) {
-    REQUIRE_ASSERT(so3Log(
-        Eigen::Matrix3<S>::Zero()));  // throws, zero is not a rotation matrix
+    REQUIRE_ASSERT(so3Log(Eigen::Matrix3<S>::Zero())); // throws, zero is not a rotation matrix
   }
 }
 
-TEMPLATE_TEST_CASE("SO3 test - from RPY, input is not a 3d vector", "[SO3]",
-                   float32_t, float64_t) {
+TEMPLATE_TEST_CASE("SO3 test - from RPY, input is not a 3d vector", "[SO3]", float32_t, float64_t) {
   using S = TestType;
 
   if (csLie::Asserts::isAssertDebugEnabled()) {
@@ -325,8 +301,7 @@ TEMPLATE_TEST_CASE("SO3 test - from RPY, input is not a 3d vector", "[SO3]",
   }
 }
 
-TEMPLATE_TEST_CASE("SO3 test - to RPY, input is not a rotation matrix", "[SO3]",
-                   float32_t, float64_t) {
+TEMPLATE_TEST_CASE("SO3 test - to RPY, input is not a rotation matrix", "[SO3]", float32_t, float64_t) {
   using S = TestType;
 
   if (csLie::Asserts::isAssertDebugEnabled()) {
@@ -335,21 +310,18 @@ TEMPLATE_TEST_CASE("SO3 test - to RPY, input is not a rotation matrix", "[SO3]",
     REQUIRE_ASSERT(so3ToRPY(Eigen::MatrixX<S>(2, 3)));
 
     Eigen::MatrixX<S> m10x10 = Eigen::MatrixX<S>::Identity(10, 10);
-    REQUIRE_NO_ASSERT(so3ToRPY(
-        m10x10.block(0, 0, 3, 3)));  // ok (is also a valid rotation matrix)!
+    REQUIRE_NO_ASSERT(so3ToRPY(m10x10.block(0, 0, 3, 3))); // ok (is also a valid rotation matrix)!
 
     REQUIRE_ASSERT(so3ToRPY(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 3)));
     REQUIRE_ASSERT(so3ToRPY(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 1)));
   }
 
   if (csLie::Asserts::isAssertParanoidEnabled()) {
-    REQUIRE_ASSERT(so3ToRPY(
-        Eigen::Matrix3<S>::Zero()));  // throws, zero is not a rotation matrix
+    REQUIRE_ASSERT(so3ToRPY(Eigen::Matrix3<S>::Zero())); // throws, zero is not a rotation matrix
   }
 }
 
-TEMPLATE_TEST_CASE("SO3 test - skewSymm, input is not a 3d vector", "[SO3]",
-                   float32_t, float64_t) {
+TEMPLATE_TEST_CASE("SO3 test - skewSymm, input is not a 3d vector", "[SO3]", float32_t, float64_t) {
   using S = TestType;
 
   if (csLie::Asserts::isAssertDebugEnabled()) {
@@ -366,4 +338,4 @@ TEMPLATE_TEST_CASE("SO3 test - skewSymm, input is not a 3d vector", "[SO3]",
   }
 }
 
-}  // namespace csLie
+} // namespace csLie

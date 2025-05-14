@@ -31,4 +31,4 @@ std::enable_if_t<std::is_floating_point<S>::value, RetType> so2Exp(S delta);
 template <class Derived>
 typename Derived::Scalar so2Log(Eigen::MatrixBase<Derived> const& rot);
 
-}  // namespace csLie
+} // namespace csLie

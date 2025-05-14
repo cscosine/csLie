@@ -27,8 +27,7 @@ SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<Derived> const& delta);
 /// @throw if rot is not a 3x3 matrix (DEBUG only), if rot is not a rotation
 /// matrix within default precision (PARANOID)
 template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(
-    Eigen::MatrixBase<Derived> const& rot);
+Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Eigen::MatrixBase<Derived> const& rot);
 
 /// @brief compute the J^-1, i.e. the inverse left jacobian of a so3 algebra
 /// @tparam Derived template to support generic matrix
@@ -36,8 +35,7 @@ Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(
 /// @return the J^-1 matrix from the algebra vector in so3
 /// @throw if delta is not a 3x1 matrix
 template <class Derived>
-SO3Jinv<typename Derived::Scalar> so3Jinv(
-    Eigen::MatrixBase<Derived> const& delta);
+SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::MatrixBase<Derived> const& delta);
 
 /// @brief compute the RPY (roll pitch yaw) angles of a SO3 rotation
 /// RPY are expressed as Euler angles so that R = rotZ(yaw) * rotY(pitch) *
@@ -51,8 +49,7 @@ SO3Jinv<typename Derived::Scalar> so3Jinv(
 /// @throw if rot is not a 3x3 matrix (DEBUG only), if rot is not a rotation
 /// matrix within default precision (PARANOID)
 template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(
-    Eigen::MatrixBase<Derived> const& rot);
+Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(Eigen::MatrixBase<Derived> const& rot);
 
 /// @brief compute a SO3 rotation matrix from RPY (roll pitch yaw) angles
 /// RPY are expressed as Euler angles so that R = rotZ(yaw) * rotY(pitch) *
@@ -68,7 +65,6 @@ SO3<typename Derived::Scalar> rpyToSo3(Eigen::MatrixBase<Derived> const& rpy);
 /// @param v the vector
 /// @throw if v is not a 3x1 matrix
 template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 3, 3> skewSymm(
-    Eigen::MatrixBase<Derived> const& v);
+Eigen::Matrix<typename Derived::Scalar, 3, 3> skewSymm(Eigen::MatrixBase<Derived> const& v);
 
-}  // namespace csLie
+} // namespace csLie

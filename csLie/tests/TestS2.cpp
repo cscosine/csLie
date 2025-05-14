@@ -1,4 +1,4 @@
-#include <Eigen/Dense>  // for determinant
+#include <Eigen/Dense> // for determinant
 #include <catch2/catch_all.hpp>
 #include <csCore/eigenUtils/RotationMatrix_impl.hpp>
 #include <csCore/testUtils/AssertCatch2.hpp>
@@ -8,8 +8,7 @@
 
 namespace csLie {
 
-TEMPLATE_TEST_CASE("S2 test - verify assumption atan2(0,0) = 0", "[S2]",
-                   float32_t, float64_t) {
+TEMPLATE_TEST_CASE("S2 test - verify assumption atan2(0,0) = 0", "[S2]", float32_t, float64_t) {
   // in s2toZAlignedSO3 we assume that atan2(0,0) = 0. This might be platform
   // dependent. In case this test fail, adapt the logic in s2toZAlignedSO3 to
   // handle this edge case
@@ -69,16 +68,11 @@ TEMPLATE_TEST_CASE("S2 test - plane fitting", "[S2]", float32_t, float64_t) {
   S const PRECISION = Constants<S>::dummy_precision;
 
   // generate a random rotation matrix
-  Eigen::Transform<S, 3, Eigen::Isometry> Rt{
-      Eigen::Transform<S, 3, Eigen::Isometry>::Identity()};
+  Eigen::Transform<S, 3, Eigen::Isometry> Rt{Eigen::Transform<S, 3, Eigen::Isometry>::Identity()};
   Rt.translation().setRandom();
-  Rt.linear() = Eigen::Matrix<S, 3, 3>(
-      Eigen::AngleAxis<S>(Eigen::Matrix<S, 1, 1>::Random()(0),
-                          Eigen::Vector3<S>::UnitX()) *
-      Eigen::AngleAxis<S>(Eigen::Matrix<S, 1, 1>::Random()(0),
-                          Eigen::Vector3<S>::UnitY()) *
-      Eigen::AngleAxis<S>(Eigen::Matrix<S, 1, 1>::Random()(0),
-                          Eigen::Vector3<S>::UnitZ()));
+  Rt.linear() = Eigen::Matrix<S, 3, 3>(Eigen::AngleAxis<S>(Eigen::Matrix<S, 1, 1>::Random()(0), Eigen::Vector3<S>::UnitX()) *
+                                       Eigen::AngleAxis<S>(Eigen::Matrix<S, 1, 1>::Random()(0), Eigen::Vector3<S>::UnitY()) *
+                                       Eigen::AngleAxis<S>(Eigen::Matrix<S, 1, 1>::Random()(0), Eigen::Vector3<S>::UnitZ()));
 
   // generate a random set of points on the Z=0 plane defined by Rt
   int const N = 40;
@@ -140,8 +134,7 @@ TEMPLATE_TEST_CASE("S2 test - plane fitting", "[S2]", float32_t, float64_t) {
       Eigen::Vector3<S> const pd = (pointsNoised.col(i) - pointCenter);
       S const e = pd.dot(estNormal);
       // and the jacobian
-      Eigen::Matrix<S, 1, 2> d_e_d_delta =
-          pd.transpose() * s2_d_oplus_d_delta_0(estNormal);
+      Eigen::Matrix<S, 1, 2> d_e_d_delta = pd.transpose() * s2_d_oplus_d_delta_0(estNormal);
 
       // cumulate terms
       S const c2 = e * e;
@@ -193,9 +186,9 @@ TEMPLATE_TEST_CASE("S2 test - assertions", "[S2]", float32_t, float64_t) {
   // s2Exp(Eigen::Matrix<S,3,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
     REQUIRE_NO_ASSERT(s2Exp(Eigen::MatrixX<S>(2, 1)));
-    REQUIRE_ASSERT(s2Exp(Eigen::MatrixX<S>(1, 2)));  // throws, wrong delta size
-    REQUIRE_ASSERT(s2Exp(Eigen::MatrixX<S>(2, 2)));  // throws, wrong delta size
-    REQUIRE_ASSERT(s2Exp(Eigen::MatrixX<S>(3, 2)));  // throws, wrong delta size
+    REQUIRE_ASSERT(s2Exp(Eigen::MatrixX<S>(1, 2))); // throws, wrong delta size
+    REQUIRE_ASSERT(s2Exp(Eigen::MatrixX<S>(2, 2))); // throws, wrong delta size
+    REQUIRE_ASSERT(s2Exp(Eigen::MatrixX<S>(3, 2))); // throws, wrong delta size
 
     REQUIRE_NO_ASSERT(s2Exp(Eigen::MatrixX<S>(2, 2).block(0, 0, 2, 1)));
     REQUIRE_NO_ASSERT(s2Exp(Eigen::VectorX<S>(10).segment(0, 2)));
@@ -277,4 +270,4 @@ TEMPLATE_TEST_CASE("S2 test - assertions", "[S2]", float32_t, float64_t) {
   }
 }
 
-}  // namespace csLie
+} // namespace csLie
