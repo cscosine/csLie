@@ -1,1 +1,1 @@
-## csVisOpenGL is a OpenGL and Eigen3 based 3d visualizer
+## lie is a Eigen3 based SE3 SE2 lie algebra/group library
