@@ -154,4 +154,17 @@ SE3Adj<S> se3Adjoint(SE3<S> const& transf) {
   return se3Adjoint(transf.matrix());
 }
 
+template <class Derived>
+Eigen::Matrix<typename Derived::Scalar, 3, 6>
+se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixBase<Derived> const& transformedPoint) {
+  using S = typename Derived::Scalar;
+
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transformedPoint, Point3d<S>()), "transf required to be 4x4");
+
+  Eigen::Matrix<S, 3, 6> J{};
+  J.template topLeftCorner<3, 3>().setIdentity();
+  J.template topRightCorner<3, 3>() = -skewSymm(transformedPoint);
+  return J;
+}
+
 } // namespace csLie

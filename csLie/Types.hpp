@@ -175,7 +175,7 @@ using SE3Algd = SE3Alg<float64_t>;
 /// @brief convenient typedef for float32_t
 using SE3Algf = SE3Alg<float32_t>;
 
-/// @brief SE3 andjoint matrix, a 6x6 vector
+/// @brief SE3 adjoint matrix, a 6x6 vector
 /// @tparam S the scalar type
 template <class S>
 using SE3Adj = Eigen::Matrix<S, 6, 6>;
@@ -183,6 +183,17 @@ using SE3Adj = Eigen::Matrix<S, 6, 6>;
 using SE3Adjd = SE3Adj<float64_t>;
 /// @brief convenient typedef for float32_t
 using SE3Adjf = SE3Adj<float32_t>;
+
+// ------------ Points ------------
+/// @brief 3d point, a 3x1 vector
+/// @tparam S the scalar type
+template <class S>
+using Point3d = Eigen::Matrix<S, 3, 1>;
+
+/// @brief 2d point, a 2x1 vector
+/// @tparam S the scalar type
+template <class S>
+using Point2d = Eigen::Matrix<S, 2, 1>;
 
 // ------------ Utils ------------
 

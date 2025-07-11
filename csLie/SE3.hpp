@@ -41,4 +41,12 @@ SE3Adj<typename Derived::Scalar> se3Adjoint(Eigen::MatrixBase<Derived> const& tr
 template <class S>
 SE3Adj<S> se3Adjoint(SE3<S> const& transf);
 
+/// @brief SE3 d exp(eps)*T*p / d eps |_ eps=0
+/// @tparam Derived template to support generic matrix
+/// @param transformedPoint the 3x1 3d point transformed
+/// @throw if transformedPoint is not a 3x1 matrix (DEBUG only)
+template <class Derived>
+Eigen::Matrix<typename Derived::Scalar, 3, 6>
+se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixBase<Derived> const& transformedPoint);
+
 } // namespace csLie

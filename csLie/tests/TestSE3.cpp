@@ -1,3 +1,5 @@
+#include "csLie/SE3.hpp"
+#include "csLie/SO3.hpp"
 #include <cmath>
 #include <csCore/math/Angles.hpp>
 #include <csCore/testUtils/AssertCatch2.hpp>
@@ -68,6 +70,17 @@ TEMPLATE_TEST_CASE("SE3 test - adjoint", "[SE3]", float32_t, float64_t) {
   }
 }
 
+TEMPLATE_TEST_CASE("SE3 test - jacobian transformed point", "[SE3]", float32_t, float64_t) {
+  using S = TestType;
+  for (size_t i = 0; i < 100; i++) {
+    Point3d<S> const p = Point3d<S>::Random();
+
+    Eigen::Matrix<S, 3, 6> const J = se3JacobianLeftZeroPerturbationPointTransformation(p);
+    REQUIRE((J.template topLeftCorner<3, 3>() - Eigen::Matrix<S, 3, 3>::Identity().matrix()).isZero());
+    REQUIRE((J.template topRightCorner<3, 3>() - skewSymm(-p)).isZero());
+  }
+}
+
 // TODO(sc) add a test with optimization in SE3
 
 TEMPLATE_TEST_CASE("SE3 test - exp, delta wrong size", "[SE3]", float32_t, float64_t) {
@@ -126,6 +139,21 @@ TEMPLATE_TEST_CASE("SE3 test - adjoint, input is not a transformation matrix", "
   if (csLie::Asserts::isAssertParanoidEnabled()) {
     REQUIRE_ASSERT(se3Adjoint(Eigen::Matrix4<S>::Zero())); // throws, zero is not a
                                                            // transformation matrix
+  }
+}
+
+TEMPLATE_TEST_CASE("SE3 test - jacobian transformed point, input is not a 3x1 point", "[SE3]", float32_t, float64_t) {
+  using S = TestType;
+  if (csLie::Asserts::isAssertDebugEnabled()) {
+    // throws, wrong matrix size
+    REQUIRE_ASSERT(se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixX<S>(2, 2)));
+    REQUIRE_ASSERT(se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixX<S>(4, 1)));
+
+    Eigen::MatrixX<S> m10x10 = Eigen::MatrixX<S>::Identity(10, 10);
+    REQUIRE_NO_ASSERT(se3JacobianLeftZeroPerturbationPointTransformation(m10x10.block(0, 0, 3, 1))); // ok
+
+    REQUIRE_ASSERT(se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixX<S>(4, 4).block(0, 0, 4, 3)));
+    REQUIRE_ASSERT(se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 1)));
   }
 }
 
