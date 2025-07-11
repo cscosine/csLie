@@ -54,6 +54,6 @@ cs_target_link_libraries(csLie
 
 add_subdirectory(tests)
 
-cs_install_target(csLie csLieExport DEFAULT)
+cs_install_target(csLie csLie DEFAULT)
 
 cs_finalize_target(csLie)
