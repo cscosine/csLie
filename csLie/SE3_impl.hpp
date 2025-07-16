@@ -6,9 +6,6 @@
 #include <csLie/SE3.hpp>
 #include <csLie/SO3_impl.hpp>
 #include <csLie/csLieAssert.hpp>
-
-#include "SO3.hpp"
-
 namespace csLie {
 
 template <class Derived>

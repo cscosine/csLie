@@ -1,5 +1,3 @@
-#include "csLie/SE3.hpp"
-#include "csLie/SO3.hpp"
 #include <cmath>
 #include <csCore/math/Angles.hpp>
 #include <csCore/testUtils/AssertCatch2.hpp>
