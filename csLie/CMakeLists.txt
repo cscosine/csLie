@@ -49,7 +49,7 @@ cs_target_link_libraries(csLie
     	csCore::core
 		csCore::eigenUtils
 		csLie::csLieAssert
-		csLieLib::csLieLib_csCMakeBaseInclude
+		csLieSol::csLieSol_csCMakeBaseInclude
 )
 
 add_subdirectory(tests)

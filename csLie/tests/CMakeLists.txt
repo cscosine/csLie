@@ -24,8 +24,8 @@ cs_target_link_libraries(csLieTest
   csLie::csLie
   csCore::math
   csCore::testUtils
-  csLieLib::csLieLib_csCMakeBaseInclude
-  csLieLib::csLieLib_csCMakeCompileOptionsDefault
+  csLieSol::csLieSol_csCMakeBaseInclude
+  csLieSol::csLieSol_csCMakeCompileOptionsDefault
   Catch2::Catch2WithMain)
 
 # add to tests

@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.31)
-project(csLieLib VERSION 1.0.0 LANGUAGES CXX)
+project(csLieSol VERSION 1.0.0 LANGUAGES CXX)
 
 # add the csCMake system
 include(csCMake)
 
-cs_initialize_project(csLieLib
+cs_initialize_project(csLieSol
     # add the default configurations supported by this project
     DEFAULT_CONFIG Debug
     DEFAULT_CONFIG Release
