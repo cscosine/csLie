@@ -50,7 +50,6 @@ cs_target_link_libraries(csLie
 		csCore::eigenUtils
 		csLie::csLieAssert
 		csLieSol::csLieSol_csCMakeBaseInclude
-		csLieSol::csLieSol_csCMakeCompileOptionsDefault
 )
 
 add_subdirectory(tests)
@@ -58,3 +57,6 @@ add_subdirectory(tests)
 cs_install_target(csLie csLie DEFAULT)
 
 cs_finalize_target(csLie)
+
+# compile each single header in standalone, ensures includes are self contained
+cs_compileEachInstalledInclude(csLie csLieSol::csLieSol_csCMakeCompileOptionsStrict)

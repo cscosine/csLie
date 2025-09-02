@@ -24,7 +24,8 @@ cs_target_link_libraries(csLieTest
   csLie::csLie
   csCore::math
   csCore::testUtils
-  Catch2::Catch2WithMain)
+  Catch2::Catch2WithMain
+  csLieSol::csLieSol_csCMakeCompileOptionsDefault)
 
 # add to tests
 catch_discover_tests(csLieTest DISCOVERY_MODE "PRE_TEST")
