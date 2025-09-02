@@ -50,6 +50,7 @@ cs_target_link_libraries(csLie
 		csCore::eigenUtils
 		csLie::csLieAssert
 		csLieSol::csLieSol_csCMakeBaseInclude
+		csLieSol::csLieSol_csCMakeCompileOptionsDefault
 )
 
 add_subdirectory(tests)
