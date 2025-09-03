@@ -88,7 +88,7 @@ SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<Derived> const& delta) {
     return ret;
   }
   // TODO(sc) why I cannot use UNREACHABLE here? it does not compile...
-  CSLIE_ASSERT_PARANOID("csLie::so3J this is a unreachable code, how did you ended up here?");
+  CSLIE_ASSERT_PARANOID(false, "csLie::so3J this is a unreachable code, how did you ended up here?");
 }
 
 namespace detail {
@@ -215,7 +215,7 @@ SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::MatrixBase<Derived> const& delt
   }
 
   // TODO(sc) why I cannot use UNREACHABLE here? it does not compile...
-  CSLIE_ASSERT_PARANOID("csLie::so3Jinv this is a unreachable code, how did you ended up here?");
+  CSLIE_ASSERT_PARANOID(false, "csLie::so3Jinv this is a unreachable code, how did you ended up here?");
 }
 
 // reference for RPY conversion
@@ -250,7 +250,7 @@ Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(Eigen::MatrixBase<Derived
   }
 
   // TODO(sc) why I cannot use UNREACHABLE here? it does not compile...
-  CSLIE_ASSERT_PARANOID("csLie::so3ToRPY this is a unreachable code, how did you ended up here?");
+  CSLIE_ASSERT_PARANOID(false, "csLie::so3ToRPY this is a unreachable code, how did you ended up here?");
 }
 
 template <class Derived>

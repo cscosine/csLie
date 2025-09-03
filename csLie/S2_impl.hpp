@@ -39,7 +39,7 @@ S2<typename Derived::Scalar> s2Exp(Eigen::MatrixBase<Derived> const& delta) {
     S cosi = 1.;
     S sinci = 1.;
     S term = -1 / 2. * norm2;
-    for (int i = 0; i < HALF_N; ++i) {
+    for (size_t i = 0; i < HALF_N; ++i) {
       cosi += term;
       term *= inv[2 * i];
       sinci += term;
