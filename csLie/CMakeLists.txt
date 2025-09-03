@@ -20,6 +20,7 @@ list(POP_BACK CMAKE_MODULE_PATH)
 # prepare standard library
 cs_add_library(csLie INTERFACE)
 cs_add_library(csLie::csLie ALIAS csLie)
+cs_exec_clang_tidy(csLie)
 
 cs_find_package(csLie PUBLIC Eigen3 REQUIRED CONFIG)
 cs_find_package(csLie PUBLIC csCore COMPONENTS core eigenUtils REQUIRED CONFIG)
