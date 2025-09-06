@@ -4,7 +4,7 @@ project(csLieSol VERSION 1.0.0 LANGUAGES CXX)
 # add the csCMake system
 include(csCMake)
 
-cs_initialize_project(csLieSol
+cs_initialize_project(csLieSol CXX_STANDARD 17
     # add the default configurations supported by this project
     DEFAULT_CONFIG Debug
     DEFAULT_CONFIG Release
