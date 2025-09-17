@@ -31,7 +31,6 @@ SO3<typename Derived::Scalar> s2toZAlignedSO3(Eigen::MatrixBase<Derived> const& 
 /// note: repeating oplus in loops might introduce numerical errors, renormalize
 /// the vector when needed.
 ///
-/// @tparam S the scalar type
 /// @tparam Derived1 template to support generic matrix
 /// @tparam Derived2 template to support generic matrix
 /// @param v a 3d unit vector representing the s2
@@ -54,7 +53,7 @@ S2<typename Derived1::Scalar> s2oplus(Eigen::MatrixBase<Derived1> const& v, Eige
 /// this is equal to the last two column of R(v), which are returned by this
 /// function
 /// ///
-/// @tparam S the scalar type
+/// @tparam Derived the matrix derived type
 /// @param v the S2 element
 /// @return the jacobians of the oplus(v, delta) evaluated in delta = 0
 template <class Derived>
