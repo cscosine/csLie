@@ -13,6 +13,7 @@ cs_initialize_project(csLieSol CXX_STANDARD 17
     # specifiying on which base configuration they are based as second value,
     # e.g. CUSTOM_CONFIG Paranoid Debug
     CUSTOM_CONFIG Paranoid BASED_ON "Debug,Release," POSTFIX "dp"
+    STRICT_COMPILATION_ON_CONFIG Paranoid
 )
 
 # add libs, executables, etc
