@@ -4,16 +4,20 @@ project(csLieSol VERSION 1.0.0 LANGUAGES CXX)
 # add the csCMake system
 include(csCMake)
 
-cs_initialize_project(csLieSol CXX_STANDARD 17
-    # add the default configurations supported by this project
-    DEFAULT_CONFIG Debug
-    DEFAULT_CONFIG Release
+# Paranoid: undefined behavior sanitizer, used by the installed headers check
+cs_add_compile_profile_rule(
+    PROFILE csLie_paranoid
+    CONFIGS Paranoid
+    PROFILES cscmake_sanitize_undefined)
+
+cs_initialize_project(
+    NAMESPACE csLie
+    CXX_STANDARD 17
+    # the default configurations supported by this project
+    DEFAULT_CONFIG Debug Release
     DEFAULT_CONFIG_MAPPED RelWithDebInfo MAPPED_TO "RelWithDebInfo,Release,"
-    # and the custom configurations supported by this project,
-    # specifiying on which base configuration they are based as second value,
-    # e.g. CUSTOM_CONFIG Paranoid Debug
+    # a custom configuration, based on Debug (imported targets: Debug, else Release)
     CUSTOM_CONFIG Paranoid BASED_ON "Debug,Release," POSTFIX "dp"
-    STRICT_COMPILATION_ON_CONFIG Paranoid
 )
 
 # add libs, executables, etc
@@ -21,4 +25,4 @@ add_subdirectory(csLie)
 # add_subdirectory(...)
 
 # remember to add this at the end of the main cmake file
-cs_finalize_project(csLie)
+cs_finalize_project()

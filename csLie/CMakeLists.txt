@@ -20,7 +20,6 @@ list(POP_BACK CMAKE_MODULE_PATH)
 # prepare standard library
 cs_add_library(csLie INTERFACE)
 cs_add_library(csLie::csLie ALIAS csLie)
-cs_exec_clang_tidy(csLie)
 
 cs_find_package(csLie PUBLIC Eigen3 REQUIRED CONFIG)
 cs_find_package(csLie PUBLIC csCore COMPONENTS core eigenUtils REQUIRED CONFIG)
@@ -41,7 +40,6 @@ cs_target_sources(csLie
 		SO3_impl.hpp
     	Utils.hpp
 		Utils_impl.hpp
-	PRIVATE
 )
 
 cs_target_link_libraries(csLie
@@ -50,7 +48,7 @@ cs_target_link_libraries(csLie
     	csCore::core
 		csCore::eigenUtils
 		csLie::csLieAssert
-		csLieSol::csLieSol_csCMakeBaseInclude
+		csLie::cscmake_base_include
 )
 
 add_subdirectory(tests)
@@ -60,4 +58,4 @@ cs_install_target(csLie csLie DEFAULT)
 cs_finalize_target(csLie)
 
 # compile each single header in standalone, ensures includes are self contained
-cs_compileEachInstalledInclude(csLie csLieSol::csLieSol_csCMakeCompileOptionsStrict)
+cs_target_check_installed_headers(csLie COMPILE_PROFILES cscmake_strict_warnings csLie_paranoid)
