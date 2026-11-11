@@ -27,6 +27,3 @@ cs_target_link_libraries(csLieTest
 
 # add to tests
 catch_discover_tests(csLieTest DISCOVERY_MODE "PRE_TEST")
-
-
-cs_finalize_target(csLieTest)

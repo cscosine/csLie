@@ -53,9 +53,7 @@ cs_target_link_libraries(csLie
 
 add_subdirectory(tests)
 
-cs_install_target(csLie csLie DEFAULT)
-
-cs_finalize_target(csLie)
+cs_install_target(csLie COMPONENT csLie DEFAULT)
 
 # compile each single header in standalone, ensures includes are self contained
 cs_target_check_installed_headers(csLie COMPILE_PROFILES cscmake_strict_warnings csLie_paranoid)
