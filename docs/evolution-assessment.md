@@ -13,9 +13,9 @@ decisions are made.
 
 | # | Goal | Short name |
 |---|------|------------|
-| G1 | Best available **computation speed** for SO3, SE3, S2 | *Speed* |
+| G1 | Best available **computation speed** for SO3, SE3, S2, SO2, SE2 | *Speed* |
 | G2 | Best available **numerical accuracy and correct edge cases**, in **float32 and float64** | *Accuracy* |
-| G3 | Scope: **SO3, SE3, S2** (SO2/SE2 exist and stay, low priority; Sim3 etc. out of scope) | *Scope* |
+| G3 | Scope: **SO3, SE3, S2** for 3D and **SO2, SE2** for 2D, all first-class (Sim3 etc. out of scope) | *Scope* |
 | G4 | **CPU vectorization** (SIMD), assessed and favoured | *SIMD* |
 | G5 | Usable **on GPU** as well | *GPU* |
 | G6 | Header-only vs static library: choose whatever gives the best speed and optimization | *Packaging* |
@@ -160,8 +160,26 @@ Other rules:
 
 ### 3.2 G3 — Scope and representation
 
-**Scope.** SO3, SE3, S2 as first-class; SO2/SE2 kept (cheap, already present),
-`se2Log` completed. No Sim3/SE_2(3)/RxSO3.
+**Scope.** SO3, SE3, S2 for 3D and SO2, SE2 for 2D, all first-class: same API,
+same Jacobian conventions, same accuracy and speed requirements. No
+Sim3/SE_2(3)/RxSO3.
+
+**SO2 and SE2 (2D).** They are needed for planar robots and odometry, 2D SLAM
+and scan matching, particle filters, and image-plane motion (csImgTracker,
+csVisOpenGL 2D). They are cheap, but they are often evaluated in very large
+numbers (particles, scan points, image patches), so the batch/SIMD path (§3.4)
+matters for them as much as for 3D.
+
+| Item | Recommendation |
+|------|----------------|
+| SO2 storage | unit complex number `(c, s)`: compose = 4 FMA, act = 4 FMA, normalize = 1 rsqrt; the angle is not stored (no wrap-around) |
+| SO2 log | `atan2(s, c)`, result in (−π, π] |
+| SE2 storage | unit complex + translation (4 scalars) |
+| se2 tangent ordering | `[x, y, θ]` (translation first, consistent with se3 `[t; ω]`) |
+| SE2 exp | `V = [[A, −B], [B, A]]` with `A = sinθ/θ` and `B = (1−cosθ)/θ = sin(θ/2)·sinc(θ/2)` (cancellation-free); Taylor near 0 with per-precision thresholds |
+| SE2 log (missing today) | `V⁻¹ = [[a, b], [−b, a]]` with `a = (θ/2)·cot(θ/2)` (Taylor `1 − θ²/12` near 0) and `b = θ/2`; well-defined up to ±π |
+| Jacobians | left/right Jacobians and Jacobians of compose/inverse/act/⊕/⊖, all closed form and small (3×3) |
+| 2D/3D embedding | helpers SE2 ↔ SE3 (planar pose at z = 0, yaw about z), used by planar robots in 3D maps |
 
 **Representation, the main speed/accuracy design decision:**
 
@@ -317,6 +335,36 @@ Where compiled parts make sense (optional components, not the core):
 - **csCore**: today used for asserts and shape checks. Keep it for the host-side
   API (Paranoid checks are valuable), but the kernel layer stays dependency-free
   (header-only, no exceptions, no allocation).
+- **Relation to csCore: separate repository, depending only on csCore's base
+  layer.** csLie is not merged into csCore: it has its own goals (precision
+  suite, benchmarks, SIMD/GPU, possibly a public release), its own optional
+  dependencies (xsimd, CUDA) that must not land in csCore, and csCamera depends
+  on it. csLie links only csCore's base components (assert, types, math traits),
+  so when csCore grows utilities (properties, serialization, logging) csLie does
+  not pull them. See the csCore assessment, §4.3.
+
+### 3.8 Python bindings (optional)
+
+**Worth adding, as a thin optional layer, once the C++ API is stable (after
+phase 2).** The aim is not to compete with jaxlie/PyPose, but to use *this*
+implementation from Python:
+
+- **Validation**: the precision suite (§6) can compare against mpmath/SymPy
+  references and plot error-vs-angle curves with matplotlib far more easily than in C++.
+- **Tools**: notebooks, dataset conversion, quick experiments with the same
+  numerics as the C++ code.
+
+How:
+
+- **nanobind** (smaller and faster bindings than pybind11, same author).
+- A **batch API on NumPy arrays** (`(N,4)` quaternions, `(N,3)` tangents, …):
+  calling one function per element from Python is slow, while batches map
+  directly onto the SoA/SIMD path (§3.4).
+- Later, **DLPack** to pass GPU arrays to and from PyTorch/JAX without copies (§3.5).
+- Packaging with scikit-build-core and cibuildwheel, in a separate optional
+  target or package. The C++ build never depends on Python.
+
+Cost: wheel builds, a Python matrix in CI, and keeping the binding API stable.
 
 ---
 
@@ -482,10 +530,11 @@ Scalar-generic, branch-light kernels with math traits and per-precision
 thresholds; `CSLIE_HD`; no csCore dependency inside kernels. Existing free functions
 re-implemented on top, with no API change.
 
-**Phase 2: Types and complete API for SO3, SE3, S2.**
-Quaternion-based `SO3`/`SE3`, `S2` with log/⊖ and full Jacobians; left and right
+**Phase 2: Types and complete API for SO3, SE3, S2, SO2, SE2.**
+Quaternion-based `SO3`/`SE3`, `S2` with log/⊖ and full Jacobians; complex-based
+`SO2`/`SE2` with `se2Log` completed and full Jacobians; left and right
 Jacobians; compose/inverse/act/plus/minus with optional Jacobians; slerp;
-normalization. Optional Ceres `Jet` support. `se2Log` completed.
+normalization; SE2 ↔ SE3 helpers. Optional Ceres `Jet` support.
 
 **Phase 3: CPU batch SIMD.**
 `csLie::batch` with span/SoA API on xsimd; measure vs scalar and alternatives;
@@ -499,12 +548,15 @@ float32 accuracy validated on device.
 Extended-precision references in CI, fuzzing of edge inputs, documentation of
 conventions and accuracy per function.
 
+**Optional, any time after phase 2: Python bindings** (§3.8), nanobind with a
+batch NumPy API; DLPack after phase 4.
+
 ---
 
 ## 9. Summary
 
 - csLie is a **small, tested, header-only** seed with a rare **S2** implementation,
-  but it is incomplete for SO3/SE3/S2 and has **measurable numerical defects**:
+  but it is incomplete for SO3/SE3/S2 (and SE2 lacks `log`) and has **measurable numerical defects**:
   NaN at exactly π, ~1e-11 small-angle error in float64 `se3Exp`, silent
   double promotion in float32, and `acos`-based logs.
 - **Accuracy first**: cancellation-free formulas, `atan2`-based angles,
@@ -519,3 +571,6 @@ conventions and accuracy per function.
   batches of SO3/SE3 exp/log. Borrow API from manif, numerics from GTSAM,
   branch-free and codegen ideas from symforce/wrenfold, batch types from
   sophus-rs, and benchmark against them.
+- **Scope**: SO3, SE3, S2 for 3D and SO2, SE2 for 2D, all first-class.
+- **Stays a separate repository** on csCore's base layer. **Python bindings**
+  are an optional nanobind layer once the API is stable.
