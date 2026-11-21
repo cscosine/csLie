@@ -8,8 +8,7 @@
 #include <csLie/csLieAssert.hpp>
 namespace csLie {
 
-template <class Derived>
-SE3<typename Derived::Scalar> se3Exp(Eigen::MatrixBase<Derived> const& delta) {
+template <class Derived> SE3<typename Derived::Scalar> se3Exp(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SE3Alg<S>()), "delta required to be 6x1");
 
@@ -28,7 +27,8 @@ SE3<typename Derived::Scalar> se3Exp(Eigen::MatrixBase<Derived> const& delta) {
     S tmp10 = delta(2, 0) * delta(4, 0) - delta(1, 0) * delta(5, 0);
     S tmp11 = delta(1, 0) * delta(3, 0) - delta(0, 0) * delta(4, 0);
     S tmp12 = delta(0, 0) * delta(5, 0) - delta(2, 0) * delta(3, 0);
-    S tmp13 = static_cast<S>(1.0 / 6.0) - theta_sq * (static_cast<S>(1.0 / 120.0) - static_cast<S>(1.0 / 5040.0) * theta_sq);
+    S tmp13 =
+        static_cast<S>(1.0 / 6.0) - theta_sq * (static_cast<S>(1.0 / 120.0) - static_cast<S>(1.0 / 5040.0) * theta_sq);
 
     transf(0, 0) = 1 - (w2(2) + w2(1)) * tmp5;
     transf(1, 0) = delta(5, 0) * tmp7 + tmp6;
@@ -79,11 +79,11 @@ SE3<typename Derived::Scalar> se3Exp(Eigen::MatrixBase<Derived> const& delta) {
   return transf;
 }
 
-template <class Derived>
-SE3Alg<typename Derived::Scalar> se3Log(Eigen::MatrixBase<Derived> const& transf) {
+template <class Derived> SE3Alg<typename Derived::Scalar> se3Log(Eigen::MatrixBase<Derived> const &transf) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE3Matrix<S>()), "transf required to be 4x4");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE3Matrix<S>()),
+                     "transf required to be 4x4");
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix3D(transf), "transf is not a valid isometry matrix");
 
   // SO3 log
@@ -126,37 +126,33 @@ SE3Alg<typename Derived::Scalar> se3Log(Eigen::MatrixBase<Derived> const& transf
   return ret;
 }
 
-template <class S>
-SE3Alg<S> se3Log(SE3<S> const& transf) {
-  return se3Log(transf.matrix());
-}
+template <class S> SE3Alg<S> se3Log(SE3<S> const &transf) { return se3Log(transf.matrix()); }
 
-template <class Derived>
-SE3Adj<typename Derived::Scalar> se3Adjoint(Eigen::MatrixBase<Derived> const& transf) {
+template <class Derived> SE3Adj<typename Derived::Scalar> se3Adjoint(Eigen::MatrixBase<Derived> const &transf) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE3Matrix<S>()), "transf required to be 4x4");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE3Matrix<S>()),
+                     "transf required to be 4x4");
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix3D(transf), "transf is not a valid isometry matrix");
 
   SE3Adj<S> ad;
   ad.template topLeftCorner<3, 3>() = transf.template topLeftCorner<3, 3>();
-  ad.template topRightCorner<3, 3>() = skewSymm(transf.template topRightCorner<3, 1>()) * transf.template topLeftCorner<3, 3>();
+  ad.template topRightCorner<3, 3>() =
+      skewSymm(transf.template topRightCorner<3, 1>()) * transf.template topLeftCorner<3, 3>();
   ad.template bottomRightCorner<3, 3>() = transf.template topLeftCorner<3, 3>();
   ad.template bottomLeftCorner<3, 3>().setZero();
   return ad;
 }
 
-template <class S>
-SE3Adj<S> se3Adjoint(SE3<S> const& transf) {
-  return se3Adjoint(transf.matrix());
-}
+template <class S> SE3Adj<S> se3Adjoint(SE3<S> const &transf) { return se3Adjoint(transf.matrix()); }
 
 template <class Derived>
 Eigen::Matrix<typename Derived::Scalar, 3, 6>
-se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixBase<Derived> const& transformedPoint) {
+se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixBase<Derived> const &transformedPoint) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transformedPoint, Point3d<S>()), "transf required to be 4x4");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transformedPoint, Point3d<S>()),
+                     "transf required to be 4x4");
 
   Eigen::Matrix<S, 3, 6> J{};
   J.template topLeftCorner<3, 3>().setIdentity();

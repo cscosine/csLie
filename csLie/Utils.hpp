@@ -12,7 +12,7 @@ namespace csLie {
 /// @throw if v is not a 3x1 matrix (DEBUG)
 /// @throw if v has zero norm and cannot be normalized (PARANOID)
 template <class Derived>
-UnitVector3dWithJacobians<typename Derived::Scalar> normalize3dVectorWithJacobians(Eigen::MatrixBase<Derived> const& v);
+UnitVector3dWithJacobians<typename Derived::Scalar> normalize3dVectorWithJacobians(Eigen::MatrixBase<Derived> const &v);
 
 // TODO(sc) implement a version returning a optional in case the normalization
 // cannot be performed

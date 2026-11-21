@@ -70,9 +70,10 @@ TEMPLATE_TEST_CASE("S2 test - plane fitting", "[S2]", float32_t, float64_t) {
   // generate a random rotation matrix
   Eigen::Transform<S, 3, Eigen::Isometry> Rt{Eigen::Transform<S, 3, Eigen::Isometry>::Identity()};
   Rt.translation().setRandom();
-  Rt.linear() = Eigen::Matrix<S, 3, 3>(Eigen::AngleAxis<S>(Eigen::Matrix<S, 1, 1>::Random()(0), Eigen::Vector3<S>::UnitX()) *
-                                       Eigen::AngleAxis<S>(Eigen::Matrix<S, 1, 1>::Random()(0), Eigen::Vector3<S>::UnitY()) *
-                                       Eigen::AngleAxis<S>(Eigen::Matrix<S, 1, 1>::Random()(0), Eigen::Vector3<S>::UnitZ()));
+  Rt.linear() =
+      Eigen::Matrix<S, 3, 3>(Eigen::AngleAxis<S>(Eigen::Matrix<S, 1, 1>::Random()(0), Eigen::Vector3<S>::UnitX()) *
+                             Eigen::AngleAxis<S>(Eigen::Matrix<S, 1, 1>::Random()(0), Eigen::Vector3<S>::UnitY()) *
+                             Eigen::AngleAxis<S>(Eigen::Matrix<S, 1, 1>::Random()(0), Eigen::Vector3<S>::UnitZ()));
 
   // generate a random set of points on the Z=0 plane defined by Rt
   int const N = 40;
