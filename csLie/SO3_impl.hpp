@@ -8,8 +8,7 @@
 
 namespace csLie {
 
-template <class Derived>
-SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const& delta) {
+template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
 
@@ -46,8 +45,7 @@ SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const& delta) {
   return R;
 }
 
-template <class Derived>
-SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<Derived> const& delta) {
+template <class Derived> SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
 
@@ -92,10 +90,7 @@ SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<Derived> const& delta) {
 }
 
 namespace detail {
-template <typename T>
-int signum(T val) {
-  return (static_cast<T>(0) < val) - (val < static_cast<T>(0));
-}
+template <typename T> int signum(T val) { return (static_cast<T>(0) < val) - (val < static_cast<T>(0)); }
 } // namespace detail
 
 // TODO(sc) references for better impl
@@ -103,8 +98,7 @@ int signum(T val) {
 // https://github.com/strasdat/Sophus
 // https://github.com/farm-ng/farm-ng-core/tree/cygnet-dev (aka Sophus 2.0)
 
-template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Eigen::MatrixBase<Derived> const& rot) {
+template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Eigen::MatrixBase<Derived> const &rot) {
   using S = typename Derived::Scalar;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO3<S>()), "rot required to be 3x3");
@@ -125,7 +119,8 @@ Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Eigen::MatrixBase<Derived> 
 
   if (ct > almostOne) {
     // special case at 1
-    const S f = 1 + st2 * (static_cast<S>(1.0 / 6.0) + st2 * (static_cast<S>(3.0 / 40.0) + st2 * static_cast<S>(5.0 / 112.0)));
+    const S f =
+        1 + st2 * (static_cast<S>(1.0 / 6.0) + st2 * (static_cast<S>(3.0 / 40.0) + st2 * static_cast<S>(5.0 / 112.0)));
     ret *= f;
   } else if (ct > almostMinusOne) {
     // standard case
@@ -172,8 +167,7 @@ Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Eigen::MatrixBase<Derived> 
   return ret;
 }
 
-template <class Derived>
-SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::MatrixBase<Derived> const& delta) {
+template <class Derived> SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
 
@@ -220,8 +214,7 @@ SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::MatrixBase<Derived> const& delt
 
 // reference for RPY conversion
 // https://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
-template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(Eigen::MatrixBase<Derived> const& rot) {
+template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(Eigen::MatrixBase<Derived> const &rot) {
   using S = typename Derived::Scalar;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO3<S>()), "rot required to be 3x3");
@@ -253,11 +246,11 @@ Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(Eigen::MatrixBase<Derived
   CSLIE_ASSERT_PARANOID(false, "csLie::so3ToRPY this is a unreachable code, how did you ended up here?");
 }
 
-template <class Derived>
-SO3<typename Derived::Scalar> rpyToSo3(Eigen::MatrixBase<Derived> const& rpy) {
+template <class Derived> SO3<typename Derived::Scalar> rpyToSo3(Eigen::MatrixBase<Derived> const &rpy) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rpy, Eigen::Matrix<S, 3, 1>()), "rpy required to be 3x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rpy, Eigen::Matrix<S, 3, 1>()),
+                     "rpy required to be 3x1");
 
   SO3<S> R;
 
@@ -287,11 +280,11 @@ SO3<typename Derived::Scalar> rpyToSo3(Eigen::MatrixBase<Derived> const& rpy) {
   return R;
 }
 
-template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 3, 3> skewSymm(Eigen::MatrixBase<Derived> const& v) {
+template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 3> skewSymm(Eigen::MatrixBase<Derived> const &v) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, Eigen::Matrix<S, 3, 1>()), "v required to be 3x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, Eigen::Matrix<S, 3, 1>()),
+                     "v required to be 3x1");
 
   Eigen::Matrix<S, 3, 3> R;
 

@@ -6,8 +6,7 @@ namespace csLie {
 
 /// @brief a set of constants used in the library
 /// @tparam S the scalar type
-template <typename S>
-class Constants {
+template <typename S> class Constants {
 public:
   /// @brief the machine epsilon, i.e. the minium number that makes (1 + epsilon
   /// == 1) true

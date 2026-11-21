@@ -9,16 +9,14 @@ namespace csLie {
 /// @tparam Derived template to support generic matrix
 /// @param delta a 2d vector representing the s2 algebra vector
 /// @return the unit vector in S2 from the algebra vector in s2
-template <class Derived>
-S2<typename Derived::Scalar> s2Exp(Eigen::MatrixBase<Derived> const& delta);
+template <class Derived> S2<typename Derived::Scalar> s2Exp(Eigen::MatrixBase<Derived> const &delta);
 
 /// @brief transform a S2 unit vector into a SO3 rotation matrix with x aligned
 /// to the unit vector
 /// @tparam Derived template to support generic matrix
 /// @param v the unit vector
 /// @return a rotation matrix
-template <class Derived>
-SO3<typename Derived::Scalar> s2toZAlignedSO3(Eigen::MatrixBase<Derived> const& v);
+template <class Derived> SO3<typename Derived::Scalar> s2toZAlignedSO3(Eigen::MatrixBase<Derived> const &v);
 
 /// @brief perform the "oplus" addition of a S2 element with the exp of a s2
 /// algebra vector given
@@ -37,7 +35,7 @@ SO3<typename Derived::Scalar> s2toZAlignedSO3(Eigen::MatrixBase<Derived> const& 
 /// @param delta a 2d vector representing the s2 algebra vector
 /// @return the result of the oplus, namely s2toZAlignedSO3(V) * s2Exp(delta)
 template <class Derived1, class Derived2>
-S2<typename Derived1::Scalar> s2oplus(Eigen::MatrixBase<Derived1> const& v, Eigen::MatrixBase<Derived2> const& delta);
+S2<typename Derived1::Scalar> s2oplus(Eigen::MatrixBase<Derived1> const &v, Eigen::MatrixBase<Derived2> const &delta);
 
 /// @brief compute the jacobian of the oplus operation when delta is zero
 ///
@@ -56,7 +54,6 @@ S2<typename Derived1::Scalar> s2oplus(Eigen::MatrixBase<Derived1> const& v, Eige
 /// @tparam Derived the matrix derived type
 /// @param v the S2 element
 /// @return the jacobians of the oplus(v, delta) evaluated in delta = 0
-template <class Derived>
-s2oplusJac<typename Derived::Scalar> s2_d_oplus_d_delta_0(Eigen::MatrixBase<Derived> const& v);
+template <class Derived> s2oplusJac<typename Derived::Scalar> s2_d_oplus_d_delta_0(Eigen::MatrixBase<Derived> const &v);
 
 } // namespace csLie

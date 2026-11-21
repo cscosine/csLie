@@ -39,7 +39,8 @@ TEMPLATE_TEST_CASE("SO2 test - base", "[SO2]", float32_t, float64_t) {
   for (size_t i = 0; i < randoms.size(); i++) {
     REQUIRE(csCore::eigenUtils::isValidRotationMatrix2D(so2Exp(randoms(i))));
     // log(exp(d)) = d
-    REQUIRE_THAT(csCore::math::angleDistance(so2Log(so2Exp(randoms(i))), randoms(i)), Catch::Matchers::WithinAbs(0.0, PRECISION));
+    REQUIRE_THAT(csCore::math::angleDistance(so2Log(so2Exp(randoms(i))), randoms(i)),
+                 Catch::Matchers::WithinAbs(0.0, PRECISION));
 
     // exp(log(exp(d))) * exp(d)^T = I
     REQUIRE((so2Exp(so2Log(so2Exp(randoms(i)))) * so2Exp(randoms(i)).transpose() - SO2<S>::Identity()).isZero());

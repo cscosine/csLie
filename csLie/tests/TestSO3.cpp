@@ -113,8 +113,8 @@ TEMPLATE_TEST_CASE("SO3 test - from/to RPY", "[SO3]", float32_t, float64_t) {
     SO3<S> r_a_r{rpyToSo3(a_r)};
 
     SO3<S> r_e;
-    r_e = Eigen::AngleAxis<S>(a(2), Eigen::Vector3<S>::UnitZ()) * Eigen::AngleAxis<S>(a(1), Eigen::Vector3<S>::UnitY()) *
-          Eigen::AngleAxis<S>(a(0), Eigen::Vector3<S>::UnitX());
+    r_e = Eigen::AngleAxis<S>(a(2), Eigen::Vector3<S>::UnitZ()) *
+          Eigen::AngleAxis<S>(a(1), Eigen::Vector3<S>::UnitY()) * Eigen::AngleAxis<S>(a(0), Eigen::Vector3<S>::UnitX());
 
     REQUIRE((r_a_r - r).isZero());
     REQUIRE((r - r_e).isZero());

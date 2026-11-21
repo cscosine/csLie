@@ -9,8 +9,7 @@
 
 namespace csLie {
 
-template <class Derived>
-SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<Derived> const& delta) {
+template <class Derived> SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SE2Alg<S>()), "delta required to be 3x1");
@@ -45,11 +44,11 @@ SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<Derived> const& delta) {
   return Rt;
 }
 
-template <class Derived>
-SE2<typename Derived::Scalar> xyYToSe2(Eigen::MatrixBase<Derived> const& xyY) {
+template <class Derived> SE2<typename Derived::Scalar> xyYToSe2(Eigen::MatrixBase<Derived> const &xyY) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(xyY, Eigen::Matrix<S, 3, 1>()), "xyY required to be 3x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(xyY, Eigen::Matrix<S, 3, 1>()),
+                     "xyY required to be 3x1");
 
   SE2<S> Rt{};
 
@@ -67,11 +66,11 @@ SE2<typename Derived::Scalar> xyYToSe2(Eigen::MatrixBase<Derived> const& xyY) {
   return Rt;
 }
 
-template <class Derived>
-Eigen::Vector3<typename Derived::Scalar> se2ToxyY(Eigen::MatrixBase<Derived> const& transf) {
+template <class Derived> Eigen::Vector3<typename Derived::Scalar> se2ToxyY(Eigen::MatrixBase<Derived> const &transf) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE2Matrix<S>()), "transf required to be 3x3");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE2Matrix<S>()),
+                     "transf required to be 3x3");
 
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix2D(transf), "transf is not a valid isometry matrix");
 
@@ -79,9 +78,6 @@ Eigen::Vector3<typename Derived::Scalar> se2ToxyY(Eigen::MatrixBase<Derived> con
   return xyY;
 }
 
-template <class S>
-Eigen::Vector3<S> se2ToxyY(SE2<S> const& transf) {
-  return se2ToxyY(transf.matrix());
-}
+template <class S> Eigen::Vector3<S> se2ToxyY(SE2<S> const &transf) { return se2ToxyY(transf.matrix()); }
 
 } // namespace csLie
