@@ -89,82 +89,56 @@ template <class Derived> SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<D
   CSLIE_ASSERT_PARANOID(false, "csLie::so3J this is a unreachable code, how did you ended up here?");
 }
 
-namespace detail {
-template <typename T> int signum(T val) { return (static_cast<T>(0) < val) - (val < static_cast<T>(0)); }
-} // namespace detail
-
-// TODO(sc) references for better impl
-// https://pettni.github.io/smooth/index.html
-// https://github.com/strasdat/Sophus
-// https://github.com/farm-ng/farm-ng-core/tree/cygnet-dev (aka Sophus 2.0)
-
 template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Eigen::MatrixBase<Derived> const &rot) {
   using S = typename Derived::Scalar;
+  using std::atan2;
+  using std::sqrt;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO3<S>()), "rot required to be 3x3");
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidRotationMatrix3D(rot), "rot is not a valid rotation matrix");
 
-  SO3Alg<S> ret;
-  ret(0) = S(0.5) * (rot(2, 1) - rot(1, 2));
-  ret(1) = S(0.5) * (rot(0, 2) - rot(2, 0));
-  ret(2) = S(0.5) * (rot(1, 0) - rot(0, 1));
-
-  S const ct = static_cast<S>(0.5) * (rot.trace() - 1);
-  S const st2 = ret.cwiseAbs2().sum();
-  S const st = std::sqrt(st2);
-
-  // TODO(sc) find better constants / better impl
-  static constexpr S almostOne{0.999856};
-  static constexpr S almostMinusOne{-0.999856};
-
-  if (ct > almostOne) {
-    // special case at 1
-    const S f =
-        1 + st2 * (static_cast<S>(1.0 / 6.0) + st2 * (static_cast<S>(3.0 / 40.0) + st2 * static_cast<S>(5.0 / 112.0)));
-    ret *= f;
-  } else if (ct > almostMinusOne) {
-    // standard case
-    const S theta = std::acos(ct);
-    const S f = theta / st;
-    ret *= f;
+  // Rotation matrix to a quaternion (w, v), up to a positive scale, with Shepperd's method: the square root is taken
+  // of the largest of 1 + trace and the diagonal terms, so nothing is divided by a value near zero. Then
+  // theta = 2 atan2(|v|, w) and omega = theta v / |v|, accurate at every angle (no acos, no series, no switch).
+  // As GTSAM's SO3::Logmap (Hertzberg et al., Information Fusion, 2011).
+  S const tr = rot(0, 0) + rot(1, 1) + rot(2, 2);
+  S w;
+  SO3Alg<S> v;
+  if (tr > S(0)) {
+    // theta < 2 pi / 3: (1 + tr, vee(R - R^T)) = 4 cos(theta / 2) (w, v)
+    w = S(1) + tr;
+    v << rot(2, 1) - rot(1, 2), rot(0, 2) - rot(2, 0), rot(1, 0) - rot(0, 1);
   } else {
-    // special case at -1
-    const S theta = Constants<S>::pi - std::asin(st);
-    const S invB = (theta * theta) / (1 - ct);
-
-    const S w00 = invB * (rot(0, 0) - ct);
-    const S w11 = invB * (rot(1, 1) - ct);
-    const S w22 = invB * (rot(2, 2) - ct);
-
-    const S w01 = invB * S(0.5) * (rot(1, 0) + rot(0, 1));
-    const S w02 = invB * S(0.5) * (rot(2, 0) + rot(0, 2));
-    const S w12 = invB * S(0.5) * (rot(2, 1) + rot(1, 2));
-
-    if (w00 > w11) {
-      if (w00 > w22) {
-        ret(0) = detail::signum(ret(0)) * std::sqrt(w00);
-        const S inv_w0 = 1.0 / ret(0);
-        ret(1) = w01 * inv_w0;
-        ret(2) = w02 * inv_w0;
-      } else {
-        ret(2) = detail::signum(ret(2)) * std::sqrt(w22);
-        const S inv_w2 = 1 / ret(2);
-        ret(0) = w02 * inv_w2;
-        ret(1) = w12 * inv_w2;
-      }
-    } else if (w11 > w22) {
-      ret(1) = detail::signum(ret(1)) * std::sqrt(w11);
-      const S inv_w1 = 1 / ret(1);
-      ret(0) = w01 * inv_w1;
-      ret(2) = w12 * inv_w1;
-    } else {
-      ret(2) = detail::signum(ret(2)) * std::sqrt(w22);
-      const S inv_w2 = 1 / ret(2);
-      ret(0) = w02 * inv_w2;
-      ret(1) = w12 * inv_w2;
+    // pivot on the largest diagonal term i: 1 + 2 R(i, i) - tr = 4 v_i^2 (up to the scale)
+    int i = 0;
+    if (rot(1, 1) > rot(i, i)) {
+      i = 1;
+    }
+    if (rot(2, 2) > rot(i, i)) {
+      i = 2;
+    }
+    int const j = (i + 1) % 3;
+    int const k = (i + 2) % 3;
+    S const r = sqrt(S(1) + S(2) * rot(i, i) - tr);
+    S const invR = S(1) / r;
+    v(i) = r;
+    v(j) = (rot(j, i) + rot(i, j)) * invR;
+    v(k) = (rot(k, i) + rot(i, k)) * invR;
+    w = (rot(k, j) - rot(j, k)) * invR;
+    // theta in [0, pi]; at exactly pi (w = 0) the sign is the pivot's: deterministic
+    if (w < S(0)) {
+      w = -w;
+      v = -v;
     }
   }
-  return ret;
+
+  S const n = v.norm();
+  if (n == S(0)) {
+    // the identity (the other branch has n >= r > 0)
+    return SO3Alg<S>::Zero();
+  }
+  S const theta = S(2) * atan2(n, w);
+  return (theta / n) * v;
 }
 
 template <class Derived> SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::MatrixBase<Derived> const &delta) {

@@ -10,10 +10,49 @@ include(Catch)
 
 cs_target_sources(
   csLieTest
-  PRIVATE TestSE2.cpp TestS2.cpp TestSO2.cpp TestSO3.cpp TestSE3.cpp TestUtils.cpp
+  PRIVATE TestSE2.cpp TestS2.cpp TestSO2.cpp TestSO3.cpp TestSO3Accuracy.cpp TestSE3.cpp TestUtils.cpp
 )
 
 cs_target_link_libraries(csLieTest PRIVATE csLie::csLie csCore::math csCore::testUtils Catch2::Catch2WithMain)
 
 # add to tests
 catch_discover_tests(csLieTest DISCOVERY_MODE "PRE_TEST")
+
+# the generator of the reference data (reference/generateReferenceData.cpp), where __float128 and libquadmath exist
+# (GCC on x86-64 Linux): a test checks that the committed ReferenceData.hpp is its output, a target regenerates it
+include(CheckCXXSourceCompiles)
+set(CMAKE_REQUIRED_LIBRARIES quadmath)
+check_cxx_source_compiles(
+  [=[
+  #include <quadmath.h>
+  int main() { __float128 x = 1; return atanq(x) > 0 ? 0 : 1; }
+  ]=]
+  CSLIE_HAS_QUADMATH
+)
+unset(CMAKE_REQUIRED_LIBRARIES)
+
+if(CSLIE_HAS_QUADMATH)
+  cs_add_executable(csLieGenerateReferenceData)
+  cs_target_sources(csLieGenerateReferenceData PRIVATE reference/generateReferenceData.cpp)
+  cs_target_link_libraries(csLieGenerateReferenceData PRIVATE quadmath)
+
+  set(
+    reference_args
+    -DGENERATOR=$<TARGET_FILE:csLieGenerateReferenceData>
+    -DREFERENCE=${CMAKE_CURRENT_SOURCE_DIR}/reference/ReferenceData.hpp
+    -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/ReferenceData.hpp
+  )
+  add_test(
+    NAME "csLie reference data up to date"
+    COMMAND ${CMAKE_COMMAND} ${reference_args} -DMODE=CHECK -P ${CMAKE_CURRENT_SOURCE_DIR}/reference/ReferenceData.cmake
+  )
+  add_custom_target(
+    csLieRegenerateReferenceData
+    COMMAND ${CMAKE_COMMAND} ${reference_args} -DMODE=WRITE -P ${CMAKE_CURRENT_SOURCE_DIR}/reference/ReferenceData.cmake
+    DEPENDS csLieGenerateReferenceData
+    COMMENT "Regenerating csLie/tests/reference/ReferenceData.hpp"
+    VERBATIM
+  )
+else()
+  message(STATUS "csLie: no __float128 / libquadmath, the reference data check is skipped")
+endif()
