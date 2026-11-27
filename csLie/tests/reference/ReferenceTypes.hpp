@@ -11,20 +11,25 @@ struct So3LogCase {
   double omega[3];
 };
 
-/// a rotation vector (exactly representable in the tested precision) and its exact exp (row major)
-struct So3ExpCase {
+/// a rotation vector (exactly representable in the tested precision) and the exact value of a 3x3 function of it (the
+/// exp, the left jacobian or its inverse; row major)
+struct So3MatrixCase {
   char const *label;
   double omega[3];
-  double R[9];
+  double M[9];
 };
 
-/// an angle (exactly representable in the tested precision) and its exact exp coefficients
-/// A = sin(theta) / theta, B = (1 - cos(theta)) / theta^2
+/// an angle (exactly representable in the tested precision) and its exact coefficients of the exp and of the
+/// jacobians: A = sin(theta) / theta, B = (1 - cos(theta)) / theta^2, C = (theta - sin(theta)) / theta^3,
+/// D = (1 - A / (2 B)) / theta^2, K = A / (2 B)
 struct CoeffCase {
   char const *label;
   double theta;
   double A;
   double B;
+  double C;
+  double D;
+  double K;
 };
 
 } // namespace csLie::testReference

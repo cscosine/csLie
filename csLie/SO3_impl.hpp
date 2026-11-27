@@ -28,6 +28,65 @@ template <class S> SO3ExpCoeffs<S> so3ExpCoeffs(S const theta) {
   return {h * cos(half), S(0.5) * h * h};
 }
 
+/// @brief the coefficients of the SO3 left jacobian and of its inverse (W = skewSymm(omega), theta = |omega|):
+/// J = I + B W + C W^2 = A I + B W + C omega omega^T, J^-1 = I - W / 2 + D W^2 = K I - W / 2 + D omega omega^T
+template <class S> struct SO3JCoeffs {
+  S A; ///< sin(theta) / theta
+  S B; ///< (1 - cos(theta)) / theta^2
+  S C; ///< (theta - sin(theta)) / theta^3
+  S D; ///< (1 - A / (2 B)) / theta^2
+  S K; ///< A / (2 B) = (theta / 2) cot(theta / 2) = 1 - D theta^2
+};
+
+/// @brief the number of terms of the series of C(x) = (x - sin(x)) / x^3 = sum_k (-x^2)^k / (2k + 3)! that makes its
+/// truncation error below epsilon / 8 of C at x <= 2 (C(2) > 1/8): the first omitted term 4^n / (2n + 3)! below
+/// epsilon / 64. A bound, computed in S at compile time
+template <class S> constexpr int so3CSeriesTerms() {
+  S term = S(1) / S(6); // the first omitted term, 4^n / (2n + 3)!, at n = 0
+  int n = 0;
+  while (term > Constants<S>::epsilon / S(64)) {
+    ++n;
+    term *= S(4) / S((2 * n + 2) * (2 * n + 3));
+  }
+  return n;
+}
+
+/// @brief C(x) = (x - sin(x)) / x^3 at x >= 0, given sin(x): accurate to a few epsilon. The closed form loses digits
+/// to the cancellation of x - sin(x) below x ~ 2: there the series, with as many terms as the precision of S needs
+template <class S> S so3CoeffC(S const x, S const sinX) {
+  if (x > S(2)) {
+    return (x - sinX) / (x * x * x);
+  }
+  constexpr int terms = so3CSeriesTerms<S>();
+  // Horner: C = (1 - x^2 / (4 5) (1 - x^2 / (6 7) (1 - ...))) / 6
+  S const x2 = x * x;
+  S r = S(1);
+  for (int k = terms - 1; k >= 1; --k) {
+    r = S(1) - x2 * r / S((2 * k + 2) * (2 * k + 3));
+  }
+  return r / S(6);
+}
+
+/// @brief the coefficients of the SO3 left jacobian and of its inverse at the angle theta >= 0, accurate to a few
+/// epsilon at every angle (J^-1 is singular at theta = 2 pi). From the half angle x = theta / 2, with no cancellation:
+/// A and B as so3ExpCoeffs, C(theta) = (C(x) + A(x) B(x)) / 4, D(theta) = (B(x) - C(x)) / (4 A(x)), K = cos(x) / A(x)
+/// (C(x) ~ 1/6 against A(x) B(x) ~ 1/2 and B(x) ~ 1/2; beyond theta = 2 pi, B(x) - C(x) cancels mildly, by 2.5 at
+/// theta = 10). C and D in closed form, (theta - sin(theta)) / theta^3 and
+/// (1 - A / (2 B)) / theta^2, lose all their digits at small angles.
+template <class S> SO3JCoeffs<S> so3JCoeffs(S const theta) {
+  using std::cos;
+  using std::sin;
+  S const half = theta / S(2);
+  S const quarter = theta / S(4);
+  S const sinHalf = sin(half);
+  S const cosHalf = cos(half);
+  S const h = half > S(0) ? sinHalf / half : S(1);             // A(theta / 2)
+  S const hq = quarter > S(0) ? sin(quarter) / quarter : S(1); // A(theta / 4)
+  S const bHalf = S(0.5) * hq * hq;                            // B(theta / 2)
+  S const cHalf = so3CoeffC(half, sinHalf);                    // C(theta / 2)
+  return {h * cosHalf, S(0.5) * h * h, (cHalf + h * bHalf) / S(4), (bHalf - cHalf) / (S(4) * h), cosHalf / h};
+}
+
 } // namespace _private
 
 template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const &delta) {
@@ -65,46 +124,30 @@ template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<
 
 template <class Derived> SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
-  using std::cos;
-  using std::sin;
+  using std::sqrt;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
 
-  S const th = delta.norm();
+  // J = A I + B W + C omega omega^T
+  S const x = delta(0, 0);
+  S const y = delta(1, 0);
+  S const z = delta(2, 0);
+  _private::SO3JCoeffs<S> const k = _private::so3JCoeffs(sqrt(x * x + y * y + z * z));
 
-  if (th > Constants<S>::epsilon) {
-    SO3J<S> ret;
+  S const Cxy = k.C * x * y;
+  S const Cxz = k.C * x * z;
+  S const Cyz = k.C * y * z;
 
-    Eigen::Matrix<S, 3, 1> const a = delta.array() / th;
-
-    const S sinth = sin(th);
-    const S costh = cos(th);
-
-    S tmp1 = S(1) / th;
-    S tmp2 = sinth * tmp1;
-    S tmp3 = S(1) - sinth * tmp1;
-    S tmp4 = S(1) - costh;
-    S tmp5 = a(0) * a(1) * tmp3;
-    S tmp6 = a(0) * a(2) * tmp3;
-    S tmp7 = a(1) * a(2) * tmp3;
-
-    ret(0, 0) = a(0) * a(0) * tmp3 + tmp2;
-    ret(0, 1) = tmp5 - a(2) * tmp4 * tmp1;
-    ret(0, 2) = tmp6 + a(1) * tmp4 * tmp1;
-    ret(1, 0) = tmp5 + a(2) * tmp4 * tmp1;
-    ret(1, 1) = a(1) * a(1) * tmp3 + tmp2;
-    ret(1, 2) = tmp7 - a(0) * tmp4 * tmp1;
-    ret(2, 0) = tmp6 - a(1) * tmp4 * tmp1;
-    ret(2, 1) = tmp7 + a(0) * tmp4 * tmp1;
-    ret(2, 2) = a(2) * a(2) * tmp3 + tmp2;
-
-    return ret;
-  } else {
-    SO3J<S> ret;
-
-    ret = Eigen::Matrix<S, 3, 3>::Identity() + S(0.5) * skewSymm(delta);
-
-    return ret;
-  }
+  SO3J<S> ret;
+  ret(0, 0) = k.A + k.C * x * x;
+  ret(1, 1) = k.A + k.C * y * y;
+  ret(2, 2) = k.A + k.C * z * z;
+  ret(0, 1) = Cxy - k.B * z;
+  ret(1, 0) = Cxy + k.B * z;
+  ret(0, 2) = Cxz + k.B * y;
+  ret(2, 0) = Cxz - k.B * y;
+  ret(1, 2) = Cyz - k.B * x;
+  ret(2, 1) = Cyz + k.B * x;
+  return ret;
 }
 
 template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Eigen::MatrixBase<Derived> const &rot) {
@@ -161,46 +204,33 @@ template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Ei
 
 template <class Derived> SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
-  using std::cos;
-  using std::sin;
+  using std::sqrt;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
 
-  S const th = delta.norm();
+  // J^-1 = K I - W / 2 + D omega omega^T
+  S const x = delta(0, 0);
+  S const y = delta(1, 0);
+  S const z = delta(2, 0);
+  _private::SO3JCoeffs<S> const k = _private::so3JCoeffs(sqrt(x * x + y * y + z * z));
 
-  if (th > Constants<S>::epsilon) {
-    SO3Jinv<S> ret;
+  S const Dxy = k.D * x * y;
+  S const Dxz = k.D * x * z;
+  S const Dyz = k.D * y * z;
+  S const hx = x / S(2);
+  S const hy = y / S(2);
+  S const hz = z / S(2);
 
-    Eigen::Matrix<S, 3, 1> const a = delta.array() / th;
-
-    S const sinth = sin(th);
-    S const costh = cos(th);
-
-    S const tmp1 = costh + S(1);
-    S const tmp2 = S(1) / sinth;
-    S const tmp3 = tmp1 * tmp2 * th / S(2);
-    S const tmp4 = S(1) - tmp1 * tmp2 * th / S(2);
-    S const tmp5 = a(0) * a(1) * tmp4;
-    S const tmp6 = a(0) * a(2) * tmp4;
-    S const tmp7 = a(1) * a(2) * tmp4;
-
-    ret(0, 0) = a(0) * a(0) * tmp4 + tmp3;
-    ret(0, 1) = tmp5 + a(2) * th / 2;
-    ret(0, 2) = tmp6 - a(1) * th / 2;
-    ret(1, 0) = tmp5 - a(2) * th / 2;
-    ret(1, 1) = a(1) * a(1) * tmp4 + tmp3;
-    ret(1, 2) = tmp7 + a(0) * th / 2;
-    ret(2, 0) = tmp6 + a(1) * th / 2;
-    ret(2, 1) = tmp7 - a(0) * th / 2;
-    ret(2, 2) = a(2) * a(2) * tmp4 + tmp3;
-
-    return ret;
-  } else {
-    SO3Jinv<S> ret;
-
-    ret = Eigen::Matrix<S, 3, 3>::Identity() - S(0.5) * skewSymm(delta);
-
-    return ret;
-  }
+  SO3Jinv<S> ret;
+  ret(0, 0) = k.K + k.D * x * x;
+  ret(1, 1) = k.K + k.D * y * y;
+  ret(2, 2) = k.K + k.D * z * z;
+  ret(0, 1) = Dxy + hz;
+  ret(1, 0) = Dxy - hz;
+  ret(0, 2) = Dxz - hy;
+  ret(2, 0) = Dxz + hy;
+  ret(1, 2) = Dyz + hx;
+  ret(2, 1) = Dyz - hx;
+  return ret;
 }
 
 // reference for RPY conversion

@@ -159,15 +159,15 @@ template <class T> void so3LogCases(char const *name) {
   std::fprintf(out, "};\n\n");
 }
 
-template <class T> void so3ExpCases(char const *name) {
-  std::fprintf(out, "inline constexpr So3ExpCase %s[] = {\n", name);
+// a 3x3 function of the rotation vector (fn: ref::so3Exp, ref::so3Jl, ref::so3JlInv) at the angles of the exp
+template <class T, class Fn> void so3MatrixCases(char const *name, Fn fn) {
+  std::fprintf(out, "inline constexpr So3MatrixCase %s[] = {\n", name);
   for (auto const &an : expAngles())
     for (auto const &ax : axes()) {
       ref::V3 w;
       for (int i = 0; i < 3; ++i)
         w(i, 0) = roundTo<T>(an.theta * ax.v(i, 0));
-      std::fprintf(out, "    {\"%s %s\", {%s}, {%s}},\n", an.label, ax.label, list(w).c_str(),
-                   list(ref::so3Exp(w)).c_str());
+      std::fprintf(out, "    {\"%s %s\", {%s}, {%s}},\n", an.label, ax.label, list(w).c_str(), list(fn(w)).c_str());
       if (!(an.theta > 0))
         break; // one zero is enough
     }
@@ -179,7 +179,8 @@ template <class T> void coeffCases(char const *name) {
   for (auto const &an : coeffAngles()) {
     Q const t = roundTo<T>(an.theta);
     ref::Coeffs const c = ref::coeffs(t);
-    std::fprintf(out, "    {\"%s\", %s, %s, %s},\n", an.label, hex(t).c_str(), hex(c.A).c_str(), hex(c.B).c_str());
+    std::fprintf(out, "    {\"%s\", %s, %s, %s, %s, %s, %s},\n", an.label, hex(t).c_str(), hex(c.A).c_str(),
+                 hex(c.B).c_str(), hex(c.C).c_str(), hex(c.D).c_str(), hex(c.A / (2 * c.B)).c_str());
   }
   std::fprintf(out, "};\n\n");
 }
@@ -216,8 +217,12 @@ int main(int argc, char **argv) {
   bool const ok = writeGroup(folder, "SO3", [] {
     so3LogCases<float>("so3LogCasesF32");
     so3LogCases<double>("so3LogCasesF64");
-    so3ExpCases<float>("so3ExpCasesF32");
-    so3ExpCases<double>("so3ExpCasesF64");
+    so3MatrixCases<float>("so3ExpCasesF32", ref::so3Exp);
+    so3MatrixCases<double>("so3ExpCasesF64", ref::so3Exp);
+    so3MatrixCases<float>("so3JlCasesF32", ref::so3Jl);
+    so3MatrixCases<double>("so3JlCasesF64", ref::so3Jl);
+    so3MatrixCases<float>("so3JlInvCasesF32", ref::so3JlInv);
+    so3MatrixCases<double>("so3JlInvCasesF64", ref::so3JlInv);
     coeffCases<float>("coeffCasesF32");
     coeffCases<double>("coeffCasesF64");
   });
