@@ -5,18 +5,19 @@
 
 namespace csLie {
 
-/// @brief compute the exp of a se3 tangent vector to a SE3
+/// @brief the exp of SE3: delta = (rho, omega), R = so3Exp(omega), t = Jl(omega) rho (so3LeftJacobian); accurate to
+/// a few epsilon at every angle
 /// @tparam Derived template to support generic matrix
-/// @param delta a 6d vector representing the se3 tangent vector
-/// @return the matrix in SE3 from the se3 tangent vector
-/// @throw if delta is not a 6x1 matrix
+/// @param delta a 6d vector, the se3 tangent vector (rho, omega): translation part first
+/// @return the transformation
+/// @throw if delta is not a 6x1 matrix (DEBUG only)
 template <class Derived> SE3<typename Derived::Scalar> se3Exp(Eigen::MatrixBase<Derived> const &delta);
 
-/// @brief compute the log of a SE3 transformation to a se3 vector
+/// @brief the log of SE3, the inverse of se3Exp: omega = so3Log(R) (|omega| <= pi), rho = Jl(omega)^-1 t
 /// @tparam Derived template to support generic matrix
-/// @param transf the transformation matrix
-/// @throw if transf is not a 4x4 matrix (DEBUG only), if transf is not a
-/// isometry matrix within default precision (PARANOID)
+/// @param transf the 4x4 transformation matrix
+/// @return the se3 tangent vector (rho, omega)
+/// @throw if transf is not a 4x4 matrix (DEBUG only), if transf is not an isometry within default precision (PARANOID)
 template <class Derived> SE3Tangent<typename Derived::Scalar> se3Log(Eigen::MatrixBase<Derived> const &transf);
 
 /// @brief se3Log, but accepting a SE3<S> i.e., a Eigen::Transform<3, Isometry>

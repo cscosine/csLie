@@ -275,6 +275,89 @@ template <class T> void rpyCases(char const *name) {
   std::fprintf(out, "};\n\n");
 }
 
+// ---- SE3 ----
+
+std::vector<std::pair<char const *, std::array<Q, 3>>> const &translations3() {
+  static std::vector<std::pair<char const *, std::array<Q, 3>>> const t{
+      {"t1", {1, 0, 0}}, {"t2", {Q(0.3), Q(-0.7), Q(0.2)}}, {"far", {Q(100), Q(-40), Q(7)}}};
+  return t;
+}
+
+// the axes of the SE3 tests: an axis-aligned one and the generic ones
+bool se3Axis(char const *label) {
+  std::string const l = label;
+  return l == "x" || l == "xyz" || l == "r1" || l == "r3";
+}
+
+ref::M<4, 4> se3Matrix(ref::SE3q const &e) {
+  ref::M<4, 4> M;
+  for (int r = 0; r < 3; ++r) {
+    for (int c = 0; c < 3; ++c)
+      M(r, c) = e.R(r, c);
+    M(r, 3) = e.t(r, 0);
+  }
+  M(3, 3) = 1;
+  return M;
+}
+
+ref::V6 xi6(std::array<Q, 3> const &rho, ref::V3 const &omega) {
+  ref::V6 xi;
+  for (int i = 0; i < 3; ++i)
+    xi(i, 0) = rho[static_cast<std::size_t>(i)], xi(i + 3, 0) = omega(i, 0);
+  return xi;
+}
+
+template <class T> void se3ExpCases(char const *name) {
+  std::fprintf(out, "inline constexpr Se3ExpCase %s[] = {\n", name);
+  for (auto const &an : expAngles())
+    for (auto const &ax : axes()) {
+      if (!se3Axis(ax.label))
+        continue;
+      for (auto const &[tl, tv] : translations3()) {
+        ref::V3 w;
+        for (int i = 0; i < 3; ++i)
+          w(i, 0) = an.theta * ax.v(i, 0);
+        ref::V6 xi = xi6(tv, w);
+        for (auto &e : xi.a)
+          e = roundTo<T>(e);
+        std::fprintf(out, "    {\"%s %s %s\", {%s}, {%s}},\n", an.label, ax.label, tl, list(xi).c_str(),
+                     list(se3Matrix(ref::se3Exp(xi))).c_str());
+      }
+      if (!(an.theta > 0))
+        break;
+    }
+  std::fprintf(out, "};\n\n");
+}
+
+// the exp of the angles of the log, rounded; to pi - 1e-4 (closer to pi the log of the rounded rotation can be the
+// other one of the pair omega, omega (1 - 2 pi / |omega|), with another rho: the SO3 log test covers pi)
+template <class T> void se3LogCases(char const *name) {
+  std::fprintf(out, "inline constexpr Se3LogCase %s[] = {\n", name);
+  for (auto const &an : angles()) {
+    if (an.theta > ref::PI - Q(1e-5))
+      continue;
+    for (auto const &ax : axes()) {
+      if (!se3Axis(ax.label))
+        continue;
+      for (auto const &[tl, tv] : translations3()) {
+        ref::V3 w;
+        for (int i = 0; i < 3; ++i)
+          w(i, 0) = an.theta * ax.v(i, 0);
+        ref::SE3q e = ref::se3Exp(xi6(tv, w));
+        for (auto &v : e.R.a)
+          v = roundTo<T>(v);
+        for (auto &v : e.t.a)
+          v = roundTo<T>(v);
+        std::fprintf(out, "    {\"%s %s %s\", {%s}, {%s}},\n", an.label, ax.label, tl, list(se3Matrix(e)).c_str(),
+                     list(ref::se3Log(e)).c_str());
+      }
+      if (!(an.theta > 0))
+        break;
+    }
+  }
+  std::fprintf(out, "};\n\n");
+}
+
 // ---- S2 ----
 
 // unit vectors: the axes, generic ones, near +-x (the second chart) and near the switch of the charts (x^2 = 1/2)
@@ -454,5 +537,11 @@ int main(int argc, char **argv) {
     s2OplusInverseCases<float>("s2OplusInverseCasesF32");
     s2OplusInverseCases<double>("s2OplusInverseCasesF64");
   });
-  return ok && okSe2 && okS2 ? 0 : 1;
+  bool const okSe3 = writeGroup(folder, "SE3", [] {
+    se3ExpCases<float>("se3ExpCasesF32");
+    se3ExpCases<double>("se3ExpCasesF64");
+    se3LogCases<float>("se3LogCasesF32");
+    se3LogCases<double>("se3LogCasesF64");
+  });
+  return ok && okSe2 && okS2 && okSe3 ? 0 : 1;
 }

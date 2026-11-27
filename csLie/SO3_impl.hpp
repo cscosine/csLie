@@ -9,38 +9,39 @@
 
 namespace csLie {
 
-template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const &delta) {
-  using S = typename Derived::Scalar;
-  using std::sqrt;
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Tangent<S>()), "delta required to be 3x1");
+namespace _private {
 
-  SO3Tangent<S> const d = delta; // read once (an expression, e.g. Random(), gives new values at each read)
+/// @brief R = I + A W + B W^2 (W = hat(d)) from the coefficients A, B of the angle |d|; shared by so3Exp and se3Exp
+template <class S> SO3<S> so3ExpFromCoeffs(SO3Tangent<S> const &d, S const a, S const b) {
   SO3Tangent<S> const w2 = d.cwiseAbs2();
-  S const theta_sq = w2.sum(); // sum of the squares
-  // below sqrt(min) theta_sq underflows to 0 or a subnormal: theta is then 0 or inexact, harmless, the coefficients
-  // are 1 and 1/2 up to theta^2
-  _private::ExpCoeffs<S> const k = _private::expCoeffs(sqrt(theta_sq));
-  S const a = k.A;
-  S const b = k.B;
-
   SO3<S> R;
-
   R(0, 0) = S(1) - b * (w2(1) + w2(2));
   R(1, 1) = S(1) - b * (w2(0) + w2(2));
   R(2, 2) = S(1) - b * (w2(0) + w2(1));
-
-  const S Bab = b * d(0) * d(1);
-  const S Bac = b * d(0) * d(2);
-  const S Bbc = b * d(1) * d(2);
-
+  S const Bab = b * d(0) * d(1);
+  S const Bac = b * d(0) * d(2);
+  S const Bbc = b * d(1) * d(2);
   R(0, 1) = Bab - a * d(2);
   R(1, 0) = Bab + a * d(2);
   R(0, 2) = Bac + a * d(1);
   R(2, 0) = Bac - a * d(1);
   R(1, 2) = Bbc - a * d(0);
   R(2, 1) = Bbc + a * d(0);
-
   return R;
+}
+
+} // namespace _private
+
+template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const &delta) {
+  using S = typename Derived::Scalar;
+  using std::sqrt;
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Tangent<S>()), "delta required to be 3x1");
+
+  SO3Tangent<S> const d = delta; // read once (an expression, e.g. Random(), gives new values at each read)
+  // below sqrt(min) the squared norm underflows to 0 or a subnormal: theta is then 0 or inexact, harmless, the
+  // coefficients are 1 and 1/2 up to theta^2
+  _private::ExpCoeffs<S> const k = _private::expCoeffs(sqrt(d.squaredNorm()));
+  return _private::so3ExpFromCoeffs(d, k.A, k.B);
 }
 
 template <class Derived>

@@ -54,6 +54,20 @@ struct Se2LogCase {
   double xi[3];
 };
 
+/// a se3 tangent vector (rho, omega; exactly representable in the tested precision) and its exact exp (4x4, row major)
+struct Se3ExpCase {
+  char const *label;
+  double xi[6];
+  double T[16];
+};
+
+/// a SE3 matrix (4x4 row major, exactly representable in the tested precision) and its exact log (rho, omega)
+struct Se3LogCase {
+  char const *label;
+  double T[16];
+  double xi[6];
+};
+
 /// a S2 tangent vector (exactly representable in the tested precision) and its exact s2Exp
 struct S2ExpCase {
   char const *label;

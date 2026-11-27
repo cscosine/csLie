@@ -4,11 +4,11 @@
 #include "reference/data/S2.hpp"
 
 #include <cmath>
-#include <cstddef>
 #include <csCore/testUtils/AssertCatch2.hpp>
 #include <csLie/Constants.hpp>
 #include <csLie/S2_impl.hpp>
 #include <csLie/Types.hpp>
+#include <cstddef>
 
 namespace csLie {
 
@@ -24,7 +24,7 @@ constexpr double s2OplusInverseTolerance = 4.0;
 // s2Oplus(v, s2OplusInverse(v, w)) against w
 constexpr double s2RoundTripTolerance = 6.0;
 
-#define CSLIE_CASES(fn, name)                                                                                         \
+#define CSLIE_CASES(fn, name)                                                                                          \
   template <class S> auto const &fn() {                                                                                \
     if constexpr (std::is_same_v<S, float32_t>) {                                                                      \
       return testReference::name##F32;                                                                                 \
@@ -108,8 +108,9 @@ TEMPLATE_TEST_CASE("S2 oplus inverse accuracy", "[S2][accuracy]", float32_t, flo
     S2Tangent<S> const delta = s2OplusInverse(v, w);
     double const theta = std::hypot(c.delta[0], c.delta[1]);
     double const conditioning = theta > 0 ? std::max(1.0, theta / std::sin(theta)) : 1.0;
-    double const err = std::hypot(static_cast<double>(delta(0)) - c.delta[0], static_cast<double>(delta(1)) - c.delta[1]) /
-                       std::max(theta, 1e-300) / conditioning / static_cast<double>(Constants<S>::epsilon);
+    double const err =
+        std::hypot(static_cast<double>(delta(0)) - c.delta[0], static_cast<double>(delta(1)) - c.delta[1]) /
+        std::max(theta, 1e-300) / conditioning / static_cast<double>(Constants<S>::epsilon);
     bool const antipodal = !(std::sin(theta) > 0) && theta > 0;
     double const roundTrip = absError(S2<S>(s2Oplus(v, delta)), c.w);
     maxErr = std::max(maxErr, antipodal ? 0.0 : err);
