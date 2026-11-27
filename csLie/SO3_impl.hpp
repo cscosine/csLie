@@ -8,25 +8,40 @@
 
 namespace csLie {
 
-template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const &delta) {
-  using S = typename Derived::Scalar;
+namespace _private {
+
+/// @brief the coefficients of the SO3 exp, R = I + A W + B W^2 (W = skewSymm(omega), theta = |omega|)
+template <class S> struct SO3ExpCoeffs {
+  S A; ///< sin(theta) / theta
+  S B; ///< (1 - cos(theta)) / theta^2
+};
+
+/// @brief the coefficients of the SO3 exp at the angle theta >= 0, from the half angle: with
+/// h = sin(theta / 2) / (theta / 2) and c = cos(theta / 2), A = h c and B = h^2 / 2. Accurate to a few epsilon at every
+/// angle, with no series and no switch: sin(x) / x has no cancellation for any x > 0 (B as (1 - cos(theta)) / theta^2
+/// loses all its digits below theta ~ sqrt(epsilon)); at theta = 0, h = 1.
+template <class S> SO3ExpCoeffs<S> so3ExpCoeffs(S const theta) {
   using std::cos;
   using std::sin;
+  S const half = theta / S(2);
+  S const h = half > S(0) ? sin(half) / half : S(1);
+  return {h * cos(half), S(0.5) * h * h};
+}
+
+} // namespace _private
+
+template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const &delta) {
+  using S = typename Derived::Scalar;
   using std::sqrt;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
 
   SO3Alg<S> const w2 = delta.cwiseAbs2();
   S const theta_sq = w2.sum(); // sum of the squares
-  S const theta = sqrt(theta_sq);
-
-  S a, b;
-  if (theta < Constants<S>::epsilon) {
-    a = S(1) - theta_sq * (S(1.0 / 6.0) + theta_sq * S(1.0 / 120.0));
-    b = S(0.5) - theta_sq * (S(1.0 / 24.0) - theta_sq * S(1.0 / 720.0));
-  } else {
-    a = sin(theta) / theta;
-    b = (S(1) - cos(theta)) / theta_sq;
-  }
+  // below sqrt(min) theta_sq underflows to 0 or a subnormal: theta is then 0 or inexact, harmless, the coefficients
+  // are 1 and 1/2 up to theta^2
+  _private::SO3ExpCoeffs<S> const k = _private::so3ExpCoeffs(sqrt(theta_sq));
+  S const a = k.A;
+  S const b = k.B;
 
   SO3<S> R;
 

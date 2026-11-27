@@ -75,6 +75,34 @@ std::vector<Axis> const &axes() {
   return a;
 }
 
+// the angles of the exp tests: those of the log, exactly pi and beyond pi (the exp takes any angle)
+std::vector<Angle> const &expAngles() {
+  static std::vector<Angle> const a = [] {
+    std::vector<Angle> o = angles();
+    o.push_back({"pi", ref::PI});
+    o.push_back({"4", Q(4)});
+    o.push_back({"2pi-1e-3", 2 * ref::PI - Q(1e-3)});
+    o.push_back({"10", Q(10)});
+    return o;
+  }();
+  return a;
+}
+
+// the angles of the coefficient tests: those of the exp, plus tiny ones and the decades between
+std::vector<Angle> const &coeffAngles() {
+  static std::vector<Angle> const a = [] {
+    std::vector<Angle> o = expAngles();
+    o.push_back({"1e-30", Q(1e-30)});
+    o.push_back({"1e-20", Q(1e-20)});
+    o.push_back({"1e-5", Q(1e-5)});
+    o.push_back({"3e-4", Q(3e-4)});
+    o.push_back({"1e-2", Q(1e-2)});
+    o.push_back({"0.3", Q(0.3)});
+    return o;
+  }();
+  return a;
+}
+
 // rotations by exactly pi, exactly representable
 std::vector<std::pair<char const *, std::array<int, 9>>> const &exactPi() {
   static std::vector<std::pair<char const *, std::array<int, 9>>> const m{
@@ -126,6 +154,30 @@ template <class T> void so3LogCases(char const *name) {
   std::printf("};\n\n");
 }
 
+template <class T> void so3ExpCases(char const *name) {
+  std::printf("inline constexpr So3ExpCase %s[] = {\n", name);
+  for (auto const &an : expAngles())
+    for (auto const &ax : axes()) {
+      ref::V3 w;
+      for (int i = 0; i < 3; ++i)
+        w(i, 0) = roundTo<T>(an.theta * ax.v(i, 0));
+      std::printf("    {\"%s %s\", {%s}, {%s}},\n", an.label, ax.label, list(w).c_str(), list(ref::so3Exp(w)).c_str());
+      if (!(an.theta > 0))
+        break; // one zero is enough
+    }
+  std::printf("};\n\n");
+}
+
+template <class T> void coeffCases(char const *name) {
+  std::printf("inline constexpr CoeffCase %s[] = {\n", name);
+  for (auto const &an : coeffAngles()) {
+    Q const t = roundTo<T>(an.theta);
+    ref::Coeffs const c = ref::coeffs(t);
+    std::printf("    {\"%s\", %s, %s, %s},\n", an.label, hex(t).c_str(), hex(c.A).c_str(), hex(c.B).c_str());
+  }
+  std::printf("};\n\n");
+}
+
 } // namespace
 
 int main() {
@@ -138,9 +190,27 @@ int main() {
               "  char const *label;\n"
               "  double R[9];\n"
               "  double omega[3];\n"
+              "};\n\n"
+              "/// a rotation vector (exactly representable in the tested precision) and its exact exp (row major)\n"
+              "struct So3ExpCase {\n"
+              "  char const *label;\n"
+              "  double omega[3];\n"
+              "  double R[9];\n"
+              "};\n\n"
+              "/// an angle (exactly representable in the tested precision) and its exact exp coefficients\n"
+              "/// A = sin(theta) / theta, B = (1 - cos(theta)) / theta^2\n"
+              "struct CoeffCase {\n"
+              "  char const *label;\n"
+              "  double theta;\n"
+              "  double A;\n"
+              "  double B;\n"
               "};\n\n");
   so3LogCases<float>("so3LogCasesF32");
   so3LogCases<double>("so3LogCasesF64");
+  so3ExpCases<float>("so3ExpCasesF32");
+  so3ExpCases<double>("so3ExpCasesF64");
+  coeffCases<float>("coeffCasesF32");
+  coeffCases<double>("coeffCasesF64");
   std::printf("} // namespace csLie::testReference\n"
               "// clang-format on\n");
 }
