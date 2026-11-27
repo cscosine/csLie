@@ -1,5 +1,7 @@
 // The left and right versions of the SO3 / SE3 jacobians and perturbations: each against its definition (central
-// finite differences) and against its pair, in float32_t and float64_t.
+// finite differences) and against its pair, in float32_t and float64_t. Two ways of computing the same value are
+// compared within rounding, not bit for bit: the compiler may fuse a multiply and an add in one and not in the other
+// (GCC on arm64 does by default).
 #include <cmath>
 #include <csCore/testUtils/AssertCatch2.hpp>
 #include <csLie/Constants.hpp>
@@ -43,9 +45,9 @@ TEMPLATE_TEST_CASE("SO3 test - left and right jacobians", "[SO3]", float32_t, fl
     Eigen::Matrix3<S> const Jr = so3RightJacobian(delta);
     INFO("delta " << delta.transpose());
     // the pairs
-    REQUIRE((Jr - Jl.transpose()).isZero(0));
+    REQUIRE((Jr - Jl.transpose()).isZero());
     REQUIRE((Jr - so3LeftJacobian(SO3Tangent<S>(-delta))).isZero());
-    REQUIRE((so3RightJacobianInverse(delta) - so3LeftJacobianInverse(delta).transpose()).isZero(0));
+    REQUIRE((so3RightJacobianInverse(delta) - so3LeftJacobianInverse(delta).transpose()).isZero());
     REQUIRE((Jr * so3RightJacobianInverse(delta) - Eigen::Matrix3<S>::Identity()).isZero());
     // the definitions: exp(delta + d) = exp(Jl d) exp(delta) = exp(delta) exp(Jr d)
     SO3<S> const R = so3Exp(delta);
@@ -68,8 +70,8 @@ TEMPLATE_TEST_CASE("SO3 test - oplus left and right", "[SO3]", float32_t, float6
   using S = TestType;
   SO3<S> const R = so3Exp(SO3Tangent<S>(S(0.4), S(-1.1), S(0.6)));
   for (SO3Tangent<S> const &delta : so3Deltas<S>()) {
-    REQUIRE((so3OplusLeft(R, delta) - so3Exp(delta) * R).isZero(0));
-    REQUIRE((so3OplusRight(R, delta) - R * so3Exp(delta)).isZero(0));
+    REQUIRE((so3OplusLeft(R, delta) - so3Exp(delta) * R).isZero());
+    REQUIRE((so3OplusRight(R, delta) - R * so3Exp(delta)).isZero());
     // the left perturbation is the right one moved to the world frame: exp(R delta) R = R exp(delta)
     REQUIRE((so3OplusLeft(R, SO3Tangent<S>(R * delta)) - so3OplusRight(R, delta)).isZero());
   }
@@ -91,8 +93,8 @@ TEMPLATE_TEST_CASE("SE3 test - point jacobians and oplus, left and right", "[SE3
   for (int i = 0; i < 6; ++i) {
     SE3Tangent<S> const d = h * SE3Tangent<S>::Unit(i);
     SE3Tangent<S> const md = -d;
-    REQUIRE((se3OplusLeft(T, d).matrix() - (se3Exp(d) * T).matrix()).isZero(0));
-    REQUIRE((se3OplusRight(T, d).matrix() - (T * se3Exp(d)).matrix()).isZero(0));
+    REQUIRE((se3OplusLeft(T, d).matrix() - (se3Exp(d) * T).matrix()).isZero());
+    REQUIRE((se3OplusRight(T, d).matrix() - (T * se3Exp(d)).matrix()).isZero());
     JlFd.col(i) = (se3OplusLeft(T, d) * p - se3OplusLeft(T, md) * p) / (S(2) * h);
     JrFd.col(i) = (se3OplusRight(T, d) * p - se3OplusRight(T, md) * p) / (S(2) * h);
   }

@@ -42,6 +42,16 @@ if(MODE STREQUAL "CHECK")
     )
     if(different)
       list(APPEND differences "${name}: differs")
+      # the first lines that differ, where diff exists (it does on the CI runners and on Unix)
+      find_program(REFERENCE_DATA_DIFF diff)
+      if(REFERENCE_DATA_DIFF)
+        execute_process(
+          COMMAND "${REFERENCE_DATA_DIFF}" "${REFERENCE}/${name}" "${OUTPUT}/${name}"
+          OUTPUT_VARIABLE diffOutput
+        )
+        string(SUBSTRING "${diffOutput}" 0 3000 diffOutput)
+        message(STATUS "${name}, committed (<) and generated (>), the first differences:\n${diffOutput}")
+      endif()
     endif()
   endforeach()
   foreach(name IN LISTS committed)
