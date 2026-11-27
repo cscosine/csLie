@@ -1,5 +1,15 @@
 project(csLieTest LANGUAGES CXX)
 
+# the tests: every warning (cscmake_warnings), not as errors; the library code is checked under strict warnings by
+# csLieInstantiationCheck below
+set(CSCMAKE_DEFAULT_COMPILE_PROFILES cscmake_default cscmake_warnings)
+
+# every public function of csLie in float32_t and float64_t, under strict warnings (compiled, not run)
+cs_add_library(csLieInstantiationCheck OBJECT)
+cs_target_sources(csLieInstantiationCheck PRIVATE InstantiationCheck.cpp)
+cs_target_link_libraries(csLieInstantiationCheck PRIVATE csLie::csLie)
+cs_target_use_compile_profiles(csLieInstantiationCheck cscmake_strict_warnings)
+
 cs_add_executable(csLieTest)
 
 cs_find_package(csLieTest PRIVATE csCore COMPONENTS testUtils math REQUIRED CONFIG)

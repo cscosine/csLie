@@ -28,9 +28,10 @@ Lie groups and algebras (SE(3), SE(2)) in C++ on Eigen
 
 Rules of this library:
 
-- Every target builds with `cscmake_strict_warnings` (`DEFAULT_COMPILE_PROFILES` in `CMakeLists.txt`): GCC and Clang
-  both clean.
-- Every public function has a test over `float32_t, float64_t` (`TEMPLATE_TEST_CASE`): a header is a template, its body
-  is compiled (and warned about) only where a test instantiates it.
+- The library builds with `cscmake_strict_warnings` (`DEFAULT_COMPILE_PROFILES` in `CMakeLists.txt`); the tests
+  (`csLie/tests/`) with every warning (`cscmake_warnings`), not as errors.
+- The library is header-only: a template body is compiled, and warned about, only where it is instantiated. Every
+  public function is called in `csLie/tests/InstantiationCheck.cpp` (in `float32_t` and `float64_t`, under strict
+  warnings) and has a test over `float32_t, float64_t` (`TEMPLATE_TEST_CASE`).
 - Generic scalar code: `using std::sin; using std::cos; using std::sqrt; ...` in the function and unqualified calls (a
   float stays float, a scalar type with its own overloads finds them); literals as `S(...)`, never a bare double.
