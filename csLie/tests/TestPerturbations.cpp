@@ -1,12 +1,12 @@
 // The left and right versions of the SO3 / SE3 jacobians and perturbations: each against its definition (central
 // finite differences) and against its pair, in float32_t and float64_t.
 #include <cmath>
-#include <vector>
 #include <csCore/testUtils/AssertCatch2.hpp>
 #include <csLie/Constants.hpp>
 #include <csLie/SE3_impl.hpp>
 #include <csLie/SO3_impl.hpp>
 #include <csLie/Types.hpp>
+#include <vector>
 
 namespace csLie {
 

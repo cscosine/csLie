@@ -24,6 +24,7 @@ cs_target_sources(
     TestSE2.cpp
     TestSE2Accuracy.cpp
     TestS2.cpp
+    TestS2Accuracy.cpp
     TestSO2.cpp
     TestSO3.cpp
     TestSO3Accuracy.cpp

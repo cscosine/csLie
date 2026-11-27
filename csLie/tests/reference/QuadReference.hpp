@@ -215,27 +215,45 @@ inline V3 se2Log(SE2q const &T) {
   return o;
 }
 
-// ---- S2: geodesic exp / log at p (|p| = 1), tangent u in R^3 with u.p = 0 ----
-inline V3 s2Exp(V3 const &p, V3 const &u) {
-  Q const n = norm(u);
-  Coeffs const c = coeffs(n);
-  V3 o = p;
-  for (auto &x : o.a)
-    x *= cosq(n);
-  return add(o, u, c.A);
+// ---- S2: the chart at v through the frame [v, b1, b2] (two charts, as csLie's s2Frame), exp at e_x ----
+inline M3 s2Frame(V3 const &v) {
+  Q const x = v(0, 0), y = v(1, 0), z = v(2, 0);
+  M3 R;
+  R(0, 0) = x, R(1, 0) = y, R(2, 0) = z;
+  if (x * x <= Q(0.5)) {
+    Q const r = sqrtq(y * y + z * z);
+    R(0, 1) = -r, R(1, 1) = x * y / r, R(2, 1) = x * z / r;
+    R(0, 2) = 0, R(1, 2) = -z / r, R(2, 2) = y / r;
+  } else {
+    Q const r = sqrtq(x * x + y * y);
+    R(0, 1) = x * z / r, R(1, 1) = y * z / r, R(2, 1) = -r;
+    R(0, 2) = -y / r, R(1, 2) = x / r, R(2, 2) = 0;
+  }
+  return R;
 }
-inline V3 s2Log(V3 const &p, V3 const &q) {
-  V3 const pq = cross(p, q);
-  Q const s = norm(pq), c = dot3(p, q);
-  Q const th = atan2q(s, c);
-  // direction: q - (p.q) p, normalized; its norm equals s for unit p, q
-  V3 d = add(q, p, -c);
-  Q const dn = norm(d);
+inline V3 s2Exp(V2 const &d) {
+  Q const t = sqrtq(d(0, 0) * d(0, 0) + d(1, 0) * d(1, 0));
+  Q const sinc = coeffs(t).A;
   V3 o;
-  if (!(dn > 0))
+  o(0, 0) = cosq(t), o(1, 0) = sinc * d(0, 0), o(2, 0) = sinc * d(1, 0);
+  return o;
+}
+inline V3 s2Oplus(V3 const &v, V2 const &d) { return mul(s2Frame(v), s2Exp(d)); }
+// the delta in the basis (b1, b2) of s2Frame(v) with s2Oplus(v, delta) = w; at w = -v, (pi, 0)
+inline V2 s2OplusInverse(V3 const &v, V3 const &w) {
+  M3 const R = s2Frame(v);
+  Q const c = dot3(v, w);
+  Q t1 = 0, t2 = 0;
+  for (int i = 0; i < 3; ++i) // b1, b2 orthogonal to v: w - v (exact zero at w = v)
+    t1 += R(i, 1) * (w(i, 0) - v(i, 0)), t2 += R(i, 2) * (w(i, 0) - v(i, 0));
+  Q const s = sqrtq(t1 * t1 + t2 * t2);
+  V2 o;
+  if (!(s > 0)) {
+    o(0, 0) = c > 0 ? Q(0) : PI;
     return o;
-  for (int i = 0; i < 3; ++i)
-    o(i, 0) = th / dn * d(i, 0);
+  }
+  Q const k = atan2q(s, c) / s;
+  o(0, 0) = k * t1, o(1, 0) = k * t2;
   return o;
 }
 

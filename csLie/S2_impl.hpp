@@ -7,71 +7,48 @@
 
 namespace csLie {
 
-namespace _private {
-/// @brief a constant representing epsilon^1/4, used as boundary to evaluate s2
-/// exp with taylor approximation
-/// @tparam S the scalar type
-template <class S> static const S s2TaylorBound{std::sqrt(std::sqrt(Constants<S>::epsilon))};
-
-} // namespace _private
-
 template <class Derived> S2<typename Derived::Scalar> s2Exp(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
-
+  using std::cos;
+  using std::sin;
+  using std::sqrt;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, S2Tangent<S>()), "delta required to be 2x1");
 
-  S const norm2 = delta.squaredNorm();
-
-  // TODO(sc) verify this logic and the taylor boundary
-  S cos_norm{}, sinc_norm{};
-  if (norm2 > _private::s2TaylorBound<S>) {
-    S const x = std::sqrt(norm2);
-    cos_norm = std::cos(x);
-    sinc_norm = std::sin(x) / x;
-  } else {
-    static constexpr size_t N{7};
-    static constexpr size_t HALF_N{N / 2};
-    static_assert(HALF_N == 3, "check N / 2 = 3 failed... did you changed it?");
-
-    static constexpr std::array<S, N> inv = {S(1 / 3.), S(1 / 4.), S(1 / 5.), S(1 / 6.),
-                                             S(1 / 7.), S(1 / 8.), S(1 / 9.)};
-    S cosi = S(1);
-    S sinci = S(1);
-    S term = S(-0.5) * norm2;
-    for (size_t i = 0; i < HALF_N; ++i) {
-      cosi += term;
-      term *= inv[2 * i];
-      sinci += term;
-      term *= -inv[2 * i + 1] * norm2;
-    }
-    cos_norm = cosi;
-    sinc_norm = sinci;
-  }
-
-  S2<S> ret{};
-  ret(0) = cos_norm;
-  ret(1) = delta(0, 0) * sinc_norm;
-  // note: to be able to use both eigen matrix and vector, it is required to use
-  // always two indices accessing delta
-  ret(2) = delta(1, 0) * sinc_norm;
-
-  return ret;
+  // (cos(theta), sin(theta) / theta delta), theta = |delta|: sin(theta) / theta has no cancellation, no series needed.
+  // delta read once (an expression, e.g. Random(), gives new values at each read)
+  S const d0 = delta(0, 0);
+  S const d1 = delta(1, 0);
+  S const theta = sqrt(d0 * d0 + d1 * d1);
+  S const sinc = theta > S(0) ? sin(theta) / theta : S(1);
+  return S2<S>(cos(theta), sinc * d0, sinc * d1);
 }
 
 template <class Derived> SO3<typename Derived::Scalar> s2Frame(Eigen::MatrixBase<Derived> const &v) {
   using S = typename Derived::Scalar;
+  using std::abs;
+  using std::hypot;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, S2<S>()), "v required to be 3x1");
+  CSLIE_ASSERT_PARANOID(abs(v.squaredNorm() - S(1)) < Constants<S>::dummy_precision, "v is not a unit vector");
 
-  CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm() - S(1)) < Constants<S>::dummy_precision,
-                        "s2Frame input vector is not unitary");
-
-  SO3<S> R{};
-  // x direction aligned with v
-  R.col(0) = v;
-  // right cols are equivalent to the jacobian
-  R.template rightCols<2>() = s2OplusJacobianAtZero(v);
-
+  // [v, b1, b2] with b2 = (a x v) / |a x v| and b1 = b2 x v, a the pivot axis: x while x^2 <= 1/2, else z. Two charts,
+  // |a x v| >= 1/sqrt(2) in both: no trigonometry, well conditioned everywhere; the frame jumps at x^2 = 1/2
+  S const x = v(0, 0);
+  S const y = v(1, 0);
+  S const z = v(2, 0);
+  SO3<S> R;
+  R.col(0) << x, y, z;
+  if (x * x <= S(0.5)) {
+    // a = x: a x v = (0, -z, y)
+    S const r = hypot(y, z);
+    R.col(1) << -r, x * y / r, x * z / r;
+    R.col(2) << S(0), -z / r, y / r;
+  } else {
+    // a = z: a x v = (-y, x, 0)
+    S const r = hypot(x, y);
+    R.col(1) << x * z / r, y * z / r, -r;
+    R.col(2) << -y / r, x / r, S(0);
+  }
   return R;
 }
 
@@ -80,43 +57,41 @@ S2<typename Derived1::Scalar> s2Oplus(Eigen::MatrixBase<Derived1> const &v, Eige
   using S = typename Derived1::Scalar;
   static_assert(std::is_same<typename Derived1::Scalar, typename Derived2::Scalar>::value,
                 "s2Oplus needs equal scalar types");
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, S2<S>()), "v required to be 3x1");
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, S2Tangent<S>()), "delta required to be 2x1");
+  return S2<S>(s2Frame(v) * s2Exp(delta.eval()));
+}
 
-  CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm() - S(1)) < Constants<S>::dummy_precision,
-                        "s2Frame input vector is not unitary");
+template <class Derived1, class Derived2>
+S2Tangent<typename Derived1::Scalar> s2OplusInverse(Eigen::MatrixBase<Derived1> const &v,
+                                                    Eigen::MatrixBase<Derived2> const &w) {
+  using S = typename Derived1::Scalar;
+  using std::atan2;
+  using std::hypot;
+  static_assert(std::is_same<typename Derived1::Scalar, typename Derived2::Scalar>::value,
+                "s2OplusInverse needs equal scalar types");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(w, S2<S>()), "w required to be 3x1");
 
-  SO3<S> const R = s2Frame(v);
-  S2<S> const vDelta = s2Exp(delta);
-  S2<S> const ret = R * vDelta;
-  return ret;
+  // w in the frame of v: (cos(theta), sin(theta) d) with d the unit direction of delta. The tangent part from w - v
+  // (exact for w near v, and b1, b2 orthogonal to v), accurate to a few epsilon of |delta| at small angles
+  S2<S> const vv = v; // read once
+  S2<S> const ww = w;
+  SO3<S> const R = s2Frame(vv);
+  S2<S> const wv = ww - vv;
+  S const c = vv.dot(ww);
+  S const t1 = R.col(1).dot(wv);
+  S const t2 = R.col(2).dot(wv);
+  S const sinTheta = hypot(t1, t2);
+  if (!(sinTheta > S(0))) {
+    // w = v, or w = -v: every direction is at the angle pi, the one of b1 (the cut locus: the direction jumps near it)
+    return c > S(0) ? S2Tangent<S>::Zero() : S2Tangent<S>(Constants<S>::pi, S(0));
+  }
+  S const k = atan2(sinTheta, c) / sinTheta;
+  return S2Tangent<S>(k * t1, k * t2);
 }
 
 template <class Derived>
 Eigen::Matrix<typename Derived::Scalar, 3, 2> s2OplusJacobianAtZero(Eigen::MatrixBase<Derived> const &v) {
-  using S = typename Derived::Scalar;
-  using std::cos;
-  using std::sin;
-
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, S2<S>()), "v required to be 3x1");
-
-  CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm() - S(1)) < Constants<S>::dummy_precision,
-                        "s2Frame input vector is not unitary");
-
-  // note: use always two indices to allow access to v as a generic matrix
-  S const x{v(0, 0)};
-  S const y{v(1, 0)};
-  S const z{v(2, 0)};
-  // here we assume atan2(0,0) = 0. This is protected with a test (testAtan2).
-  // In case the test fail on some platform, we need to handle the logic here
-  S const alpha = std::atan2(z, y);
-  S const r = std::sqrt(z * z + y * y);
-  S const c = cos(alpha);
-  S const s = sin(alpha);
-
-  Eigen::Matrix<S, 3, 2> J{};
-  J.col(0) = Eigen::Matrix<S, 3, 1>(-r, x * c, x * s);
-  J.col(1) = Eigen::Matrix<S, 3, 1>(0, -s, c);
-  return J;
+  return s2Frame(v).template rightCols<2>();
 }
+
 } // namespace csLie

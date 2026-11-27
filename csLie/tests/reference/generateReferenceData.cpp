@@ -275,6 +275,126 @@ template <class T> void rpyCases(char const *name) {
   std::fprintf(out, "};\n\n");
 }
 
+// ---- S2 ----
+
+// unit vectors: the axes, generic ones, near +-x (the second chart) and near the switch of the charts (x^2 = 1/2)
+std::vector<Axis> const &s2Points() {
+  static std::vector<Axis> const a = [] {
+    std::vector<Axis> o;
+    auto add = [&](char const *label, Q x, Q y, Q z) {
+      ref::V3 v;
+      v(0, 0) = x, v(1, 0) = y, v(2, 0) = z;
+      Q const n = ref::norm(v);
+      for (auto &e : v.a)
+        e /= n;
+      o.push_back({label, v});
+    };
+    add("x", 1, 0, 0);
+    add("-x", -1, 0, 0);
+    add("y", 0, 1, 0);
+    add("-z", 0, 0, -1);
+    add("xyz", 1, 1, 1);
+    add("r1", Q(0.3), Q(-0.8), Q(0.52));
+    add("r2", Q(-0.91), Q(0.12), Q(-0.4));
+    add("near x", 1, Q(1e-8), Q(-2e-8));
+    add("near -x", -1, Q(3e-5), Q(1e-5));
+    add("switch-", Q(0.7), Q(0.5), Q(0.51));
+    add("switch+", Q(0.72), Q(-0.5), Q(0.48));
+    return o;
+  }();
+  return a;
+}
+
+std::vector<std::pair<char const *, std::array<Q, 2>>> const &s2Directions() {
+  static std::vector<std::pair<char const *, std::array<Q, 2>>> const d{
+      {"b1", {1, 0}}, {"b2", {0, 1}}, {"d1", {Q(0.6), Q(-0.8)}}, {"d2", {Q(-0.28), Q(0.96)}}};
+  return d;
+}
+
+template <class T> ref::V3 roundV3(ref::V3 v) {
+  for (auto &e : v.a)
+    e = roundTo<T>(e);
+  return v;
+}
+
+template <class T> ref::V2 delta2(Q theta, std::array<Q, 2> const &d) {
+  ref::V2 o;
+  o(0, 0) = roundTo<T>(theta * d[0]), o(1, 0) = roundTo<T>(theta * d[1]);
+  return o;
+}
+
+template <class T> void s2ExpCases(char const *name) {
+  std::fprintf(out, "inline constexpr S2ExpCase %s[] = {\n", name);
+  for (auto const &an : expAngles())
+    for (auto const &[dl, d] : s2Directions()) {
+      ref::V2 const delta = delta2<T>(an.theta, d);
+      std::fprintf(out, "    {\"%s %s\", {%s}, {%s}},\n", an.label, dl, list(delta).c_str(),
+                   list(ref::s2Exp(delta)).c_str());
+      if (!(an.theta > 0))
+        break;
+    }
+  std::fprintf(out, "};\n\n");
+}
+
+template <class T> void s2FrameCases(char const *name) {
+  std::fprintf(out, "inline constexpr S2FrameCase %s[] = {\n", name);
+  for (auto const &p : s2Points()) {
+    ref::V3 const v = roundV3<T>(p.v);
+    std::fprintf(out, "    {\"%s\", {%s}, {%s}},\n", p.label, list(v).c_str(), list(ref::s2Frame(v)).c_str());
+  }
+  std::fprintf(out, "};\n\n");
+}
+
+std::vector<Angle> const &s2OplusAngles() {
+  static std::vector<Angle> const a{{"0", 0},        {"1e-8", Q(1e-8)}, {"1e-3", Q(1e-3)},
+                                    {"0.5", Q(0.5)}, {"2", Q(2)},       {"pi-1e-4", ref::PI - Q(1e-4)},
+                                    {"pi", ref::PI}, {"4", Q(4)}};
+  return a;
+}
+
+template <class T> void s2OplusCases(char const *name) {
+  std::fprintf(out, "inline constexpr S2OplusCase %s[] = {\n", name);
+  for (auto const &p : s2Points())
+    for (auto const &an : s2OplusAngles())
+      for (auto const &[dl, d] : s2Directions()) {
+        if (dl[0] == 'b')
+          continue; // the generic directions only
+        ref::V3 const v = roundV3<T>(p.v);
+        ref::V2 const delta = delta2<T>(an.theta, d);
+        std::fprintf(out, "    {\"%s %s %s\", {%s}, {%s}, {%s}},\n", p.label, an.label, dl, list(v).c_str(),
+                     list(delta).c_str(), list(ref::s2Oplus(v, delta)).c_str());
+        if (!(an.theta > 0))
+          break;
+      }
+  std::fprintf(out, "};\n\n");
+}
+
+// w = s2Oplus(v, theta d) rounded, for the angles of the log (to pi - 1e-8); and w = -v exactly
+template <class T> void s2OplusInverseCases(char const *name) {
+  std::fprintf(out, "inline constexpr S2OplusInverseCase %s[] = {\n", name);
+  for (auto const &p : s2Points()) {
+    ref::V3 const v = roundV3<T>(p.v);
+    for (auto const &an : angles())
+      for (auto const &[dl, d] : s2Directions()) {
+        if (dl[0] == 'b')
+          continue;
+        ref::V2 dq;
+        dq(0, 0) = an.theta * d[0], dq(1, 0) = an.theta * d[1];
+        ref::V3 const w = roundV3<T>(ref::s2Oplus(v, dq));
+        std::fprintf(out, "    {\"%s %s %s\", {%s}, {%s}, {%s}},\n", p.label, an.label, dl, list(v).c_str(),
+                     list(w).c_str(), list(ref::s2OplusInverse(v, w)).c_str());
+        if (!(an.theta > 0))
+          break;
+      }
+    ref::V3 mv = v;
+    for (auto &e : mv.a)
+      e = -e;
+    std::fprintf(out, "    {\"%s antipodal\", {%s}, {%s}, {%s}},\n", p.label, list(v).c_str(), list(mv).c_str(),
+                 list(ref::s2OplusInverse(v, mv)).c_str());
+  }
+  std::fprintf(out, "};\n\n");
+}
+
 // writes <folder>/<group>.hpp: the header, the tables written by body, the footer
 template <class Body> bool writeGroup(std::string const &folder, char const *group, Body body) {
   std::string const path = folder + "/" + group + ".hpp";
@@ -324,5 +444,15 @@ int main(int argc, char **argv) {
     se2LogCases<float>("se2LogCasesF32");
     se2LogCases<double>("se2LogCasesF64");
   });
-  return ok && okSe2 ? 0 : 1;
+  bool const okS2 = writeGroup(folder, "S2", [] {
+    s2ExpCases<float>("s2ExpCasesF32");
+    s2ExpCases<double>("s2ExpCasesF64");
+    s2FrameCases<float>("s2FrameCasesF32");
+    s2FrameCases<double>("s2FrameCasesF64");
+    s2OplusCases<float>("s2OplusCasesF32");
+    s2OplusCases<double>("s2OplusCasesF64");
+    s2OplusInverseCases<float>("s2OplusInverseCasesF32");
+    s2OplusInverseCases<double>("s2OplusInverseCasesF64");
+  });
+  return ok && okSe2 && okS2 ? 0 : 1;
 }

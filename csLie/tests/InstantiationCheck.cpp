@@ -68,6 +68,7 @@ template <class S> void instantiateAll() {
   static_cast<void>(s2Frame(s2));
   static_cast<void>(s2Oplus(s2, s2Tangent));
   static_cast<void>(s2OplusJacobianAtZero(s2));
+  static_cast<void>(s2OplusInverse(s2, s2));
   // Utils
   static_cast<void>(normalizeWithJacobian(s2));
 }

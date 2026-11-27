@@ -5,16 +5,10 @@
 #include <csCore/testUtils/AssertCatch2.hpp>
 #include <csLie/Constants.hpp>
 #include <csLie/S2_impl.hpp>
+#include <csLie/SO3_impl.hpp>
 #include <csLie/Types.hpp>
 
 namespace csLie {
-
-TEMPLATE_TEST_CASE("S2 test - verify assumption atan2(0,0) = 0", "[S2]", float32_t, float64_t) {
-  // in s2Frame we assume that atan2(0,0) = 0. This might be platform
-  // dependent. In case this test fail, adapt the logic in s2Frame to
-  // handle this edge case
-  REQUIRE(std::fpclassify(std::atan2<TestType>(0, 0)) == FP_ZERO);
-}
 
 TEMPLATE_TEST_CASE("S2 test - base", "[S2]", float32_t, float64_t) {
   using S = TestType;
@@ -58,6 +52,19 @@ TEMPLATE_TEST_CASE("S2 test - base", "[S2]", float32_t, float64_t) {
   Eigen::Matrix<S, 3, 2> const J = s2OplusJacobianAtZero(v);
   // verify is equivalent to the first two columns of Rv
   REQUIRE((J - Rv.template rightCols<2>()).isZero());
+}
+
+TEMPLATE_TEST_CASE("S2 test - expression inputs read once", "[S2]", float32_t, float64_t) {
+  using S = TestType;
+  // Random() gives new values at each read of a coefficient: a function reading it twice would mix them
+  for (int i = 0; i < 100; ++i) {
+    S2<S> const v = s2Exp(S2Tangent<S>::Random() * S(2));
+    REQUIRE(v.allFinite());
+    REQUIRE(std::abs(v.norm() - S(1)) < S(8) * Constants<S>::epsilon);
+    S2<S> const w = s2Oplus(S2<S>::UnitZ(), S2Tangent<S>::Random() * S(2));
+    REQUIRE(std::abs(w.norm() - S(1)) < S(8) * Constants<S>::epsilon);
+    REQUIRE(csCore::eigenUtils::isValidRotationMatrix3D(so3Exp(SO3Tangent<S>::Random() * S(2))));
+  }
 }
 
 TEMPLATE_TEST_CASE("S2 test - plane fitting", "[S2]", float32_t, float64_t) {

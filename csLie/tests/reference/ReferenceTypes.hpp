@@ -54,4 +54,34 @@ struct Se2LogCase {
   double xi[3];
 };
 
+/// a S2 tangent vector (exactly representable in the tested precision) and its exact s2Exp
+struct S2ExpCase {
+  char const *label;
+  double delta[2];
+  double v[3];
+};
+
+/// a vector (exactly representable in the tested precision, unit to its precision) and its exact s2Frame (row major)
+struct S2FrameCase {
+  char const *label;
+  double v[3];
+  double R[9];
+};
+
+/// v and delta (exactly representable in the tested precision) and the exact s2Oplus(v, delta)
+struct S2OplusCase {
+  char const *label;
+  double v[3];
+  double delta[2];
+  double w[3];
+};
+
+/// v and w (exactly representable in the tested precision) and the exact s2OplusInverse(v, w)
+struct S2OplusInverseCase {
+  char const *label;
+  double v[3];
+  double w[3];
+  double delta[2];
+};
+
 } // namespace csLie::testReference

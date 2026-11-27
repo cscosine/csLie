@@ -14,7 +14,8 @@ template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<
   using std::sqrt;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Tangent<S>()), "delta required to be 3x1");
 
-  SO3Tangent<S> const w2 = delta.cwiseAbs2();
+  SO3Tangent<S> const d = delta; // read once (an expression, e.g. Random(), gives new values at each read)
+  SO3Tangent<S> const w2 = d.cwiseAbs2();
   S const theta_sq = w2.sum(); // sum of the squares
   // below sqrt(min) theta_sq underflows to 0 or a subnormal: theta is then 0 or inexact, harmless, the coefficients
   // are 1 and 1/2 up to theta^2
@@ -28,16 +29,16 @@ template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<
   R(1, 1) = S(1) - b * (w2(0) + w2(2));
   R(2, 2) = S(1) - b * (w2(0) + w2(1));
 
-  const S Bab = b * delta(0, 0) * delta(1, 0);
-  const S Bac = b * delta(0, 0) * delta(2, 0);
-  const S Bbc = b * delta(1, 0) * delta(2, 0);
+  const S Bab = b * d(0) * d(1);
+  const S Bac = b * d(0) * d(2);
+  const S Bbc = b * d(1) * d(2);
 
-  R(0, 1) = Bab - a * delta(2, 0);
-  R(1, 0) = Bab + a * delta(2, 0);
-  R(0, 2) = Bac + a * delta(1, 0);
-  R(2, 0) = Bac - a * delta(1, 0);
-  R(1, 2) = Bbc - a * delta(0, 0);
-  R(2, 1) = Bbc + a * delta(0, 0);
+  R(0, 1) = Bab - a * d(2);
+  R(1, 0) = Bab + a * d(2);
+  R(0, 2) = Bac + a * d(1);
+  R(2, 0) = Bac - a * d(1);
+  R(1, 2) = Bbc - a * d(0);
+  R(2, 1) = Bbc + a * d(0);
 
   return R;
 }
@@ -83,30 +84,31 @@ template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Ei
   // of the largest of 1 + trace and the diagonal terms, so nothing is divided by a value near zero. Then
   // theta = 2 atan2(|v|, w) and omega = theta v / |v|, accurate at every angle (no acos, no series, no switch).
   // As GTSAM's SO3::Logmap (Hertzberg et al., Information Fusion, 2011).
-  S const tr = rot(0, 0) + rot(1, 1) + rot(2, 2);
+  SO3<S> const R = rot; // read once
+  S const tr = R(0, 0) + R(1, 1) + R(2, 2);
   S w;
   SO3Tangent<S> v;
   if (tr > S(0)) {
     // theta < 2 pi / 3: (1 + tr, vee(R - R^T)) = 4 cos(theta / 2) (w, v)
     w = S(1) + tr;
-    v << rot(2, 1) - rot(1, 2), rot(0, 2) - rot(2, 0), rot(1, 0) - rot(0, 1);
+    v << R(2, 1) - R(1, 2), R(0, 2) - R(2, 0), R(1, 0) - R(0, 1);
   } else {
     // pivot on the largest diagonal term i: 1 + 2 R(i, i) - tr = 4 v_i^2 (up to the scale)
     int i = 0;
-    if (rot(1, 1) > rot(i, i)) {
+    if (R(1, 1) > R(i, i)) {
       i = 1;
     }
-    if (rot(2, 2) > rot(i, i)) {
+    if (R(2, 2) > R(i, i)) {
       i = 2;
     }
     int const j = (i + 1) % 3;
     int const k = (i + 2) % 3;
-    S const r = sqrt(S(1) + S(2) * rot(i, i) - tr);
+    S const r = sqrt(S(1) + S(2) * R(i, i) - tr);
     S const invR = S(1) / r;
     v(i) = r;
-    v(j) = (rot(j, i) + rot(i, j)) * invR;
-    v(k) = (rot(k, i) + rot(i, k)) * invR;
-    w = (rot(k, j) - rot(j, k)) * invR;
+    v(j) = (R(j, i) + R(i, j)) * invR;
+    v(k) = (R(k, i) + R(i, k)) * invR;
+    w = (R(k, j) - R(j, k)) * invR;
     // theta in [0, pi]; at exactly pi (w = 0) the sign is the pivot's: deterministic
     if (w < S(0)) {
       w = -w;
@@ -180,8 +182,9 @@ so3ToRollPitchYawImpl(Eigen::MatrixBase<Derived> const &rot, typename Derived::S
 
   // R(:, 0) = (cos(yaw) cos(pitch), sin(yaw) cos(pitch), -sin(pitch)), R(2, :) = (., cos(pitch) sin(roll),
   // cos(pitch) cos(roll))
-  S const cosPitch = hypot(rot(0, 0), rot(1, 0));
-  S const pitch = atan2(-rot(2, 0), cosPitch);
+  SO3<S> const R = rot; // read once
+  S const cosPitch = hypot(R(0, 0), R(1, 0));
+  S const pitch = atan2(-R(2, 0), cosPitch);
   bool const gimbal = !(cosPitch > gimbalTolerance);
   if constexpr (CHECKED) {
     if (gimbal) {
@@ -191,17 +194,17 @@ so3ToRollPitchYawImpl(Eigen::MatrixBase<Derived> const &rot, typename Derived::S
 
   if constexpr (P == GimbalPolicy::kRollZero) {
     // roll, then yaw from R rotX(roll)^T = rotZ(yaw) rotY(pitch), whose column 1 is (-sin(yaw), cos(yaw), 0)
-    S const roll = gimbal ? S(0) : atan2(rot(2, 1), rot(2, 2));
+    S const roll = gimbal ? S(0) : atan2(R(2, 1), R(2, 2));
     S const c = cos(roll);
     S const s = sin(roll);
-    S const yaw = atan2(s * rot(0, 2) - c * rot(0, 1), c * rot(1, 1) - s * rot(1, 2));
+    S const yaw = atan2(s * R(0, 2) - c * R(0, 1), c * R(1, 1) - s * R(1, 2));
     return Eigen::Matrix<S, 3, 1>(roll, pitch, yaw);
   } else {
     // yaw, then roll from rotZ(yaw)^T R = rotY(pitch) rotX(roll), whose row 1 is (0, cos(roll), -sin(roll))
-    S const yaw = gimbal ? S(0) : atan2(rot(1, 0), rot(0, 0));
+    S const yaw = gimbal ? S(0) : atan2(R(1, 0), R(0, 0));
     S const c = cos(yaw);
     S const s = sin(yaw);
-    S const roll = atan2(s * rot(0, 2) - c * rot(1, 2), c * rot(1, 1) - s * rot(0, 1));
+    S const roll = atan2(s * R(0, 2) - c * R(1, 2), c * R(1, 1) - s * R(0, 1));
     return Eigen::Matrix<S, 3, 1>(roll, pitch, yaw);
   }
 }
