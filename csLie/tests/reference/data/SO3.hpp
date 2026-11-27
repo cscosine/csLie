@@ -2,30 +2,9 @@
 // clang-format off
 #pragma once
 
+#include "../ReferenceTypes.hpp"
+
 namespace csLie::testReference {
-
-/// a rotation matrix (row major, exactly representable in the tested precision) and its exact log
-struct So3LogCase {
-  char const *label;
-  double R[9];
-  double omega[3];
-};
-
-/// a rotation vector (exactly representable in the tested precision) and its exact exp (row major)
-struct So3ExpCase {
-  char const *label;
-  double omega[3];
-  double R[9];
-};
-
-/// an angle (exactly representable in the tested precision) and its exact exp coefficients
-/// A = sin(theta) / theta, B = (1 - cos(theta)) / theta^2
-struct CoeffCase {
-  char const *label;
-  double theta;
-  double A;
-  double B;
-};
 
 inline constexpr So3LogCase so3LogCasesF32[] = {
     {"0 x", {0x1p+0, 0x0p+0, 0x0p+0, 0x0p+0, 0x1p+0, 0x0p+0, 0x0p+0, 0x0p+0, 0x1p+0}, {0x0p+0, 0x0p+0, 0x0p+0}},

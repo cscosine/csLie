@@ -1,5 +1,5 @@
 // Quad-precision (__float128, ~1e-34) reference of the csLie functions, used by generateReferenceData.cpp only
-// (__float128 and libquadmath: GCC on x86-64 Linux): the tests read the values it generates (ReferenceData.hpp), so
+// (__float128 and libquadmath: GCC on x86-64 Linux): the tests read the values it generates (data/), so
 // they run on every platform. Every formula is accurate to far below double precision for any angle: Taylor series (to
 // theta^8) below 1e-3, closed forms above; no formula subtracts nearly equal quad values by more than 1e-6.
 #pragma once

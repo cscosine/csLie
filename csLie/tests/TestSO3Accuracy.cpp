@@ -1,7 +1,7 @@
-// Accuracy of the SO3 functions and of their coefficients against exact results (reference/ReferenceData.hpp, computed
+// Accuracy of the SO3 functions and of their coefficients against exact results (reference/data/SO3.hpp, computed
 // in quad precision), in units of the epsilon of the tested precision. The inputs cover 0, tiny angles, 1 degree, the
 // switch of the formulas, pi - 1e-k and exactly pi, on axis-aligned and generic axes.
-#include "reference/ReferenceData.hpp"
+#include "reference/data/SO3.hpp"
 
 #include <cmath>
 #include <csCore/testUtils/AssertCatch2.hpp>
