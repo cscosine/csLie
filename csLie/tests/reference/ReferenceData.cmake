@@ -7,6 +7,10 @@
 #
 # OUTPUT: the folder the generator writes first (in the build folder), emptied before.
 
+# A -P script does not inherit the policies of the project that runs it: without this, CMake 3.x leaves CMP0057 unset
+# and does not treat IN_LIST as an operator (CMake 4 always does). Same version as the top-level CMakeLists.txt.
+cmake_minimum_required(VERSION 3.31)
+
 foreach(var GENERATOR REFERENCE OUTPUT MODE)
   if(NOT DEFINED ${var})
     message(FATAL_ERROR "ReferenceData.cmake: ${var} is required")
