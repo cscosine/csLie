@@ -3,6 +3,7 @@
 #include <csCore/eigenUtils/IsometryMatrix.hpp>
 #include <csCore/eigenUtils/IsometryMatrix_impl.hpp>
 #include <csCore/eigenUtils/MatrixShape_impl.hpp>
+#include <csLie/Coefficients_impl.hpp>
 #include <csLie/SE2.hpp>
 #include <csLie/SO2_impl.hpp>
 #include <csLie/csLieAssert.hpp>
@@ -11,38 +12,45 @@ namespace csLie {
 
 template <class Derived> SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
-
+  using std::abs;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SE2Alg<S>()), "delta required to be 3x1");
-  SE2<S> Rt{};
 
-  // note: to be able to use both eigen matrix and vector, it is required to use
-  // always two indices
-  S const theta{delta(2, 0)};
-  Rt.linear() = so2Exp<S>(theta);
-
-  S sinTh_Th{};
-  S m1cosTh_Th{};
-  if (std::abs(theta) < Eigen::NumTraits<S>::epsilon()) {
-    sinTh_Th = 1;
-    m1cosTh_Th = 0;
-  } else {
-    S const sinTh{Rt(1, 0)};
-    S const cosTh{Rt(0, 0)};
-    sinTh_Th = sinTh / theta;
-    m1cosTh_Th = (1 - cosTh) / theta;
-  }
-
+  // R = so2Exp(theta), t = V rho with V = [A, -B theta; B theta, A] (A, B even in theta)
   S const x{delta(0, 0)};
   S const y{delta(1, 0)};
-  Rt.translation().x() = x * sinTh_Th - y * m1cosTh_Th;
-  Rt.translation().y() = x * m1cosTh_Th + y * sinTh_Th;
+  S const theta{delta(2, 0)};
+  _private::ExpCoeffs<S> const k = _private::expCoeffs(abs(theta));
+  S const bTheta = k.B * theta;
 
-  // bottom row
+  SE2<S> Rt{};
+  Rt.linear() = so2Exp<S>(theta);
+  Rt.translation().x() = k.A * x - bTheta * y;
+  Rt.translation().y() = bTheta * x + k.A * y;
   Rt(2, 0) = 0;
   Rt(2, 1) = 0;
   Rt(2, 2) = 1;
   return Rt;
 }
+
+template <class Derived> SE2Alg<typename Derived::Scalar> se2Log(Eigen::MatrixBase<Derived> const &transf) {
+  using S = typename Derived::Scalar;
+  using std::abs;
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE2Matrix<S>()),
+                     "transf required to be 3x3");
+  CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix2D(transf), "transf is not a valid isometry matrix");
+
+  // theta = so2Log(R) in (-pi, pi], rho = V^-1 t with V^-1 = [K, theta / 2; -theta / 2, K], K = (theta / 2) cot(theta /
+  // 2) (det V = 2 B): no division by a small value at any angle
+  S const theta = so2Log(transf.template topLeftCorner<2, 2>());
+  _private::ExpCoeffs<S> const k = _private::expCoeffs(abs(theta));
+  S const kk = k.A / (S(2) * k.B);
+  S const halfTheta = theta / S(2);
+  S const tx = transf(0, 2);
+  S const ty = transf(1, 2);
+  return SE2Alg<S>(kk * tx + halfTheta * ty, -halfTheta * tx + kk * ty, theta);
+}
+
+template <class S> SE2Alg<S> se2Log(SE2<S> const &transf) { return se2Log(transf.matrix()); }
 
 template <class Derived> SE2<typename Derived::Scalar> xyYToSe2(Eigen::MatrixBase<Derived> const &xyY) {
   using S = typename Derived::Scalar;

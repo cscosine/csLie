@@ -30,6 +30,8 @@ template <class S> void instantiateAll() {
   static_cast<void>(so2Log(so2));
   // SE2
   static_cast<void>(se2Exp(se2Alg));
+  static_cast<void>(se2Log(se2.matrix()));
+  static_cast<void>(se2Log(se2));
   static_cast<void>(xyYToSe2(se2Alg));
   static_cast<void>(se2ToxyY(se2.matrix()));
   static_cast<void>(se2ToxyY(se2));

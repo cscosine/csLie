@@ -27,6 +27,7 @@ cs_target_sources(
   csLie
   PRIVATE_INSTALL
     Types.hpp
+    Coefficients_impl.hpp
     Constants.hpp
     S2.hpp
     S2_impl.hpp

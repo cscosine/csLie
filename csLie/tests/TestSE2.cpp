@@ -65,7 +65,27 @@ TEMPLATE_TEST_CASE("SE2 test - from/to xyY", "[SE2]", float32_t, float64_t) {
   REQUIRE((xyY_gt - xyY_transf).isZero());
 }
 
-// TODO(sc) add test of log in SE2, after adding log
+TEMPLATE_TEST_CASE("SE2 test - log", "[SE2]", float32_t, float64_t) {
+  using S = TestType;
+
+  // log(exp(xi)) = xi for theta in (-pi, pi], exp(log(T)) = T
+  for (S const theta : {S(0), S(1e-6), S(-0.3), S(1), S(-2), S(3)}) {
+    SE2Alg<S> const xi(S(1.5), S(-0.25), theta);
+    SE2<S> const T = se2Exp(xi);
+    SE2Alg<S> const logT = se2Log(T);
+    INFO("xi " << xi.transpose() << ", log(exp(xi)) " << logT.transpose());
+    REQUIRE((logT - xi).isZero());
+    REQUIRE((se2Exp(logT).matrix() - T.matrix()).isZero());
+    REQUIRE((se2Log(T.matrix()) - logT).isZero());
+  }
+
+  // beyond pi the log is the equivalent angle in (-pi, pi], same rotation and translation
+  SE2Alg<S> const xi(S(1), S(2), S(4));
+  SE2Alg<S> const logT = se2Log(se2Exp(xi));
+  REQUIRE(logT(2) <= Constants<S>::pi);
+  REQUIRE((se2Exp(logT).matrix() - se2Exp(xi).matrix()).isZero());
+}
+
 // TODO(sc) add a test with optimization in SE2
 
 TEMPLATE_TEST_CASE("SE2 test - exp, delta wrong size", "[SE2]", float32_t, float64_t) {
@@ -82,6 +102,26 @@ TEMPLATE_TEST_CASE("SE2 test - exp, delta wrong size", "[SE2]", float32_t, float
     REQUIRE_ASSERT(se2Exp(Eigen::MatrixX<S>(6, 10).block(0, 0, 1, 2)));
     REQUIRE_ASSERT(se2Exp(Eigen::MatrixX<S>(2, 2).block(0, 0, 2, 1)));
     REQUIRE_ASSERT(se2Exp(Eigen::VectorX<S>(10).segment(0, 2)));
+  }
+}
+
+TEMPLATE_TEST_CASE("SE2 test - log, transf wrong", "[SE2]", float32_t, float64_t) {
+  using S = TestType;
+
+  if (csLie::Asserts::isAssertDebugEnabled()) {
+    REQUIRE_NO_ASSERT(se2Log(Eigen::MatrixX<S>::Identity(3, 3)));
+    REQUIRE_ASSERT(se2Log(Eigen::MatrixX<S>(1, 2))); // throws, wrong size
+    REQUIRE_ASSERT(se2Log(Eigen::MatrixX<S>(2, 1))); // throws, wrong size
+
+    Eigen::MatrixX<S> m44 = Eigen::MatrixX<S>::Identity(4, 4);
+    REQUIRE_NO_ASSERT(se2Log(m44.block(0, 0, 3, 3)));
+    REQUIRE_ASSERT(se2Log(Eigen::MatrixX<S>(6, 10).block(0, 0, 1, 2)));
+  }
+
+  if (csLie::Asserts::isAssertParanoidEnabled()) {
+    SE2<S> tmp = SE2<S>::Identity();
+    tmp(2, 2) = 0.0;
+    REQUIRE_ASSERT(se2Log(tmp));
   }
 }
 

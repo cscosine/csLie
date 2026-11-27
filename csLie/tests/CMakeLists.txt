@@ -20,7 +20,15 @@ include(Catch)
 
 cs_target_sources(
   csLieTest
-  PRIVATE TestSE2.cpp TestS2.cpp TestSO2.cpp TestSO3.cpp TestSO3Accuracy.cpp TestSE3.cpp TestUtils.cpp
+  PRIVATE
+    TestSE2.cpp
+    TestSE2Accuracy.cpp
+    TestS2.cpp
+    TestSO2.cpp
+    TestSO3.cpp
+    TestSO3Accuracy.cpp
+    TestSE3.cpp
+    TestUtils.cpp
 )
 
 cs_target_link_libraries(csLieTest PRIVATE csLie::csLie csCore::math csCore::testUtils Catch2::Catch2WithMain)

@@ -108,6 +108,14 @@ std::vector<Angle> const &coeffAngles() {
   return a;
 }
 
+// the translations of the SE2 tests
+std::vector<std::pair<char const *, std::array<Q, 2>>> const &translations2() {
+  static std::vector<std::pair<char const *, std::array<Q, 2>>> const t{
+      {"x", {1, 0}}, {"y", {0, 1}}, {"r1", {Q(0.3), Q(-0.7)}}, {"r2", {Q(-2.5), Q(1.25)}}, {"far", {Q(100), Q(-40)}},
+  };
+  return t;
+}
+
 // rotations by exactly pi, exactly representable
 std::vector<std::pair<char const *, std::array<int, 9>>> const &exactPi() {
   static std::vector<std::pair<char const *, std::array<int, 9>>> const m{
@@ -185,6 +193,54 @@ template <class T> void coeffCases(char const *name) {
   std::fprintf(out, "};\n\n");
 }
 
+// SE2 exp: every angle of the exp, both signs, every translation
+template <class T> void se2ExpCases(char const *name) {
+  std::fprintf(out, "inline constexpr Se2ExpCase %s[] = {\n", name);
+  for (auto const &an : expAngles())
+    for (Q const sign : {Q(1), Q(-1)}) {
+      for (auto const &[tl, tv] : translations2()) {
+        ref::V3 xi;
+        xi(0, 0) = roundTo<T>(tv[0]), xi(1, 0) = roundTo<T>(tv[1]), xi(2, 0) = roundTo<T>(sign * an.theta);
+        ref::SE2q const e = ref::se2Exp(xi);
+        ref::M3 M;
+        M(0, 0) = e.R(0, 0), M(0, 1) = e.R(0, 1), M(0, 2) = e.t(0, 0);
+        M(1, 0) = e.R(1, 0), M(1, 1) = e.R(1, 1), M(1, 2) = e.t(1, 0);
+        M(2, 2) = 1;
+        std::fprintf(out, "    {\"%s%s %s\", {%s}, {%s}},\n", sign < 0 ? "-" : "", an.label, tl, list(xi).c_str(),
+                     list(M).c_str());
+      }
+      if (!(an.theta > 0))
+        break; // one zero is enough
+    }
+  std::fprintf(out, "};\n\n");
+}
+
+// SE2 log: the exp of the angles of the log (up to pi - 1e-8), both signs, every translation, rounded
+template <class T> void se2LogCases(char const *name) {
+  std::fprintf(out, "inline constexpr Se2LogCase %s[] = {\n", name);
+  for (auto const &an : angles())
+    for (Q const sign : {Q(1), Q(-1)}) {
+      for (auto const &[tl, tv] : translations2()) {
+        ref::V3 xi;
+        xi(0, 0) = tv[0], xi(1, 0) = tv[1], xi(2, 0) = sign * an.theta;
+        ref::SE2q e = ref::se2Exp(xi);
+        for (auto &v : e.R.a)
+          v = roundTo<T>(v);
+        for (auto &v : e.t.a)
+          v = roundTo<T>(v);
+        ref::M3 M;
+        M(0, 0) = e.R(0, 0), M(0, 1) = e.R(0, 1), M(0, 2) = e.t(0, 0);
+        M(1, 0) = e.R(1, 0), M(1, 1) = e.R(1, 1), M(1, 2) = e.t(1, 0);
+        M(2, 2) = 1;
+        std::fprintf(out, "    {\"%s%s %s\", {%s}, {%s}},\n", sign < 0 ? "-" : "", an.label, tl, list(M).c_str(),
+                     list(ref::se2Log(e)).c_str());
+      }
+      if (!(an.theta > 0))
+        break; // one zero is enough
+    }
+  std::fprintf(out, "};\n\n");
+}
+
 // writes <folder>/<group>.hpp: the header, the tables written by body, the footer
 template <class Body> bool writeGroup(std::string const &folder, char const *group, Body body) {
   std::string const path = folder + "/" + group + ".hpp";
@@ -226,5 +282,11 @@ int main(int argc, char **argv) {
     coeffCases<float>("coeffCasesF32");
     coeffCases<double>("coeffCasesF64");
   });
-  return ok ? 0 : 1;
+  bool const okSe2 = writeGroup(folder, "SE2", [] {
+    se2ExpCases<float>("se2ExpCasesF32");
+    se2ExpCases<double>("se2ExpCasesF64");
+    se2LogCases<float>("se2LogCasesF32");
+    se2LogCases<double>("se2LogCasesF64");
+  });
+  return ok && okSe2 ? 0 : 1;
 }

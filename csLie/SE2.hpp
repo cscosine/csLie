@@ -13,11 +13,20 @@ namespace csLie {
 /// @throw if delta is not a 3x1 matrix
 template <class Derived> SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<Derived> const &delta);
 
-/*
-TODO(sc) implement log in SE2
-template <class Derived>
-typename Derived::Scalar se2Log(Eigen::MatrixBase<Derived> const& trans);
-*/
+/// @brief compute the log of a SE2 rototranslation to a se2 algebra vector
+/// @tparam Derived template to support generic matrix
+/// @param transf a 3x3 matrix representing an isometry
+/// @return the se2 algebra vector (x, y, theta), theta in (-pi, pi]: se2Exp of it gives transf
+/// @throw if transf is not a 3x3 matrix (DEBUG only), if transf is not a valid isometry within default precision
+/// (PARANOID)
+template <class Derived> SE2Alg<typename Derived::Scalar> se2Log(Eigen::MatrixBase<Derived> const &transf);
+
+/// @brief compute the log of a SE2 rototranslation to a se2 algebra vector
+/// @tparam S the scalar type
+/// @param transf a SE2, i.e., a Eigen::Transform<2, Isometry>
+/// @return the se2 algebra vector (x, y, theta), theta in (-pi, pi]: se2Exp of it gives transf
+/// @throw if transf is not a valid isometry within default precision (PARANOID)
+template <class S> SE2Alg<S> se2Log(SE2<S> const &transf);
 
 /// @brief create a SE2 transformation from translation (x y) and angle (Y)
 /// @tparam Derived template to support generic matrix

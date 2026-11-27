@@ -2,92 +2,12 @@
 
 #include <csCore/eigenUtils/MatrixShape_impl.hpp>
 #include <csCore/eigenUtils/RotationMatrix_impl.hpp>
+#include <csLie/Coefficients_impl.hpp>
 #include <csLie/Constants.hpp>
 #include <csLie/SO3.hpp>
 #include <csLie/csLieAssert.hpp>
 
 namespace csLie {
-
-namespace _private {
-
-/// @brief the coefficients of the SO3 exp, R = I + A W + B W^2 (W = skewSymm(omega), theta = |omega|)
-template <class S> struct SO3ExpCoeffs {
-  S A; ///< sin(theta) / theta
-  S B; ///< (1 - cos(theta)) / theta^2
-};
-
-/// @brief the coefficients of the SO3 exp at the angle theta >= 0, from the half angle: with
-/// h = sin(theta / 2) / (theta / 2) and c = cos(theta / 2), A = h c and B = h^2 / 2. Accurate to a few epsilon at every
-/// angle, with no series and no switch: sin(x) / x has no cancellation for any x > 0 (B as (1 - cos(theta)) / theta^2
-/// loses all its digits below theta ~ sqrt(epsilon)); at theta = 0, h = 1.
-template <class S> SO3ExpCoeffs<S> so3ExpCoeffs(S const theta) {
-  using std::cos;
-  using std::sin;
-  S const half = theta / S(2);
-  S const h = half > S(0) ? sin(half) / half : S(1);
-  return {h * cos(half), S(0.5) * h * h};
-}
-
-/// @brief the coefficients of the SO3 left jacobian and of its inverse (W = skewSymm(omega), theta = |omega|):
-/// J = I + B W + C W^2 = A I + B W + C omega omega^T, J^-1 = I - W / 2 + D W^2 = K I - W / 2 + D omega omega^T
-template <class S> struct SO3JCoeffs {
-  S A; ///< sin(theta) / theta
-  S B; ///< (1 - cos(theta)) / theta^2
-  S C; ///< (theta - sin(theta)) / theta^3
-  S D; ///< (1 - A / (2 B)) / theta^2
-  S K; ///< A / (2 B) = (theta / 2) cot(theta / 2) = 1 - D theta^2
-};
-
-/// @brief the number of terms of the series of C(x) = (x - sin(x)) / x^3 = sum_k (-x^2)^k / (2k + 3)! that makes its
-/// truncation error below epsilon / 8 of C at x <= 2 (C(2) > 1/8): the first omitted term 4^n / (2n + 3)! below
-/// epsilon / 64. A bound, computed in S at compile time
-template <class S> constexpr int so3CSeriesTerms() {
-  S term = S(1) / S(6); // the first omitted term, 4^n / (2n + 3)!, at n = 0
-  int n = 0;
-  while (term > Constants<S>::epsilon / S(64)) {
-    ++n;
-    term *= S(4) / S((2 * n + 2) * (2 * n + 3));
-  }
-  return n;
-}
-
-/// @brief C(x) = (x - sin(x)) / x^3 at x >= 0, given sin(x): accurate to a few epsilon. The closed form loses digits
-/// to the cancellation of x - sin(x) below x ~ 2: there the series, with as many terms as the precision of S needs
-template <class S> S so3CoeffC(S const x, S const sinX) {
-  if (x > S(2)) {
-    return (x - sinX) / (x * x * x);
-  }
-  constexpr int terms = so3CSeriesTerms<S>();
-  // Horner: C = (1 - x^2 / (4 5) (1 - x^2 / (6 7) (1 - ...))) / 6
-  S const x2 = x * x;
-  S r = S(1);
-  for (int k = terms - 1; k >= 1; --k) {
-    r = S(1) - x2 * r / S((2 * k + 2) * (2 * k + 3));
-  }
-  return r / S(6);
-}
-
-/// @brief the coefficients of the SO3 left jacobian and of its inverse at the angle theta >= 0, accurate to a few
-/// epsilon at every angle (J^-1 is singular at theta = 2 pi). From the half angle x = theta / 2, with no cancellation:
-/// A and B as so3ExpCoeffs, C(theta) = (C(x) + A(x) B(x)) / 4, D(theta) = (B(x) - C(x)) / (4 A(x)), K = cos(x) / A(x)
-/// (C(x) ~ 1/6 against A(x) B(x) ~ 1/2 and B(x) ~ 1/2; beyond theta = 2 pi, B(x) - C(x) cancels mildly, by 2.5 at
-/// theta = 10). C and D in closed form, (theta - sin(theta)) / theta^3 and
-/// (1 - A / (2 B)) / theta^2, lose all their digits at small angles.
-template <class S> SO3JCoeffs<S> so3JCoeffs(S const theta) {
-  using std::cos;
-  using std::sin;
-  S const half = theta / S(2);
-  S const quarter = theta / S(4);
-  S const sinHalf = sin(half);
-  S const cosHalf = cos(half);
-  S const h = half > S(0) ? sinHalf / half : S(1);             // A(theta / 2)
-  S const hq = quarter > S(0) ? sin(quarter) / quarter : S(1); // A(theta / 4)
-  S const bHalf = S(0.5) * hq * hq;                            // B(theta / 2)
-  S const cHalf = so3CoeffC(half, sinHalf);                    // C(theta / 2)
-  return {h * cosHalf, S(0.5) * h * h, (cHalf + h * bHalf) / S(4), (bHalf - cHalf) / (S(4) * h), cosHalf / h};
-}
-
-} // namespace _private
 
 template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
@@ -98,7 +18,7 @@ template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<
   S const theta_sq = w2.sum(); // sum of the squares
   // below sqrt(min) theta_sq underflows to 0 or a subnormal: theta is then 0 or inexact, harmless, the coefficients
   // are 1 and 1/2 up to theta^2
-  _private::SO3ExpCoeffs<S> const k = _private::so3ExpCoeffs(sqrt(theta_sq));
+  _private::ExpCoeffs<S> const k = _private::expCoeffs(sqrt(theta_sq));
   S const a = k.A;
   S const b = k.B;
 
@@ -131,7 +51,7 @@ template <class Derived> SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<D
   S const x = delta(0, 0);
   S const y = delta(1, 0);
   S const z = delta(2, 0);
-  _private::SO3JCoeffs<S> const k = _private::so3JCoeffs(sqrt(x * x + y * y + z * z));
+  _private::JCoeffs<S> const k = _private::jCoeffs(sqrt(x * x + y * y + z * z));
 
   S const Cxy = k.C * x * y;
   S const Cxz = k.C * x * z;
@@ -211,7 +131,7 @@ template <class Derived> SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::Matrix
   S const x = delta(0, 0);
   S const y = delta(1, 0);
   S const z = delta(2, 0);
-  _private::SO3JCoeffs<S> const k = _private::so3JCoeffs(sqrt(x * x + y * y + z * z));
+  _private::JCoeffs<S> const k = _private::jCoeffs(sqrt(x * x + y * y + z * z));
 
   S const Dxy = k.D * x * y;
   S const Dxz = k.D * x * z;

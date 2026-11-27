@@ -32,4 +32,18 @@ struct CoeffCase {
   double K;
 };
 
+/// a se2 algebra vector (x, y, theta; exactly representable in the tested precision) and its exact exp (row major)
+struct Se2ExpCase {
+  char const *label;
+  double xi[3];
+  double T[9];
+};
+
+/// a SE2 matrix (row major, exactly representable in the tested precision) and its exact log (x, y, theta)
+struct Se2LogCase {
+  char const *label;
+  double T[9];
+  double xi[3];
+};
+
 } // namespace csLie::testReference

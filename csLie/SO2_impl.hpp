@@ -16,9 +16,11 @@ template <class Derived> SO2<typename Derived::Scalar> so2Exp(Eigen::MatrixBase<
 }
 
 template <class S, class RetType> std::enable_if_t<std::is_floating_point<S>::value, RetType> so2Exp(S delta) {
+  using std::cos;
+  using std::sin;
   SO2<S> res{};
-  S const cd{std::cos(delta)};
-  S const sd{std::sin(delta)};
+  S const cd{cos(delta)};
+  S const sd{sin(delta)};
 
   res(0, 0) = cd;
   res(0, 1) = -sd;
@@ -33,7 +35,8 @@ template <class Derived> typename Derived::Scalar so2Log(Eigen::MatrixBase<Deriv
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidRotationMatrix2D(rot), "rot is not a valid rotation matrix");
 
   // atan2 (sin,cos), average of values
-  return std::atan2(rot(1, 0), rot(0, 0));
+  using std::atan2;
+  return atan2(rot(1, 0), rot(0, 0));
 }
 
 } // namespace csLie

@@ -166,7 +166,7 @@ TEMPLATE_TEST_CASE("SO3 inverse left jacobian accuracy", "[SO3][accuracy]", floa
 TEMPLATE_TEST_CASE("SO3 exp coefficients accuracy", "[SO3][accuracy]", float32_t, float64_t) {
   using S = TestType;
   for (auto const &c : coeffCases<S>()) {
-    _private::SO3ExpCoeffs<S> const k = _private::so3ExpCoeffs(static_cast<S>(c.theta));
+    _private::ExpCoeffs<S> const k = _private::expCoeffs(static_cast<S>(c.theta));
     double const errA = relError(k.A, c.A);
     double const errB = relError(k.B, c.B);
     INFO(c.label << ": A error " << errA << " eps, B error " << errB << " eps");
@@ -178,7 +178,7 @@ TEMPLATE_TEST_CASE("SO3 exp coefficients accuracy", "[SO3][accuracy]", float32_t
 TEMPLATE_TEST_CASE("SO3 jacobian coefficients accuracy", "[SO3][accuracy]", float32_t, float64_t) {
   using S = TestType;
   for (auto const &c : coeffCases<S>()) {
-    _private::SO3JCoeffs<S> const k = _private::so3JCoeffs(static_cast<S>(c.theta));
+    _private::JCoeffs<S> const k = _private::jCoeffs(static_cast<S>(c.theta));
     double const errA = relError(k.A, c.A);
     double const errB = relError(k.B, c.B);
     double const errC = relError(k.C, c.C);
