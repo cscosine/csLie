@@ -18,7 +18,7 @@ template <class S> static const S s2TaylorBound{std::sqrt(std::sqrt(Constants<S>
 template <class Derived> S2<typename Derived::Scalar> s2Exp(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
 
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, S2Alg<S>()), "delta required to be 2x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, S2Tangent<S>()), "delta required to be 2x1");
 
   S const norm2 = delta.squaredNorm();
 
@@ -58,42 +58,42 @@ template <class Derived> S2<typename Derived::Scalar> s2Exp(Eigen::MatrixBase<De
   return ret;
 }
 
-template <class Derived> SO3<typename Derived::Scalar> s2toZAlignedSO3(Eigen::MatrixBase<Derived> const &v) {
+template <class Derived> SO3<typename Derived::Scalar> s2Frame(Eigen::MatrixBase<Derived> const &v) {
   using S = typename Derived::Scalar;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, S2<S>()), "v required to be 3x1");
 
   CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm() - S(1)) < Constants<S>::dummy_precision,
-                        "s2toZAlignedSO3 input vector is not unitary");
+                        "s2Frame input vector is not unitary");
 
   SO3<S> R{};
   // x direction aligned with v
   R.col(0) = v;
   // right cols are equivalent to the jacobian
-  R.template rightCols<2>() = s2_d_oplus_d_delta_0(v);
+  R.template rightCols<2>() = s2OplusJacobianAtZero(v);
 
   return R;
 }
 
 template <class Derived1, class Derived2>
-S2<typename Derived1::Scalar> s2oplus(Eigen::MatrixBase<Derived1> const &v, Eigen::MatrixBase<Derived2> const &delta) {
+S2<typename Derived1::Scalar> s2Oplus(Eigen::MatrixBase<Derived1> const &v, Eigen::MatrixBase<Derived2> const &delta) {
   using S = typename Derived1::Scalar;
   static_assert(std::is_same<typename Derived1::Scalar, typename Derived2::Scalar>::value,
-                "s2oplus needs equal scalar types");
+                "s2Oplus needs equal scalar types");
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, S2<S>()), "v required to be 3x1");
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, S2Alg<S>()), "delta required to be 2x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, S2Tangent<S>()), "delta required to be 2x1");
 
   CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm() - S(1)) < Constants<S>::dummy_precision,
-                        "s2toZAlignedSO3 input vector is not unitary");
+                        "s2Frame input vector is not unitary");
 
-  SO3<S> const R = s2toZAlignedSO3(v);
+  SO3<S> const R = s2Frame(v);
   S2<S> const vDelta = s2Exp(delta);
   S2<S> const ret = R * vDelta;
   return ret;
 }
 
 template <class Derived>
-s2oplusJac<typename Derived::Scalar> s2_d_oplus_d_delta_0(Eigen::MatrixBase<Derived> const &v) {
+Eigen::Matrix<typename Derived::Scalar, 3, 2> s2OplusJacobianAtZero(Eigen::MatrixBase<Derived> const &v) {
   using S = typename Derived::Scalar;
   using std::cos;
   using std::sin;
@@ -101,7 +101,7 @@ s2oplusJac<typename Derived::Scalar> s2_d_oplus_d_delta_0(Eigen::MatrixBase<Deri
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, S2<S>()), "v required to be 3x1");
 
   CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm() - S(1)) < Constants<S>::dummy_precision,
-                        "s2toZAlignedSO3 input vector is not unitary");
+                        "s2Frame input vector is not unitary");
 
   // note: use always two indices to allow access to v as a generic matrix
   S const x{v(0, 0)};
@@ -114,7 +114,7 @@ s2oplusJac<typename Derived::Scalar> s2_d_oplus_d_delta_0(Eigen::MatrixBase<Deri
   S const c = cos(alpha);
   S const s = sin(alpha);
 
-  s2oplusJac<S> J{};
+  Eigen::Matrix<S, 3, 2> J{};
   J.col(0) = Eigen::Matrix<S, 3, 1>(-r, x * c, x * s);
   J.col(1) = Eigen::Matrix<S, 3, 1>(0, -s, c);
   return J;

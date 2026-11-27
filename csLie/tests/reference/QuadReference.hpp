@@ -152,7 +152,7 @@ inline V3 so3Log(M3 const &R) {
 }
 
 // R = rotZ(yaw) rotY(pitch) rotX(roll)
-inline M3 rpyToSo3(Q roll, Q pitch, Q yaw) {
+inline M3 rollPitchYawToSo3(Q roll, Q pitch, Q yaw) {
   Q const cr = cosq(roll), sr = sinq(roll), cp = cosq(pitch), sp = sinq(pitch), cy = cosq(yaw), sy = sinq(yaw);
   M3 R;
   R(0, 0) = cy * cp, R(0, 1) = cy * sp * sr - sy * cr, R(0, 2) = cy * sp * cr + sy * sr;

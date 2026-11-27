@@ -28,6 +28,7 @@ cs_target_sources(
     TestSO3.cpp
     TestSO3Accuracy.cpp
     TestSE3.cpp
+    TestPerturbations.cpp
     TestUtils.cpp
 )
 

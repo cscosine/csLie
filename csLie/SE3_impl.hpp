@@ -13,7 +13,7 @@ template <class Derived> SE3<typename Derived::Scalar> se3Exp(Eigen::MatrixBase<
   using std::cos;
   using std::sin;
   using std::sqrt;
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SE3Alg<S>()), "delta required to be 6x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SE3Tangent<S>()), "delta required to be 6x1");
 
   SE3<S> transf;
 
@@ -82,7 +82,7 @@ template <class Derived> SE3<typename Derived::Scalar> se3Exp(Eigen::MatrixBase<
   return transf;
 }
 
-template <class Derived> SE3Alg<typename Derived::Scalar> se3Log(Eigen::MatrixBase<Derived> const &transf) {
+template <class Derived> SE3Tangent<typename Derived::Scalar> se3Log(Eigen::MatrixBase<Derived> const &transf) {
   using S = typename Derived::Scalar;
   using std::cos;
   using std::sin;
@@ -93,7 +93,7 @@ template <class Derived> SE3Alg<typename Derived::Scalar> se3Log(Eigen::MatrixBa
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix3D(transf), "transf is not a valid isometry matrix");
 
   // SO3 log
-  SE3Alg<S> ret;
+  SE3Tangent<S> ret;
   ret.template tail<3>() = so3Log(transf.template topLeftCorner<3, 3>());
 
   const S theta_sq = ret.template tail<3>().cwiseAbs2().sum();
@@ -132,38 +132,61 @@ template <class Derived> SE3Alg<typename Derived::Scalar> se3Log(Eigen::MatrixBa
   return ret;
 }
 
-template <class S> SE3Alg<S> se3Log(SE3<S> const &transf) { return se3Log(transf.matrix()); }
+template <class S> SE3Tangent<S> se3Log(SE3<S> const &transf) { return se3Log(transf.matrix()); }
 
-template <class Derived> SE3Adj<typename Derived::Scalar> se3Adjoint(Eigen::MatrixBase<Derived> const &transf) {
+template <class Derived> SE3Adjoint<typename Derived::Scalar> se3Adjoint(Eigen::MatrixBase<Derived> const &transf) {
   using S = typename Derived::Scalar;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE3Matrix<S>()),
                      "transf required to be 4x4");
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix3D(transf), "transf is not a valid isometry matrix");
 
-  SE3Adj<S> ad;
+  SE3Adjoint<S> ad;
   ad.template topLeftCorner<3, 3>() = transf.template topLeftCorner<3, 3>();
   ad.template topRightCorner<3, 3>() =
-      skewSymm(transf.template topRightCorner<3, 1>()) * transf.template topLeftCorner<3, 3>();
+      hat(transf.template topRightCorner<3, 1>()) * transf.template topLeftCorner<3, 3>();
   ad.template bottomRightCorner<3, 3>() = transf.template topLeftCorner<3, 3>();
   ad.template bottomLeftCorner<3, 3>().setZero();
   return ad;
 }
 
-template <class S> SE3Adj<S> se3Adjoint(SE3<S> const &transf) { return se3Adjoint(transf.matrix()); }
+template <class S> SE3Adjoint<S> se3Adjoint(SE3<S> const &transf) { return se3Adjoint(transf.matrix()); }
 
 template <class Derived>
-Eigen::Matrix<typename Derived::Scalar, 3, 6>
-se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixBase<Derived> const &transformedPoint) {
+Eigen::Matrix<typename Derived::Scalar, 3, 6> se3PointJacobianLeft(Eigen::MatrixBase<Derived> const &transformedPoint) {
   using S = typename Derived::Scalar;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transformedPoint, Point3d<S>()),
-                     "transf required to be 4x4");
+                     "transformedPoint required to be 3x1");
 
   Eigen::Matrix<S, 3, 6> J{};
   J.template topLeftCorner<3, 3>().setIdentity();
-  J.template topRightCorner<3, 3>() = -skewSymm(transformedPoint);
+  J.template topRightCorner<3, 3>() = -hat(transformedPoint);
   return J;
+}
+
+template <class Derived1, class Derived2>
+Eigen::Matrix<typename Derived1::Scalar, 3, 6> se3PointJacobianRight(Eigen::MatrixBase<Derived1> const &rot,
+                                                                     Eigen::MatrixBase<Derived2> const &point) {
+  using S = typename Derived1::Scalar;
+  static_assert(std::is_same<S, typename Derived2::Scalar>::value, "se3PointJacobianRight needs equal scalar types");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO3<S>()), "rot required to be 3x3");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(point, Point3d<S>()), "point required to be 3x1");
+
+  Eigen::Matrix<S, 3, 6> J{};
+  J.template leftCols<3>() = rot;
+  J.template rightCols<3>() = -rot * hat(point);
+  return J;
+}
+
+template <class S, class Derived> SE3<S> se3OplusLeft(SE3<S> const &transf, Eigen::MatrixBase<Derived> const &delta) {
+  static_assert(std::is_same<S, typename Derived::Scalar>::value, "se3OplusLeft needs equal scalar types");
+  return SE3<S>(se3Exp(delta) * transf);
+}
+
+template <class S, class Derived> SE3<S> se3OplusRight(SE3<S> const &transf, Eigen::MatrixBase<Derived> const &delta) {
+  static_assert(std::is_same<S, typename Derived::Scalar>::value, "se3OplusRight needs equal scalar types");
+  return SE3<S>(transf * se3Exp(delta));
 }
 
 } // namespace csLie

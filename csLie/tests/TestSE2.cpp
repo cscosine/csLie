@@ -14,7 +14,7 @@ TEMPLATE_TEST_CASE("SE2 test - base", "[SE2]", float32_t, float64_t) {
   SE2<S> const rI{SE2<S>::Identity()};
 
   // create a zero algebra
-  SE2Alg<S> const d0{SE2Alg<S>::Zero()};
+  SE2Tangent<S> const d0{SE2Tangent<S>::Zero()};
 
   // exp the zero algebra, it has to be the identity matrix
   SE2<S> const exp0{se2Exp(d0)};
@@ -26,7 +26,7 @@ TEMPLATE_TEST_CASE("SE2 test - base", "[SE2]", float32_t, float64_t) {
   S const x = 10;
   S const y = 20;
   S const theta = csCore::math::degToRad(S(90.0));
-  SE2<S> const exp90{se2Exp(SE2Alg<S>(x, y, theta))};
+  SE2<S> const exp90{se2Exp(SE2Tangent<S>(x, y, theta))};
   REQUIRE(csCore::eigenUtils::isValidIsometryMatrix2D(exp90));
 
   SE2<S> exp90_gt{};
@@ -76,8 +76,8 @@ TEMPLATE_TEST_CASE("SE2 test - from/to xyYaw", "[SE2]", float32_t, float64_t) {
   REQUIRE((xyYawToSe2(back).matrix() - xyYawToSe2(x, y, yaw).matrix()).isZero());
 
   // not the se2 exp: equal only at yaw = 0
-  REQUIRE(!(xyYawToSe2(x, y, theta).matrix() - se2Exp(SE2Alg<S>(x, y, theta)).matrix()).isZero());
-  REQUIRE((xyYawToSe2(x, y, S(0)).matrix() - se2Exp(SE2Alg<S>(x, y, S(0))).matrix()).isZero());
+  REQUIRE(!(xyYawToSe2(x, y, theta).matrix() - se2Exp(SE2Tangent<S>(x, y, theta)).matrix()).isZero());
+  REQUIRE((xyYawToSe2(x, y, S(0)).matrix() - se2Exp(SE2Tangent<S>(x, y, S(0))).matrix()).isZero());
 }
 
 TEMPLATE_TEST_CASE("SE2 test - log", "[SE2]", float32_t, float64_t) {
@@ -85,9 +85,9 @@ TEMPLATE_TEST_CASE("SE2 test - log", "[SE2]", float32_t, float64_t) {
 
   // log(exp(xi)) = xi for theta in (-pi, pi], exp(log(T)) = T
   for (S const theta : {S(0), S(1e-6), S(-0.3), S(1), S(-2), S(3)}) {
-    SE2Alg<S> const xi(S(1.5), S(-0.25), theta);
+    SE2Tangent<S> const xi(S(1.5), S(-0.25), theta);
     SE2<S> const T = se2Exp(xi);
-    SE2Alg<S> const logT = se2Log(T);
+    SE2Tangent<S> const logT = se2Log(T);
     INFO("xi " << xi.transpose() << ", log(exp(xi)) " << logT.transpose());
     REQUIRE((logT - xi).isZero());
     REQUIRE((se2Exp(logT).matrix() - T.matrix()).isZero());
@@ -95,8 +95,8 @@ TEMPLATE_TEST_CASE("SE2 test - log", "[SE2]", float32_t, float64_t) {
   }
 
   // beyond pi the log is the equivalent angle in (-pi, pi], same rotation and translation
-  SE2Alg<S> const xi(S(1), S(2), S(4));
-  SE2Alg<S> const logT = se2Log(se2Exp(xi));
+  SE2Tangent<S> const xi(S(1), S(2), S(4));
+  SE2Tangent<S> const logT = se2Log(se2Exp(xi));
   REQUIRE(logT(2) <= Constants<S>::pi);
   REQUIRE((se2Exp(logT).matrix() - se2Exp(xi).matrix()).isZero());
 }

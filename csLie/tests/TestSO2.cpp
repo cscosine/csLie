@@ -14,7 +14,7 @@ TEMPLATE_TEST_CASE("SO2 test - base", "[SO2]", float32_t, float64_t) {
   SO2<S> const rI{SO2<S>::Identity()};
 
   // create a zero algebra
-  SO2Alg<S> const d0{SO2Alg<S>::Zero()};
+  SO2Tangent<S> const d0{SO2Tangent<S>::Zero()};
 
   // exp the zero algebra, it has to be the identity matrix
   SO2<S> const exp0{so2Exp(d0)};

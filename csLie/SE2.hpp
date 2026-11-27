@@ -6,31 +6,31 @@
 
 namespace csLie {
 
-/// @brief compute the exp of a se2 algebra to a SE2
+/// @brief compute the exp of a se2 tangent vector to a SE2
 /// @tparam Derived template to support generic matrix
-/// @param delta a 3d vector representing the se2 algebra vector
-/// @return the rototranslation matrix in SE2 from the algebra vector in se2
+/// @param delta a 3d vector representing the se2 tangent vector
+/// @return the rototranslation matrix in SE2 from the se2 tangent vector
 /// @throw if delta is not a 3x1 matrix
 template <class Derived> SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<Derived> const &delta);
 
-/// @brief compute the log of a SE2 rototranslation to a se2 algebra vector
+/// @brief compute the log of a SE2 rototranslation to a se2 tangent vector
 /// @tparam Derived template to support generic matrix
 /// @param transf a 3x3 matrix representing an isometry
-/// @return the se2 algebra vector (x, y, theta), theta in (-pi, pi]: se2Exp of it gives transf
+/// @return the se2 tangent vector (x, y, theta), theta in (-pi, pi]: se2Exp of it gives transf
 /// @throw if transf is not a 3x3 matrix (DEBUG only), if transf is not a valid isometry within default precision
 /// (PARANOID)
-template <class Derived> SE2Alg<typename Derived::Scalar> se2Log(Eigen::MatrixBase<Derived> const &transf);
+template <class Derived> SE2Tangent<typename Derived::Scalar> se2Log(Eigen::MatrixBase<Derived> const &transf);
 
-/// @brief compute the log of a SE2 rototranslation to a se2 algebra vector
+/// @brief compute the log of a SE2 rototranslation to a se2 tangent vector
 /// @tparam S the scalar type
 /// @param transf a SE2, i.e., a Eigen::Transform<2, Isometry>
-/// @return the se2 algebra vector (x, y, theta), theta in (-pi, pi]: se2Exp of it gives transf
+/// @return the se2 tangent vector (x, y, theta), theta in (-pi, pi]: se2Exp of it gives transf
 /// @throw if transf is not a valid isometry within default precision (PARANOID)
-template <class S> SE2Alg<S> se2Log(SE2<S> const &transf);
+template <class S> SE2Tangent<S> se2Log(SE2<S> const &transf);
 
 /// @brief create a SE2 rototranslation from a position (x, y) and a yaw angle in radians (around Z, counterclockwise):
-/// R = so2Exp(yaw), t = (x, y). Not the se2 algebra: se2Exp((x, y, theta)) has a translation V (x, y) (an arc), equal
-/// only at theta = 0
+/// R = so2Exp(yaw), t = (x, y). Not the se2 tangent vector: se2Exp((x, y, theta)) has a translation V (x, y) (an arc),
+/// equal only at theta = 0
 /// @tparam Derived template to support generic matrix
 /// @param xyYaw a 3d vector (x, y, yaw), yaw in radians
 /// @return the rototranslation in SE2

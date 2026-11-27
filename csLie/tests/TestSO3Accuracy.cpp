@@ -81,7 +81,7 @@ double norm3(double x, double y, double z) { return std::sqrt(x * x + y * y + z 
 
 /// relative error of a log (absolute when the exact log is zero), in epsilon of S; near pi the log is defined up to
 /// w -> w (1 - 2 pi / |w|), the closest of the two is taken
-template <class S> double so3LogError(SO3Alg<S> const &got, double const (&exact)[3]) {
+template <class S> double so3LogError(SO3Tangent<S> const &got, double const (&exact)[3]) {
   double const g[3] = {static_cast<double>(got(0)), static_cast<double>(got(1)), static_cast<double>(got(2))};
   double const n = norm3(exact[0], exact[1], exact[2]);
   double err = norm3(g[0] - exact[0], g[1] - exact[1], g[2] - exact[2]) / (n > 0 ? n : 1.0);
@@ -107,18 +107,18 @@ template <class S> double matrixError(Eigen::Matrix<S, 3, 3> const &got, double 
 
 /// the condition number of J^-1 in theta: near 2 pi an error of epsilon in theta (computed as |omega|, rounded)
 /// moves J^-1 by theta / |2 pi - theta| epsilon, relative
-double so3JinvConditioning(double const (&omega)[3]) {
+double so3LeftJacobianInverseConditioning(double const (&omega)[3]) {
   double const theta = norm3(omega[0], omega[1], omega[2]);
   return std::max(1.0, theta / std::abs(2.0 * Constants<double>::pi - theta));
 }
 
-/// checks fn (so3Exp, so3J, so3Jinv) on every case: the error, divided by the condition number of the case
-/// (conditioning(omega)), within tolerance
+/// checks fn (so3Exp, so3LeftJacobian, so3LeftJacobianInverse) on every case: the error, divided by the condition
+/// number of the case (conditioning(omega)), within tolerance
 template <class S, class Cases, class Fn, class Conditioning>
 void checkMatrixCases(Cases const &cases, Fn fn, Conditioning conditioning, double const tolerance) {
   double maxErr = 0;
   for (auto const &c : cases) {
-    SO3Alg<S> const w(static_cast<S>(c.omega[0]), static_cast<S>(c.omega[1]), static_cast<S>(c.omega[2]));
+    SO3Tangent<S> const w(static_cast<S>(c.omega[0]), static_cast<S>(c.omega[1]), static_cast<S>(c.omega[2]));
     Eigen::Matrix<S, 3, 3> const M = fn(w);
     double const err = matrixError(M, c.M) / conditioning(c.omega);
     maxErr = std::max(maxErr, err);
@@ -139,7 +139,7 @@ TEMPLATE_TEST_CASE("SO3 log accuracy", "[SO3][accuracy]", float32_t, float64_t) 
     SO3<S> R;
     for (int i = 0; i < 9; ++i)
       R(i / 3, i % 3) = static_cast<S>(c.R[i]);
-    SO3Alg<S> const w = so3Log(R);
+    SO3Tangent<S> const w = so3Log(R);
     double const err = so3LogError(w, c.omega);
     maxErr = std::max(maxErr, err);
     INFO(c.label << ": log = " << w.transpose() << ", error " << err << " eps");
@@ -154,21 +154,22 @@ TEMPLATE_TEST_CASE("SO3 exp accuracy", "[SO3][accuracy]", float32_t, float64_t) 
   using S = TestType;
   // the entries are at most 1: the absolute error
   checkMatrixCases<S>(
-      so3ExpCases<S>(), [](SO3Alg<S> const &w) { return so3Exp(w); }, [](double const(&)[3]) { return 1.0; },
+      so3ExpCases<S>(), [](SO3Tangent<S> const &w) { return so3Exp(w); }, [](double const(&)[3]) { return 1.0; },
       so3ExpTolerance);
 }
 
 TEMPLATE_TEST_CASE("SO3 left jacobian accuracy", "[SO3][accuracy]", float32_t, float64_t) {
   using S = TestType;
   checkMatrixCases<S>(
-      so3JlCases<S>(), [](SO3Alg<S> const &w) { return so3J(w); }, [](double const(&)[3]) { return 1.0; },
-      so3JTolerance);
+      so3JlCases<S>(), [](SO3Tangent<S> const &w) { return so3LeftJacobian(w); },
+      [](double const(&)[3]) { return 1.0; }, so3JTolerance);
 }
 
 TEMPLATE_TEST_CASE("SO3 inverse left jacobian accuracy", "[SO3][accuracy]", float32_t, float64_t) {
   using S = TestType;
   checkMatrixCases<S>(
-      so3JlInvCases<S>(), [](SO3Alg<S> const &w) { return so3Jinv(w); }, so3JinvConditioning, so3JTolerance);
+      so3JlInvCases<S>(), [](SO3Tangent<S> const &w) { return so3LeftJacobianInverse(w); },
+      so3LeftJacobianInverseConditioning, so3JTolerance);
 }
 
 TEMPLATE_TEST_CASE("SO3 exp coefficients accuracy", "[SO3][accuracy]", float32_t, float64_t) {
@@ -215,40 +216,41 @@ template <class S> double rotationError(SO3<S> const &got, SO3<S> const &exact) 
   return static_cast<double>((got - exact).cwiseAbs().maxCoeff()) / static_cast<double>(Constants<S>::epsilon);
 }
 
-constexpr double rpyToSo3Tolerance = 3.0;
-// so3ToRpy: rpyToSo3 of its result against its input (a few roundings of each), the pitch against the exact one
-constexpr double so3ToRpyRoundTripTolerance = 6.0;
-constexpr double so3ToRpyPitchTolerance = 3.0;
+constexpr double rollPitchYawToSo3Tolerance = 3.0;
+// so3ToRollPitchYaw: rollPitchYawToSo3 of its result against its input (a few roundings of each), the pitch against the
+// exact one
+constexpr double so3ToRollPitchYawRoundTripTolerance = 6.0;
+constexpr double so3ToRollPitchYawPitchTolerance = 3.0;
 // roll and yaw each alone are conditioned by 1 / cos(pitch): the error times cos(pitch)
-constexpr double so3ToRpyAngleTolerance = 4.0;
+constexpr double so3ToRollPitchYawAngleTolerance = 4.0;
 
-/// checks so3ToRpy<P> on every case: the round trip and the pitch; away from the gimbal lock (cos(pitch) > epsilon)
-/// roll and yaw; at the gimbal lock the angle P names is 0; so3ToRpyChecked empty below sqrt(epsilon)
-template <class S, GimbalPolicy P> void checkSo3ToRpy() {
+/// checks so3ToRollPitchYaw<P> on every case: the round trip and the pitch; away from the gimbal lock (cos(pitch) >
+/// epsilon) roll and yaw; at the gimbal lock the angle P names is 0; so3ToRollPitchYawChecked empty below sqrt(epsilon)
+template <class S, GimbalPolicy P> void checkSo3ToRollPitchYaw() {
   double maxRoundTrip = 0;
   for (auto const &c : rpyCases<S>()) {
     SO3<S> R;
     for (int i = 0; i < 9; ++i)
       R(i / 3, i % 3) = static_cast<S>(c.R[i]);
-    Eigen::Vector3<S> const rpy = so3ToRpy<P>(R);
-    double const roundTrip = rotationError<S>(rpyToSo3(rpy), R);
+    Eigen::Vector3<S> const rpy = so3ToRollPitchYaw<P>(R);
+    double const roundTrip = rotationError<S>(rollPitchYawToSo3(rpy), R);
     double const errPitch = angleError(rpy(1), c.rpy[1]);
     double const cosPitch = std::cos(c.rpy[1]);
     bool const gimbal = !(static_cast<S>(cosPitch) > Constants<S>::epsilon);
-    bool const checkedGimbal = !(static_cast<S>(cosPitch) > rpyCheckedGimbalTolerance<S>());
+    bool const checkedGimbal = !(static_cast<S>(cosPitch) > rollPitchYawCheckedGimbalTolerance<S>());
     maxRoundTrip = std::max(maxRoundTrip, roundTrip);
     INFO(c.label << ": rpy " << rpy.transpose() << ", round trip " << roundTrip << " eps, pitch " << errPitch
                  << " eps, gimbal " << gimbal);
     CHECK(rpy.allFinite());
-    CHECK(roundTrip <= so3ToRpyRoundTripTolerance);
-    CHECK(errPitch <= so3ToRpyPitchTolerance);
+    CHECK(roundTrip <= so3ToRollPitchYawRoundTripTolerance);
+    CHECK(errPitch <= so3ToRollPitchYawPitchTolerance);
     if (gimbal) {
       CHECK(std::fpclassify(rpy(P == GimbalPolicy::kRollZero ? 0 : 2)) == FP_ZERO);
     } else {
-      CHECK(angleError(rpy(0), c.rpy[0]) * cosPitch <= so3ToRpyAngleTolerance);
-      CHECK(angleError(rpy(2), c.rpy[2]) * cosPitch <= so3ToRpyAngleTolerance);
+      CHECK(angleError(rpy(0), c.rpy[0]) * cosPitch <= so3ToRollPitchYawAngleTolerance);
+      CHECK(angleError(rpy(2), c.rpy[2]) * cosPitch <= so3ToRollPitchYawAngleTolerance);
     }
-    CHECK(so3ToRpyChecked(R).has_value() == !checkedGimbal);
+    CHECK(so3ToRollPitchYawChecked(R).has_value() == !checkedGimbal);
   }
   INFO("max round trip error " << maxRoundTrip << " eps");
   SUCCEED();
@@ -256,30 +258,32 @@ template <class S, GimbalPolicy P> void checkSo3ToRpy() {
 
 } // namespace
 
-TEMPLATE_TEST_CASE("SO3 rpyToSo3 accuracy", "[SO3][accuracy]", float32_t, float64_t) {
+TEMPLATE_TEST_CASE("SO3 rollPitchYawToSo3 accuracy", "[SO3][accuracy]", float32_t, float64_t) {
   using S = TestType;
   double maxErr = 0;
   for (auto const &c : rpyCases<S>()) {
     Eigen::Vector3<S> const rpy(static_cast<S>(c.rpy[0]), static_cast<S>(c.rpy[1]), static_cast<S>(c.rpy[2]));
-    SO3<S> const R = rpyToSo3(rpy);
+    SO3<S> const R = rollPitchYawToSo3(rpy);
     double err = 0;
     for (int i = 0; i < 9; ++i)
       err = std::max(err, std::abs(static_cast<double>(R(i / 3, i % 3)) - c.R[i]));
     err /= static_cast<double>(Constants<S>::epsilon);
     maxErr = std::max(maxErr, err);
     INFO(c.label << ": error " << err << " eps");
-    CHECK(err <= rpyToSo3Tolerance);
+    CHECK(err <= rollPitchYawToSo3Tolerance);
   }
   INFO("max error " << maxErr << " eps");
   SUCCEED();
 }
 
-TEMPLATE_TEST_CASE("SO3 so3ToRpy accuracy (roll zero at gimbal lock)", "[SO3][accuracy]", float32_t, float64_t) {
-  checkSo3ToRpy<TestType, GimbalPolicy::kRollZero>();
+TEMPLATE_TEST_CASE("SO3 so3ToRollPitchYaw accuracy (roll zero at gimbal lock)", "[SO3][accuracy]", float32_t,
+                   float64_t) {
+  checkSo3ToRollPitchYaw<TestType, GimbalPolicy::kRollZero>();
 }
 
-TEMPLATE_TEST_CASE("SO3 so3ToRpy accuracy (yaw zero at gimbal lock)", "[SO3][accuracy]", float32_t, float64_t) {
-  checkSo3ToRpy<TestType, GimbalPolicy::kYawZero>();
+TEMPLATE_TEST_CASE("SO3 so3ToRollPitchYaw accuracy (yaw zero at gimbal lock)", "[SO3][accuracy]", float32_t,
+                   float64_t) {
+  checkSo3ToRollPitchYaw<TestType, GimbalPolicy::kYawZero>();
 }
 
 } // namespace csLie

@@ -267,7 +267,7 @@ template <class T> void rpyCases(char const *name) {
         ref::V3 rpy;
         rpy(0, 0) = roll, rpy(1, 0) = pitch, rpy(2, 0) = yaw;
         std::fprintf(out, "    {\"p%s%s %s\", {%s}, {%s}},\n", sign < 0 ? "-" : "", p.label, label, list(rpy).c_str(),
-                     list(ref::rpyToSo3(roll, pitch, yaw)).c_str());
+                     list(ref::rollPitchYawToSo3(roll, pitch, yaw)).c_str());
       }
       if (!(p.theta > 0))
         break; // one zero is enough

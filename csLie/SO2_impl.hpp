@@ -8,7 +8,7 @@
 namespace csLie {
 
 template <class Derived> SO2<typename Derived::Scalar> so2Exp(Eigen::MatrixBase<Derived> const &delta) {
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO2Alg<typename Derived::Scalar>()),
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO2Tangent<typename Derived::Scalar>()),
                      "delta required to be 1x1");
   // note: to be able to use both eigen matrix and vector, it is required to use
   // always two indices

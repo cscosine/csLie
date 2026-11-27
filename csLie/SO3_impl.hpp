@@ -12,9 +12,9 @@ namespace csLie {
 template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
   using std::sqrt;
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Tangent<S>()), "delta required to be 3x1");
 
-  SO3Alg<S> const w2 = delta.cwiseAbs2();
+  SO3Tangent<S> const w2 = delta.cwiseAbs2();
   S const theta_sq = w2.sum(); // sum of the squares
   // below sqrt(min) theta_sq underflows to 0 or a subnormal: theta is then 0 or inexact, harmless, the coefficients
   // are 1 and 1/2 up to theta^2
@@ -42,10 +42,11 @@ template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<
   return R;
 }
 
-template <class Derived> SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<Derived> const &delta) {
+template <class Derived>
+Eigen::Matrix3<typename Derived::Scalar> so3LeftJacobian(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
   using std::sqrt;
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Tangent<S>()), "delta required to be 3x1");
 
   // J = A I + B W + C omega omega^T
   S const x = delta(0, 0);
@@ -57,7 +58,7 @@ template <class Derived> SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<D
   S const Cxz = k.C * x * z;
   S const Cyz = k.C * y * z;
 
-  SO3J<S> ret;
+  Eigen::Matrix3<S> ret;
   ret(0, 0) = k.A + k.C * x * x;
   ret(1, 1) = k.A + k.C * y * y;
   ret(2, 2) = k.A + k.C * z * z;
@@ -84,7 +85,7 @@ template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Ei
   // As GTSAM's SO3::Logmap (Hertzberg et al., Information Fusion, 2011).
   S const tr = rot(0, 0) + rot(1, 1) + rot(2, 2);
   S w;
-  SO3Alg<S> v;
+  SO3Tangent<S> v;
   if (tr > S(0)) {
     // theta < 2 pi / 3: (1 + tr, vee(R - R^T)) = 4 cos(theta / 2) (w, v)
     w = S(1) + tr;
@@ -116,16 +117,17 @@ template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Ei
   S const n = v.norm();
   if (!(n > S(0))) {
     // the identity (the other branch has n >= r > 0)
-    return SO3Alg<S>::Zero();
+    return SO3Tangent<S>::Zero();
   }
   S const theta = S(2) * atan2(n, w);
   return (theta / n) * v;
 }
 
-template <class Derived> SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::MatrixBase<Derived> const &delta) {
+template <class Derived>
+Eigen::Matrix3<typename Derived::Scalar> so3LeftJacobianInverse(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
   using std::sqrt;
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Tangent<S>()), "delta required to be 3x1");
 
   // J^-1 = K I - W / 2 + D omega omega^T
   S const x = delta(0, 0);
@@ -140,7 +142,7 @@ template <class Derived> SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::Matrix
   S const hy = y / S(2);
   S const hz = z / S(2);
 
-  SO3Jinv<S> ret;
+  Eigen::Matrix3<S> ret;
   ret(0, 0) = k.K + k.D * x * x;
   ret(1, 1) = k.K + k.D * y * y;
   ret(2, 2) = k.K + k.D * z * z;
@@ -153,7 +155,7 @@ template <class Derived> SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::Matrix
   return ret;
 }
 
-template <class S> S rpyCheckedGimbalTolerance() {
+template <class S> S rollPitchYawCheckedGimbalTolerance() {
   using std::sqrt;
   return sqrt(Constants<S>::epsilon);
 }
@@ -163,10 +165,10 @@ namespace _private {
 /// @brief the RPY angles of rot, R = rotZ(yaw) rotY(pitch) rotX(roll); at gimbal lock (cos(pitch) <= gimbalTolerance)
 /// the angle P names is 0, or empty when checked. Pitch from atan2 (asin(-R(2, 0)) is inaccurate near +-pi / 2); one
 /// of roll and yaw directly, the other from rot with the first removed (as in Day, "Extracting Euler Angles from a
-/// Rotation Matrix", 2014): rpyToSo3 of the result gives rot back to a few epsilon at every pitch
+/// Rotation Matrix", 2014): rollPitchYawToSo3 of the result gives rot back to a few epsilon at every pitch
 template <GimbalPolicy P, bool CHECKED, class Derived>
 std::optional<Eigen::Matrix<typename Derived::Scalar, 3, 1>>
-so3ToRpyImpl(Eigen::MatrixBase<Derived> const &rot, typename Derived::Scalar const gimbalTolerance) {
+so3ToRollPitchYawImpl(Eigen::MatrixBase<Derived> const &rot, typename Derived::Scalar const gimbalTolerance) {
   using S = typename Derived::Scalar;
   using std::atan2;
   using std::cos;
@@ -207,18 +209,18 @@ so3ToRpyImpl(Eigen::MatrixBase<Derived> const &rot, typename Derived::Scalar con
 } // namespace _private
 
 template <GimbalPolicy P, class Derived>
-Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRpy(Eigen::MatrixBase<Derived> const &rot,
-                                                       typename Derived::Scalar const gimbalTolerance) {
-  return *_private::so3ToRpyImpl<P, false>(rot, gimbalTolerance);
+Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRollPitchYaw(Eigen::MatrixBase<Derived> const &rot,
+                                                                typename Derived::Scalar const gimbalTolerance) {
+  return *_private::so3ToRollPitchYawImpl<P, false>(rot, gimbalTolerance);
 }
 
 template <class Derived>
 std::optional<Eigen::Matrix<typename Derived::Scalar, 3, 1>>
-so3ToRpyChecked(Eigen::MatrixBase<Derived> const &rot, typename Derived::Scalar const gimbalTolerance) {
-  return _private::so3ToRpyImpl<GimbalPolicy::kRollZero, true>(rot, gimbalTolerance);
+so3ToRollPitchYawChecked(Eigen::MatrixBase<Derived> const &rot, typename Derived::Scalar const gimbalTolerance) {
+  return _private::so3ToRollPitchYawImpl<GimbalPolicy::kRollZero, true>(rot, gimbalTolerance);
 }
 
-template <class Derived> SO3<typename Derived::Scalar> rpyToSo3(Eigen::MatrixBase<Derived> const &rpy) {
+template <class Derived> SO3<typename Derived::Scalar> rollPitchYawToSo3(Eigen::MatrixBase<Derived> const &rpy) {
   using S = typename Derived::Scalar;
   using std::cos;
   using std::sin;
@@ -254,7 +256,7 @@ template <class Derived> SO3<typename Derived::Scalar> rpyToSo3(Eigen::MatrixBas
   return R;
 }
 
-template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 3> skewSymm(Eigen::MatrixBase<Derived> const &v) {
+template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 3> hat(Eigen::MatrixBase<Derived> const &v) {
   using S = typename Derived::Scalar;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, Eigen::Matrix<S, 3, 1>()),
@@ -265,6 +267,41 @@ template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 3> skewSymm(
   R << 0, -v(2, 0), v(1, 0), v(2, 0), 0, -v(0, 0), -v(1, 0), v(0, 0), 0;
 
   return R;
+}
+
+template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> vee(Eigen::MatrixBase<Derived> const &W) {
+  using S = typename Derived::Scalar;
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(W, Eigen::Matrix<S, 3, 3>()),
+                     "W required to be 3x3");
+  return Eigen::Matrix<S, 3, 1>(W(2, 1), W(0, 2), W(1, 0));
+}
+
+template <class Derived>
+Eigen::Matrix3<typename Derived::Scalar> so3RightJacobian(Eigen::MatrixBase<Derived> const &delta) {
+  return so3LeftJacobian(delta).transpose();
+}
+
+template <class Derived>
+Eigen::Matrix3<typename Derived::Scalar> so3RightJacobianInverse(Eigen::MatrixBase<Derived> const &delta) {
+  return so3LeftJacobianInverse(delta).transpose();
+}
+
+template <class Derived1, class Derived2>
+SO3<typename Derived1::Scalar> so3OplusLeft(Eigen::MatrixBase<Derived1> const &rot,
+                                            Eigen::MatrixBase<Derived2> const &delta) {
+  using S = typename Derived1::Scalar;
+  static_assert(std::is_same<S, typename Derived2::Scalar>::value, "so3OplusLeft needs equal scalar types");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO3<S>()), "rot required to be 3x3");
+  return so3Exp(delta) * rot;
+}
+
+template <class Derived1, class Derived2>
+SO3<typename Derived1::Scalar> so3OplusRight(Eigen::MatrixBase<Derived1> const &rot,
+                                             Eigen::MatrixBase<Derived2> const &delta) {
+  using S = typename Derived1::Scalar;
+  static_assert(std::is_same<S, typename Derived2::Scalar>::value, "so3OplusRight needs equal scalar types");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO3<S>()), "rot required to be 3x3");
+  return rot * so3Exp(delta);
 }
 
 } // namespace csLie

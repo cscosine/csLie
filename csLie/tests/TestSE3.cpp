@@ -14,7 +14,7 @@ TEMPLATE_TEST_CASE("SE3 test - base", "[SE3]", float32_t, float64_t) {
   SE3<S> const rI{SE3<S>::Identity()};
 
   // create a zero algebra
-  SE3Alg<S> const d0{SE3Alg<S>::Zero()};
+  SE3Tangent<S> const d0{SE3Tangent<S>::Zero()};
 
   // exp the zero algebra, it has to be the identity matrix
   SE3<S> const exp0{se3Exp(d0)};
@@ -25,13 +25,13 @@ TEMPLATE_TEST_CASE("SE3 test - base", "[SE3]", float32_t, float64_t) {
 
   // randomized tests
   for (size_t i = 0; i < 100; i++) {
-    SE3Alg<S> const randV = SE3Alg<S>::Random() * 4 * Constants<S>::pi;
+    SE3Tangent<S> const randV = SE3Tangent<S>::Random() * 4 * Constants<S>::pi;
 
     SE3<S> const T = se3Exp(randV);
     REQUIRE(csCore::eigenUtils::isValidIsometryMatrix3D(T));
 
     // log(exp(d)) = d
-    SE3Alg<S> const logV = se3Log(T);
+    SE3Tangent<S> const logV = se3Log(T);
 
     SE3<S> const TlogV = se3Exp(logV);
     REQUIRE(csCore::eigenUtils::isValidIsometryMatrix3D(TlogV));
@@ -48,15 +48,15 @@ TEMPLATE_TEST_CASE("SE3 test - base", "[SE3]", float32_t, float64_t) {
 TEMPLATE_TEST_CASE("SE3 test - adjoint", "[SE3]", float32_t, float64_t) {
   using S = TestType;
   for (size_t i = 0; i < 100; i++) {
-    SE3Alg<S> const v = SE3Alg<S>::Random();
-    SE3Alg<S> const t = SE3Alg<S>::Random();
+    SE3Tangent<S> const v = SE3Tangent<S>::Random();
+    SE3Tangent<S> const t = SE3Tangent<S>::Random();
 
     SE3<S> const V = se3Exp(v);
     REQUIRE(csCore::eigenUtils::isValidIsometryMatrix3D(V));
     SE3<S> const T = se3Exp(t);
     REQUIRE(csCore::eigenUtils::isValidIsometryMatrix3D(T));
 
-    SE3Adj<S> const AdT = se3Adjoint(T);
+    SE3Adjoint<S> const AdT = se3Adjoint(T);
 
     SE3<S> const TV = T * V;
     SE3<S> const expAdTVT = se3Exp(AdT * v) * T;
@@ -71,9 +71,9 @@ TEMPLATE_TEST_CASE("SE3 test - jacobian transformed point", "[SE3]", float32_t, 
   for (size_t i = 0; i < 100; i++) {
     Point3d<S> const p = Point3d<S>::Random();
 
-    Eigen::Matrix<S, 3, 6> const J = se3JacobianLeftZeroPerturbationPointTransformation(p);
+    Eigen::Matrix<S, 3, 6> const J = se3PointJacobianLeft(p);
     REQUIRE((J.template topLeftCorner<3, 3>() - Eigen::Matrix<S, 3, 3>::Identity().matrix()).isZero());
-    REQUIRE((J.template topRightCorner<3, 3>() - skewSymm(-p)).isZero());
+    REQUIRE((J.template topRightCorner<3, 3>() - hat(-p)).isZero());
   }
 }
 
@@ -142,14 +142,14 @@ TEMPLATE_TEST_CASE("SE3 test - jacobian transformed point, input is not a 3x1 po
   using S = TestType;
   if (csLie::Asserts::isAssertDebugEnabled()) {
     // throws, wrong matrix size
-    REQUIRE_ASSERT(se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixX<S>(2, 2)));
-    REQUIRE_ASSERT(se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixX<S>(4, 1)));
+    REQUIRE_ASSERT(se3PointJacobianLeft(Eigen::MatrixX<S>(2, 2)));
+    REQUIRE_ASSERT(se3PointJacobianLeft(Eigen::MatrixX<S>(4, 1)));
 
     Eigen::MatrixX<S> m10x10 = Eigen::MatrixX<S>::Identity(10, 10);
-    REQUIRE_NO_ASSERT(se3JacobianLeftZeroPerturbationPointTransformation(m10x10.block(0, 0, 3, 1))); // ok
+    REQUIRE_NO_ASSERT(se3PointJacobianLeft(m10x10.block(0, 0, 3, 1))); // ok
 
-    REQUIRE_ASSERT(se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixX<S>(4, 4).block(0, 0, 4, 3)));
-    REQUIRE_ASSERT(se3JacobianLeftZeroPerturbationPointTransformation(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 1)));
+    REQUIRE_ASSERT(se3PointJacobianLeft(Eigen::MatrixX<S>(4, 4).block(0, 0, 4, 3)));
+    REQUIRE_ASSERT(se3PointJacobianLeft(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 1)));
   }
 }
 

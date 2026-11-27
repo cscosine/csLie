@@ -41,7 +41,7 @@ TEMPLATE_TEST_CASE("SE2 exp accuracy", "[SE2][accuracy]", float32_t, float64_t) 
   using S = TestType;
   double maxErr = 0;
   for (auto const &c : se2ExpCases<S>()) {
-    SE2Alg<S> const xi(static_cast<S>(c.xi[0]), static_cast<S>(c.xi[1]), static_cast<S>(c.xi[2]));
+    SE2Tangent<S> const xi(static_cast<S>(c.xi[0]), static_cast<S>(c.xi[1]), static_cast<S>(c.xi[2]));
     SE2<S> const T = se2Exp(xi);
     // the rotation entries are at most 1; the translation is relative to |rho| (|t| <= |rho|), to 1 when smaller
     double const scale = std::max(1.0, std::hypot(c.xi[0], c.xi[1]));
@@ -67,7 +67,7 @@ TEMPLATE_TEST_CASE("SE2 log accuracy", "[SE2][accuracy]", float32_t, float64_t) 
     SE2Matrix<S> T;
     for (int i = 0; i < 9; ++i)
       T(i / 3, i % 3) = static_cast<S>(c.T[i]);
-    SE2Alg<S> const xi = se2Log(T);
+    SE2Tangent<S> const xi = se2Log(T);
     // relative to |xi|, to 1 when smaller
     double const scale = std::max(1.0, norm3(c.xi[0], c.xi[1], c.xi[2]));
     double const err = norm3(static_cast<double>(xi(0)) - c.xi[0], static_cast<double>(xi(1)) - c.xi[1],

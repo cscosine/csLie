@@ -9,7 +9,7 @@ namespace csLie {
 
 namespace _private {
 
-/// @brief the coefficients of the exp at the angle theta: SO3, R = I + A W + B W^2 (W = skewSymm(omega),
+/// @brief the coefficients of the exp at the angle theta: SO3, R = I + A W + B W^2 (W = hat(omega),
 /// theta = |omega|); SE2, t = [A, -B theta; B theta, A] rho
 template <class S> struct ExpCoeffs {
   S A; ///< sin(theta) / theta
@@ -29,7 +29,7 @@ template <class S> ExpCoeffs<S> expCoeffs(S const theta) {
 }
 
 /// @brief the coefficients of the SO3 left jacobian and of its inverse, also of SE2 and SE3
-/// (W = skewSymm(omega), theta = |omega|):
+/// (W = hat(omega), theta = |omega|):
 /// J = I + B W + C W^2 = A I + B W + C omega omega^T, J^-1 = I - W / 2 + D W^2 = K I - W / 2 + D omega omega^T
 template <class S> struct JCoeffs {
   S A; ///< sin(theta) / theta

@@ -13,7 +13,7 @@ namespace csLie {
 template <class Derived> SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
   using std::abs;
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SE2Alg<S>()), "delta required to be 3x1");
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SE2Tangent<S>()), "delta required to be 3x1");
 
   // R = so2Exp(theta), t = V rho with V = [A, -B theta; B theta, A] (A, B even in theta)
   S const x{delta(0, 0)};
@@ -32,7 +32,7 @@ template <class Derived> SE2<typename Derived::Scalar> se2Exp(Eigen::MatrixBase<
   return Rt;
 }
 
-template <class Derived> SE2Alg<typename Derived::Scalar> se2Log(Eigen::MatrixBase<Derived> const &transf) {
+template <class Derived> SE2Tangent<typename Derived::Scalar> se2Log(Eigen::MatrixBase<Derived> const &transf) {
   using S = typename Derived::Scalar;
   using std::abs;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE2Matrix<S>()),
@@ -47,10 +47,10 @@ template <class Derived> SE2Alg<typename Derived::Scalar> se2Log(Eigen::MatrixBa
   S const halfTheta = theta / S(2);
   S const tx = transf(0, 2);
   S const ty = transf(1, 2);
-  return SE2Alg<S>(kk * tx + halfTheta * ty, -halfTheta * tx + kk * ty, theta);
+  return SE2Tangent<S>(kk * tx + halfTheta * ty, -halfTheta * tx + kk * ty, theta);
 }
 
-template <class S> SE2Alg<S> se2Log(SE2<S> const &transf) { return se2Log(transf.matrix()); }
+template <class S> SE2Tangent<S> se2Log(SE2<S> const &transf) { return se2Log(transf.matrix()); }
 
 template <class S> std::enable_if_t<std::is_floating_point<S>::value, SE2<S>> xyYawToSe2(S x, S y, S yawRad) {
   SE2<S> Rt{};
