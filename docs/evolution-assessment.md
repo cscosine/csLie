@@ -97,6 +97,23 @@ Findings:
    Paranoid). Real inputs drift (products of many rotations); results on
    slightly non-orthonormal input are not specified.
 
+**Status (csLie v0.2.0).** Findings 1–5 are fixed, with accuracy tests against
+results computed in quad precision (`csLie/tests/reference/`, committed tables,
+run on every platform):
+
+- `so3Log`: Shepperd's method and `θ = 2·atan2(‖v‖, w)`, ≤ 1.2 ε at every angle,
+  exactly π included (findings 1 and 4).
+- The coefficients of exp, log and the jacobians (`Coefficients_impl.hpp`) come
+  from the half angle without cancellation, ≤ 2 ε at every angle; the only series,
+  C(θ/2), has its number of terms from the precision at compile time (findings 2
+  and 5). `so3Exp`, `so3LeftJacobian(Inverse)`, `se2Exp`, `se2Log`, `se3Exp`,
+  `se3Log`, the S2 functions: ≤ 3.5 ε.
+- `using std::` and `S(...)` literals in every function; the library builds with
+  strict warnings, and every public function is compiled under them in `float32_t`
+  and `float64_t` (finding 3).
+
+Finding 6 is open.
+
 ### 2.4 Performance-relevant observations
 
 - **SO3 stored as a 3×3 matrix** (9 scalars), **SE3 as `Eigen::Transform`**
