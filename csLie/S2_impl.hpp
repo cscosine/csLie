@@ -35,9 +35,9 @@ template <class Derived> S2<typename Derived::Scalar> s2Exp(Eigen::MatrixBase<De
 
     static constexpr std::array<S, N> inv = {S(1 / 3.), S(1 / 4.), S(1 / 5.), S(1 / 6.),
                                              S(1 / 7.), S(1 / 8.), S(1 / 9.)};
-    S cosi = 1.;
-    S sinci = 1.;
-    S term = -1 / 2. * norm2;
+    S cosi = S(1);
+    S sinci = S(1);
+    S term = S(-0.5) * norm2;
     for (size_t i = 0; i < HALF_N; ++i) {
       cosi += term;
       term *= inv[2 * i];
@@ -63,7 +63,7 @@ template <class Derived> SO3<typename Derived::Scalar> s2toZAlignedSO3(Eigen::Ma
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, S2<S>()), "v required to be 3x1");
 
-  CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm() - 1.0) < Constants<S>::dummy_precision,
+  CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm() - S(1)) < Constants<S>::dummy_precision,
                         "s2toZAlignedSO3 input vector is not unitary");
 
   SO3<S> R{};
@@ -83,7 +83,7 @@ S2<typename Derived1::Scalar> s2oplus(Eigen::MatrixBase<Derived1> const &v, Eige
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, S2<S>()), "v required to be 3x1");
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, S2Alg<S>()), "delta required to be 2x1");
 
-  CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm() - 1.0) < Constants<S>::dummy_precision,
+  CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm() - S(1)) < Constants<S>::dummy_precision,
                         "s2toZAlignedSO3 input vector is not unitary");
 
   SO3<S> const R = s2toZAlignedSO3(v);
@@ -95,10 +95,12 @@ S2<typename Derived1::Scalar> s2oplus(Eigen::MatrixBase<Derived1> const &v, Eige
 template <class Derived>
 s2oplusJac<typename Derived::Scalar> s2_d_oplus_d_delta_0(Eigen::MatrixBase<Derived> const &v) {
   using S = typename Derived::Scalar;
+  using std::cos;
+  using std::sin;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(v, S2<S>()), "v required to be 3x1");
 
-  CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm() - 1.0) < Constants<S>::dummy_precision,
+  CSLIE_ASSERT_PARANOID(std::abs(v.squaredNorm() - S(1)) < Constants<S>::dummy_precision,
                         "s2toZAlignedSO3 input vector is not unitary");
 
   // note: use always two indices to allow access to v as a generic matrix

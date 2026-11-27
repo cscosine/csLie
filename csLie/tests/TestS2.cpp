@@ -1,5 +1,6 @@
 #include <Eigen/Dense> // for determinant
 #include <catch2/catch_all.hpp>
+#include <cmath>
 #include <csCore/eigenUtils/RotationMatrix_impl.hpp>
 #include <csCore/testUtils/AssertCatch2.hpp>
 #include <csLie/Constants.hpp>
@@ -12,12 +13,13 @@ TEMPLATE_TEST_CASE("S2 test - verify assumption atan2(0,0) = 0", "[S2]", float32
   // in s2toZAlignedSO3 we assume that atan2(0,0) = 0. This might be platform
   // dependent. In case this test fail, adapt the logic in s2toZAlignedSO3 to
   // handle this edge case
-  REQUIRE(std::atan2<TestType>(0, 0) == 0.0);
+  REQUIRE(std::fpclassify(std::atan2<TestType>(0, 0)) == FP_ZERO);
 }
 
 TEMPLATE_TEST_CASE("S2 test - base", "[S2]", float32_t, float64_t) {
   using S = TestType;
-  S const PRECISION = Constants<S>::dummy_precision;
+  // a double: the Catch2 matchers take double
+  double const PRECISION = static_cast<double>(Constants<S>::dummy_precision);
 
   // create a unit vector v
   S2<S> const v{S2<S>::Random().normalized()};
@@ -65,7 +67,8 @@ TEMPLATE_TEST_CASE("S2 test - plane fitting", "[S2]", float32_t, float64_t) {
   CAPTURE(pointsNoisedFlag, perturbedInitialization);
 
   using S = TestType;
-  S const PRECISION = Constants<S>::dummy_precision;
+  // a double: the Catch2 matchers take double
+  double const PRECISION = static_cast<double>(Constants<S>::dummy_precision);
 
   // generate a random rotation matrix
   Eigen::Transform<S, 3, Eigen::Isometry> Rt{Eigen::Transform<S, 3, Eigen::Isometry>::Identity()};

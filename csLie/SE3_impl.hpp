@@ -10,13 +10,16 @@ namespace csLie {
 
 template <class Derived> SE3<typename Derived::Scalar> se3Exp(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
+  using std::cos;
+  using std::sin;
+  using std::sqrt;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SE3Alg<S>()), "delta required to be 6x1");
 
   SE3<S> transf;
 
   Eigen::Matrix<S, 3, 1> const w2 = delta.template bottomLeftCorner<3, 1>().cwiseAbs2();
   S const theta_sq = w2.sum(); // sum of the squares
-  S const theta = std::sqrt(theta_sq);
+  S const theta = sqrt(theta_sq);
 
   if (theta < Constants<S>::epsilon) {
     S tmp5 = static_cast<S>(0.5) - theta_sq * (static_cast<S>(1.0 / 24.0) - static_cast<S>(1.0 / 720.0) * theta_sq);
@@ -81,6 +84,9 @@ template <class Derived> SE3<typename Derived::Scalar> se3Exp(Eigen::MatrixBase<
 
 template <class Derived> SE3Alg<typename Derived::Scalar> se3Log(Eigen::MatrixBase<Derived> const &transf) {
   using S = typename Derived::Scalar;
+  using std::cos;
+  using std::sin;
+  using std::sqrt;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE3Matrix<S>()),
                      "transf required to be 4x4");
@@ -101,14 +107,14 @@ template <class Derived> SE3Alg<typename Derived::Scalar> se3Log(Eigen::MatrixBa
   } else {
     const S inv_theta = 1 / theta;
     const S inv_theta_sq = 1 / theta_sq;
-    a = inv_theta * std::sin(theta);
-    b = inv_theta_sq * (1 - std::cos(theta));
+    a = inv_theta * sin(theta);
+    b = inv_theta_sq * (1 - cos(theta));
     c = inv_theta_sq * (1 - a);
   }
 
   // TODO(sc) a bunch of magic numbers here...
 
-  static constexpr S epsilon25{Constants<S>::epsilon * 25.};
+  static constexpr S epsilon25{Constants<S>::epsilon * S(25)};
   S d;
   if (theta_sq < epsilon25) {
     d = static_cast<S>(1.0 / 12) + theta_sq * (static_cast<S>(1.0 / 720) + theta_sq * static_cast<S>(1.0 / 30240));
@@ -121,7 +127,7 @@ template <class Derived> SE3Alg<typename Derived::Scalar> se3Log(Eigen::MatrixBa
   Eigen::Vector3<S> const wxt = ret.template tail<3>().cross(transf.template topRightCorner<3, 1>());
   Eigen::Vector3<S> const wxwxt = ret.template tail<3>().cross(wxt);
 
-  ret.template head<3>() = transf.template topRightCorner<3, 1>() - 0.5 * wxt + d * wxwxt;
+  ret.template head<3>() = transf.template topRightCorner<3, 1>() - S(0.5) * wxt + d * wxwxt;
 
   return ret;
 }

@@ -7,6 +7,7 @@
 // test measures the error of the function alone. Values are written as hexadecimal floating literals (exact).
 #include "QuadReference.hpp"
 
+#include <cstddef>
 #include <cstdio>
 #include <string>
 #include <vector>
@@ -94,7 +95,7 @@ std::string hex(Q v) {
 
 template <int R, int C> std::string list(ref::M<R, C> const &m) {
   std::string s;
-  for (int i = 0; i < R * C; ++i)
+  for (std::size_t i = 0; i < m.a.size(); ++i)
     s += (i ? ", " : "") + hex(m.a[i]);
   return s;
 }
@@ -113,12 +114,12 @@ template <class T> void so3LogCases(char const *name) {
       for (auto &e : R.a)
         e = roundTo<T>(e);
       emit(std::string(an.label) + " " + ax.label, R);
-      if (an.theta == 0)
+      if (!(an.theta > 0))
         break; // one identity is enough
     }
   for (auto const &[label, m] : exactPi()) {
     ref::M3 R;
-    for (int i = 0; i < 9; ++i)
+    for (std::size_t i = 0; i < m.size(); ++i)
       R.a[i] = m[i];
     emit(label, R);
   }

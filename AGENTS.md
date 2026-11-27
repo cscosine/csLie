@@ -25,3 +25,12 @@ there, then `copier update --defaults`; never edit its parts here):
 ## csLie
 
 Lie groups and algebras (SE(3), SE(2)) in C++ on Eigen
+
+Rules of this library:
+
+- Every target builds with `cscmake_strict_warnings` (`DEFAULT_COMPILE_PROFILES` in `CMakeLists.txt`): GCC and Clang
+  both clean.
+- Every public function has a test over `float32_t, float64_t` (`TEMPLATE_TEST_CASE`): a header is a template, its body
+  is compiled (and warned about) only where a test instantiates it.
+- Generic scalar code: `using std::sin; using std::cos; using std::sqrt; ...` in the function and unqualified calls (a
+  float stays float, a scalar type with its own overloads finds them); literals as `S(...)`, never a bare double.

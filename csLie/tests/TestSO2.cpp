@@ -21,22 +21,24 @@ TEMPLATE_TEST_CASE("SO2 test - base", "[SO2]", float32_t, float64_t) {
   REQUIRE((exp0 - rI).isZero());
 
   // exp the 90deg (M_PI / 2), expect [0 -1; 1 0]
-  SO2<S> const exp90{so2Exp<S>(csCore::math::degToRad(90.0))};
+  SO2<S> const exp90{so2Exp<S>(csCore::math::degToRad(S(90.0)))};
   SO2<S> exp90_gt{};
   exp90_gt << 0, -1, 1, 0;
   REQUIRE((exp90 - exp90_gt).isZero());
 
-  S const PRECISION = Constants<S>::dummy_precision;
+  // a double: the Catch2 matchers take double
+  double const PRECISION = static_cast<double>(Constants<S>::dummy_precision);
 
   // log of identity is 0
   REQUIRE_THAT(so2Log(rI), Catch::Matchers::WithinAbs(0.0, PRECISION));
 
   // log of exp90 is 90
-  REQUIRE_THAT(so2Log(exp90), Catch::Matchers::WithinAbs(csCore::math::degToRad(90.0), PRECISION));
+  REQUIRE_THAT(so2Log(exp90),
+               Catch::Matchers::WithinAbs(static_cast<double>(csCore::math::degToRad(S(90.0))), PRECISION));
 
   // randomized tests
   Eigen::VectorX<S> randoms = Eigen::VectorX<S>::Random(100) * 4 * Constants<S>::pi;
-  for (size_t i = 0; i < randoms.size(); i++) {
+  for (Eigen::Index i = 0; i < randoms.size(); i++) {
     REQUIRE(csCore::eigenUtils::isValidRotationMatrix2D(so2Exp(randoms(i))));
     // log(exp(d)) = d
     REQUIRE_THAT(csCore::math::angleDistance(so2Log(so2Exp(randoms(i))), randoms(i)),

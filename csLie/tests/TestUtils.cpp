@@ -9,11 +9,12 @@ namespace csLie {
 TEMPLATE_TEST_CASE("Utils test - normalize", "[SO3]", float32_t, float64_t) {
   using S = TestType;
 
-  Eigen::Vector3<S> const u(std::sqrt(3) / 3.0, std::sqrt(3) / 3.0, std::sqrt(3) / 3.0);
+  Eigen::Vector3<S> const u(std::sqrt(S(3)) / S(3), std::sqrt(S(3)) / S(3), std::sqrt(S(3)) / S(3));
   UnitVector3dWithJacobians<S> ret{normalize3dVectorWithJacobians(u)};
   REQUIRE((ret.vo - u).isZero());
   Eigen::Matrix3<S> d_vo_d_v_gt;
-  d_vo_d_v_gt << 2. / 3., -1. / 3., -1. / 3., -1. / 3., 2. / 3., -1. / 3., -1. / 3., -1. / 3., 2. / 3.;
+  d_vo_d_v_gt << S(2) / S(3), S(-1) / S(3), S(-1) / S(3), S(-1) / S(3), S(2) / S(3), S(-1) / S(3), S(-1) / S(3),
+      S(-1) / S(3), S(2) / S(3);
   REQUIRE((ret.d_vo_d_v - d_vo_d_v_gt).isZero());
 
   ret = normalize3dVectorWithJacobians(Eigen::Vector3<S>(2, 0, 0));

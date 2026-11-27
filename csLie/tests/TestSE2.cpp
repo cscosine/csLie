@@ -25,14 +25,14 @@ TEMPLATE_TEST_CASE("SE2 test - base", "[SE2]", float32_t, float64_t) {
   // exp the 90deg (M_PI / 2) with a transl, expect [0 -1; 1 0] in rotation
   S const x = 10;
   S const y = 20;
-  S const theta = csCore::math::degToRad(90.0);
+  S const theta = csCore::math::degToRad(S(90.0));
   SE2<S> const exp90{se2Exp(SE2Alg<S>(x, y, theta))};
   REQUIRE(csCore::eigenUtils::isValidIsometryMatrix2D(exp90));
 
   SE2<S> exp90_gt{};
 
-  S const sinTh_Th = 1.0 / theta;
-  S const m1cosTh_Th = 1.0 / theta;
+  S const sinTh_Th = S(1) / theta;
+  S const m1cosTh_Th = S(1) / theta;
   S const tx = x * sinTh_Th - y * m1cosTh_Th;
   S const ty = x * m1cosTh_Th + y * sinTh_Th;
 
@@ -46,7 +46,7 @@ TEMPLATE_TEST_CASE("SE2 test - from/to xyY", "[SE2]", float32_t, float64_t) {
 
   S const x = 10;
   S const y = 20;
-  S const theta = csCore::math::degToRad(90.0);
+  S const theta = csCore::math::degToRad(S(90.0));
 
   Eigen::Vector3<S> xyY_gt(x, y, theta);
 

@@ -21,13 +21,11 @@ TEMPLATE_TEST_CASE("SO3 test - base", "[SO3]", float32_t, float64_t) {
   REQUIRE((exp0 - rI).isZero());
 
   // exp the 90deg on z (M_PI / 2), expect [0 -1 0; 1 0 0; 0 0 1]
-  SO3Alg<S> const rotZ90(0, 0, csCore::math::degToRad(90.0));
+  SO3Alg<S> const rotZ90(0, 0, csCore::math::degToRad(S(90.0)));
   SO3<S> const exp90{so3Exp(rotZ90)};
   SO3<S> exp90_gt{};
   exp90_gt << 0, -1, 0, 1, 0, 0, 0, 0, 1;
   REQUIRE((exp90 - exp90_gt).isZero());
-
-  S const PRECISION = Constants<S>::dummy_precision;
 
   // log of identity is 0
   REQUIRE(so3Log(rI).isZero());
@@ -74,7 +72,7 @@ TEMPLATE_TEST_CASE("SO3 test - from/to RPY", "[SO3]", float32_t, float64_t) {
 
   // 1 axis only
   {
-    S a = csCore::math::degToRad(23.0);
+    S a = csCore::math::degToRad(S(23.0));
     Eigen::Vector3<S> vz_gt(0, 0, a);
     Eigen::Vector3<S> vy_gt(0, a, 0);
     Eigen::Vector3<S> vx_gt(a, 0, 0);
@@ -107,7 +105,8 @@ TEMPLATE_TEST_CASE("SO3 test - from/to RPY", "[SO3]", float32_t, float64_t) {
   }
   // 3 axis
   {
-    Eigen::Vector3<S> a(csCore::math::degToRad(23.0), csCore::math::degToRad(57.0), csCore::math::degToRad(82.0));
+    Eigen::Vector3<S> a(csCore::math::degToRad(S(23.0)), csCore::math::degToRad(S(57.0)),
+                        csCore::math::degToRad(S(82.0)));
     SO3<S> r{rpyToSo3(a)};
     Eigen::Vector3<S> a_r{so3ToRPY(r)};
     SO3<S> r_a_r{rpyToSo3(a_r)};
@@ -126,21 +125,22 @@ TEMPLATE_TEST_CASE("SO3 test - Gymbal lock", "[SO3]", float32_t, float64_t) {
 
   // 90 deg
   {
-    Eigen::Vector3<S> vy(csCore::math::degToRad(10.0), csCore::math::degToRad(90.0), csCore::math::degToRad(-20.0));
+    Eigen::Vector3<S> vy(csCore::math::degToRad(S(10.0)), csCore::math::degToRad(S(90.0)),
+                         csCore::math::degToRad(S(-20.0)));
     SO3<S> r1{rpyToSo3(vy)};
 
     // gymbal on yaw - roll
 
-    vy(0) = csCore::math::degToRad(30.0);
-    vy(2) = csCore::math::degToRad(0.0);
+    vy(0) = csCore::math::degToRad(S(30.0));
+    vy(2) = csCore::math::degToRad(S(0.0));
     SO3<S> r2{rpyToSo3(vy)};
 
-    vy(0) = csCore::math::degToRad(0.0);
-    vy(2) = csCore::math::degToRad(-30.0);
+    vy(0) = csCore::math::degToRad(S(0.0));
+    vy(2) = csCore::math::degToRad(S(-30.0));
     SO3<S> r3{rpyToSo3(vy)};
 
-    vy(0) = csCore::math::degToRad(-10.0);
-    vy(2) = csCore::math::degToRad(-40.0);
+    vy(0) = csCore::math::degToRad(S(-10.0));
+    vy(2) = csCore::math::degToRad(S(-40.0));
     SO3<S> r4{rpyToSo3(vy)};
 
     REQUIRE((r1 * r2.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
@@ -166,21 +166,22 @@ TEMPLATE_TEST_CASE("SO3 test - Gymbal lock", "[SO3]", float32_t, float64_t) {
 
   // -90 deg
   {
-    Eigen::Vector3<S> vy(csCore::math::degToRad(10.0), csCore::math::degToRad(-90.0), csCore::math::degToRad(20.0));
+    Eigen::Vector3<S> vy(csCore::math::degToRad(S(10.0)), csCore::math::degToRad(S(-90.0)),
+                         csCore::math::degToRad(S(20.0)));
     SO3<S> r1{rpyToSo3(vy)};
 
     // gymbal on yaw + roll
 
-    vy(0) = csCore::math::degToRad(30.0);
-    vy(2) = csCore::math::degToRad(0.0);
+    vy(0) = csCore::math::degToRad(S(30.0));
+    vy(2) = csCore::math::degToRad(S(0.0));
     SO3<S> r2{rpyToSo3(vy)};
 
-    vy(0) = csCore::math::degToRad(0.0);
-    vy(2) = csCore::math::degToRad(30.0);
+    vy(0) = csCore::math::degToRad(S(0.0));
+    vy(2) = csCore::math::degToRad(S(30.0));
     SO3<S> r3{rpyToSo3(vy)};
 
-    vy(0) = csCore::math::degToRad(-10.0);
-    vy(2) = csCore::math::degToRad(40.0);
+    vy(0) = csCore::math::degToRad(S(-10.0));
+    vy(2) = csCore::math::degToRad(S(40.0));
     SO3<S> r4{rpyToSo3(vy)};
 
     REQUIRE((r1 * r2.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
@@ -208,7 +209,7 @@ TEMPLATE_TEST_CASE("SO3 test - Gymbal lock", "[SO3]", float32_t, float64_t) {
 TEMPLATE_TEST_CASE("SO3 test - SkewSymm", "[SO3]", float32_t, float64_t) {
   using S = TestType;
 
-  Eigen::Matrix3<S> s{skewSymm(Eigen::Vector3<S>(2.4, 1.2, 3.2))};
+  Eigen::Matrix3<S> s{skewSymm(Eigen::Vector3<S>(S(2.4), S(1.2), S(3.2)))};
   REQUIRE(s.diagonal().isZero(0));
   REQUIRE((s + s.transpose()).isZero(0));
 }

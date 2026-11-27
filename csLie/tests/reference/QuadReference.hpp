@@ -7,15 +7,16 @@
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 
 namespace ref {
 
 using Q = __float128;
 
 template <int R, int C> struct M {
-  std::array<Q, R * C> a{};
-  Q &operator()(int r, int c) { return a[r * C + c]; }
-  Q operator()(int r, int c) const { return a[r * C + c]; }
+  std::array<Q, static_cast<std::size_t>(R *C)> a{};
+  Q &operator()(int r, int c) { return a[static_cast<std::size_t>(r * C + c)]; }
+  Q operator()(int r, int c) const { return a[static_cast<std::size_t>(r * C + c)]; }
 };
 using V3 = M<3, 1>;
 using M3 = M<3, 3>;
@@ -38,7 +39,7 @@ template <int R, int K, int C> M<R, C> mul(M<R, K> const &a, M<K, C> const &b) {
   return o;
 }
 template <int R, int C> M<R, C> add(M<R, C> a, M<R, C> const &b, Q sb = 1) {
-  for (int i = 0; i < R * C; ++i)
+  for (std::size_t i = 0; i < a.a.size(); ++i)
     a.a[i] += sb * b.a[i];
   return a;
 }
@@ -142,7 +143,7 @@ inline V3 so3Log(M3 const &R) {
   }
   Q const n = norm(v);
   V3 o;
-  if (n == 0)
+  if (!(n > 0))
     return o;
   Q const th = 2 * atan2q(n, w);
   for (int i = 0; i < 3; ++i)
@@ -221,7 +222,7 @@ inline V3 s2Log(V3 const &p, V3 const &q) {
   V3 d = add(q, p, -c);
   Q const dn = norm(d);
   V3 o;
-  if (dn == 0)
+  if (!(dn > 0))
     return o;
   for (int i = 0; i < 3; ++i)
     o(i, 0) = th / dn * d(i, 0);

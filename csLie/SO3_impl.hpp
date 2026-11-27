@@ -10,26 +10,29 @@ namespace csLie {
 
 template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
+  using std::cos;
+  using std::sin;
+  using std::sqrt;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
 
   SO3Alg<S> const w2 = delta.cwiseAbs2();
   S const theta_sq = w2.sum(); // sum of the squares
-  S const theta = std::sqrt(theta_sq);
+  S const theta = sqrt(theta_sq);
 
   S a, b;
   if (theta < Constants<S>::epsilon) {
-    a = static_cast<S>(1.0) - theta_sq * (static_cast<S>(1.0 / 6.0) + theta_sq * static_cast<S>(1.0 / 120.0));
-    b = static_cast<S>(0.5) - theta_sq * (static_cast<S>(1.0 / 24.0) - theta_sq * static_cast<S>(1.0 / 720.0));
+    a = S(1) - theta_sq * (S(1.0 / 6.0) + theta_sq * S(1.0 / 120.0));
+    b = S(0.5) - theta_sq * (S(1.0 / 24.0) - theta_sq * S(1.0 / 720.0));
   } else {
     a = sin(theta) / theta;
-    b = (static_cast<S>(1.0) - cos(theta)) / theta_sq;
+    b = (S(1) - cos(theta)) / theta_sq;
   }
 
   SO3<S> R;
 
-  R(0, 0) = 1 - b * (w2(1) + w2(2));
-  R(1, 1) = 1 - b * (w2(0) + w2(2));
-  R(2, 2) = 1 - b * (w2(0) + w2(1));
+  R(0, 0) = S(1) - b * (w2(1) + w2(2));
+  R(1, 1) = S(1) - b * (w2(0) + w2(2));
+  R(2, 2) = S(1) - b * (w2(0) + w2(1));
 
   const S Bab = b * delta(0, 0) * delta(1, 0);
   const S Bac = b * delta(0, 0) * delta(2, 0);
@@ -47,6 +50,8 @@ template <class Derived> SO3<typename Derived::Scalar> so3Exp(Eigen::MatrixBase<
 
 template <class Derived> SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
+  using std::cos;
+  using std::sin;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
 
   S const th = delta.norm();
@@ -56,13 +61,13 @@ template <class Derived> SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<D
 
     Eigen::Matrix<S, 3, 1> const a = delta.array() / th;
 
-    const S sinth = std::sin(th);
-    const S costh = std::cos(th);
+    const S sinth = sin(th);
+    const S costh = cos(th);
 
-    S tmp1 = 1.0 / th;
+    S tmp1 = S(1) / th;
     S tmp2 = sinth * tmp1;
-    S tmp3 = 1 - sinth * tmp1;
-    S tmp4 = 1 - costh;
+    S tmp3 = S(1) - sinth * tmp1;
+    S tmp4 = S(1) - costh;
     S tmp5 = a(0) * a(1) * tmp3;
     S tmp6 = a(0) * a(2) * tmp3;
     S tmp7 = a(1) * a(2) * tmp3;
@@ -81,7 +86,7 @@ template <class Derived> SO3J<typename Derived::Scalar> so3J(Eigen::MatrixBase<D
   } else {
     SO3J<S> ret;
 
-    ret = Eigen::Matrix<S, 3, 3>::Identity() + 0.5 * skewSymm(delta);
+    ret = Eigen::Matrix<S, 3, 3>::Identity() + S(0.5) * skewSymm(delta);
 
     return ret;
   }
@@ -133,7 +138,7 @@ template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Ei
   }
 
   S const n = v.norm();
-  if (n == S(0)) {
+  if (!(n > S(0))) {
     // the identity (the other branch has n >= r > 0)
     return SO3Alg<S>::Zero();
   }
@@ -143,6 +148,8 @@ template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> so3Log(Ei
 
 template <class Derived> SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::MatrixBase<Derived> const &delta) {
   using S = typename Derived::Scalar;
+  using std::cos;
+  using std::sin;
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(delta, SO3Alg<S>()), "delta required to be 3x1");
 
   S const th = delta.norm();
@@ -152,13 +159,13 @@ template <class Derived> SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::Matrix
 
     Eigen::Matrix<S, 3, 1> const a = delta.array() / th;
 
-    S const sinth = std::sin(th);
-    S const costh = std::cos(th);
+    S const sinth = sin(th);
+    S const costh = cos(th);
 
-    S const tmp1 = costh + 1;
-    S const tmp2 = 1 / sinth;
-    S const tmp3 = tmp1 * tmp2 * th / 2;
-    S const tmp4 = 1 - tmp1 * tmp2 * th / 2;
+    S const tmp1 = costh + S(1);
+    S const tmp2 = S(1) / sinth;
+    S const tmp3 = tmp1 * tmp2 * th / S(2);
+    S const tmp4 = S(1) - tmp1 * tmp2 * th / S(2);
     S const tmp5 = a(0) * a(1) * tmp4;
     S const tmp6 = a(0) * a(2) * tmp4;
     S const tmp7 = a(1) * a(2) * tmp4;
@@ -177,7 +184,7 @@ template <class Derived> SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::Matrix
   } else {
     SO3Jinv<S> ret;
 
-    ret = Eigen::Matrix<S, 3, 3>::Identity() - 0.5 * skewSymm(delta);
+    ret = Eigen::Matrix<S, 3, 3>::Identity() - S(0.5) * skewSymm(delta);
 
     return ret;
   }
@@ -222,6 +229,8 @@ template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(
 
 template <class Derived> SO3<typename Derived::Scalar> rpyToSo3(Eigen::MatrixBase<Derived> const &rpy) {
   using S = typename Derived::Scalar;
+  using std::cos;
+  using std::sin;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rpy, Eigen::Matrix<S, 3, 1>()),
                      "rpy required to be 3x1");

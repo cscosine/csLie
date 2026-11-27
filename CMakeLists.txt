@@ -15,6 +15,8 @@ cs_add_compile_profile_rule(PROFILE csLie_paranoid CONFIGS Paranoid PROFILES csc
 cs_initialize_project(
   NAMESPACE csLie
   CXX_STANDARD 17
+  # every target: strict warnings (warnings as errors)
+  DEFAULT_COMPILE_PROFILES cscmake_default cscmake_strict_warnings
   # the default configurations supported by this project
   DEFAULT_CONFIG Debug Release
   DEFAULT_CONFIG_MAPPED RelWithDebInfo

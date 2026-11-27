@@ -20,8 +20,6 @@ TEMPLATE_TEST_CASE("SE3 test - base", "[SE3]", float32_t, float64_t) {
   SE3<S> const exp0{se3Exp(d0)};
   REQUIRE((exp0.matrix() - rI.matrix()).isZero());
 
-  S const PRECISION = Constants<S>::dummy_precision;
-
   // log of identity is 0
   REQUIRE(se3Log(rI).isZero());
 
