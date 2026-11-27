@@ -32,15 +32,20 @@ template <class S> void instantiateAll() {
   static_cast<void>(se2Exp(se2Alg));
   static_cast<void>(se2Log(se2.matrix()));
   static_cast<void>(se2Log(se2));
-  static_cast<void>(xyYToSe2(se2Alg));
-  static_cast<void>(se2ToxyY(se2.matrix()));
-  static_cast<void>(se2ToxyY(se2));
+  static_cast<void>(xyYawToSe2(se2Alg));
+  static_cast<void>(xyYawToSe2(Eigen::Matrix<S, 2, 1>::Zero().eval(), S(0)));
+  static_cast<void>(xyYawToSe2(S(0), S(0), S(0)));
+  static_cast<void>(se2ToXyYaw(se2.matrix()));
+  static_cast<void>(se2ToXyYaw(se2));
   // SO3
   static_cast<void>(so3Exp(so3Alg));
   static_cast<void>(so3Log(so3));
   static_cast<void>(so3J(so3Alg));
   static_cast<void>(so3Jinv(so3Alg));
-  static_cast<void>(so3ToRPY(so3));
+  static_cast<void>(so3ToRpy(so3));
+  static_cast<void>(so3ToRpy<GimbalPolicy::kYawZero>(so3));
+  static_cast<void>(so3ToRpyChecked(so3));
+  static_cast<void>(rpyCheckedGimbalTolerance<S>());
   static_cast<void>(rpyToSo3(so3Alg));
   static_cast<void>(skewSymm(so3Alg));
   // SE3

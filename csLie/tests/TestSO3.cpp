@@ -91,9 +91,9 @@ TEMPLATE_TEST_CASE("SO3 test - from/to RPY", "[SO3]", float32_t, float64_t) {
     REQUIRE((ry_gt - ry).isZero());
     REQUIRE((rx_gt - rx).isZero());
 
-    Eigen::Vector3<S> vz = so3ToRPY(rz);
-    Eigen::Vector3<S> vy = so3ToRPY(ry);
-    Eigen::Vector3<S> vx = so3ToRPY(rx);
+    Eigen::Vector3<S> vz = so3ToRpy(rz);
+    Eigen::Vector3<S> vy = so3ToRpy(ry);
+    Eigen::Vector3<S> vx = so3ToRpy(rx);
 
     SO3<S> rvz{rpyToSo3(vz)};
     SO3<S> rvy{rpyToSo3(vy)};
@@ -108,7 +108,7 @@ TEMPLATE_TEST_CASE("SO3 test - from/to RPY", "[SO3]", float32_t, float64_t) {
     Eigen::Vector3<S> a(csCore::math::degToRad(S(23.0)), csCore::math::degToRad(S(57.0)),
                         csCore::math::degToRad(S(82.0)));
     SO3<S> r{rpyToSo3(a)};
-    Eigen::Vector3<S> a_r{so3ToRPY(r)};
+    Eigen::Vector3<S> a_r{so3ToRpy(r)};
     SO3<S> r_a_r{rpyToSo3(a_r)};
 
     SO3<S> r_e;
@@ -147,19 +147,19 @@ TEMPLATE_TEST_CASE("SO3 test - Gymbal lock", "[SO3]", float32_t, float64_t) {
     REQUIRE((r1 * r3.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
     REQUIRE((r1 * r4.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
 
-    Eigen::Vector3<S> v1{so3ToRPY(r1)};
+    Eigen::Vector3<S> v1{so3ToRpy(r1)};
     SO3<S> rv1{rpyToSo3(v1)};
     REQUIRE((rv1 * r1.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
 
-    Eigen::Vector3<S> v2{so3ToRPY(r2)};
+    Eigen::Vector3<S> v2{so3ToRpy(r2)};
     SO3<S> rv2{rpyToSo3(v2)};
     REQUIRE((rv2 * r2.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
 
-    Eigen::Vector3<S> v3{so3ToRPY(r3)};
+    Eigen::Vector3<S> v3{so3ToRpy(r3)};
     SO3<S> rv3{rpyToSo3(v3)};
     REQUIRE((rv3 * r3.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
 
-    Eigen::Vector3<S> v4{so3ToRPY(r4)};
+    Eigen::Vector3<S> v4{so3ToRpy(r4)};
     SO3<S> rv4{rpyToSo3(v4)};
     REQUIRE((rv4 * r4.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
   }
@@ -188,19 +188,19 @@ TEMPLATE_TEST_CASE("SO3 test - Gymbal lock", "[SO3]", float32_t, float64_t) {
     REQUIRE((r1 * r3.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
     REQUIRE((r1 * r4.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
 
-    Eigen::Vector3<S> v1{so3ToRPY(r1)};
+    Eigen::Vector3<S> v1{so3ToRpy(r1)};
     SO3<S> rv1{rpyToSo3(v1)};
     REQUIRE((rv1 * r1.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
 
-    Eigen::Vector3<S> v2{so3ToRPY(r2)};
+    Eigen::Vector3<S> v2{so3ToRpy(r2)};
     SO3<S> rv2{rpyToSo3(v2)};
     REQUIRE((rv2 * r2.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
 
-    Eigen::Vector3<S> v3{so3ToRPY(r3)};
+    Eigen::Vector3<S> v3{so3ToRpy(r3)};
     SO3<S> rv3{rpyToSo3(v3)};
     REQUIRE((rv3 * r3.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
 
-    Eigen::Vector3<S> v4{so3ToRPY(r4)};
+    Eigen::Vector3<S> v4{so3ToRpy(r4)};
     SO3<S> rv4{rpyToSo3(v4)};
     REQUIRE((rv4 * r4.transpose() - Eigen::Matrix3<S>::Identity()).isZero());
   }
@@ -307,18 +307,18 @@ TEMPLATE_TEST_CASE("SO3 test - to RPY, input is not a rotation matrix", "[SO3]",
 
   if (csLie::Asserts::isAssertDebugEnabled()) {
     // throws, wrong matrix size
-    REQUIRE_ASSERT(so3ToRPY(Eigen::MatrixX<S>(3, 4)));
-    REQUIRE_ASSERT(so3ToRPY(Eigen::MatrixX<S>(2, 3)));
+    REQUIRE_ASSERT(so3ToRpy(Eigen::MatrixX<S>(3, 4)));
+    REQUIRE_ASSERT(so3ToRpy(Eigen::MatrixX<S>(2, 3)));
 
     Eigen::MatrixX<S> m10x10 = Eigen::MatrixX<S>::Identity(10, 10);
-    REQUIRE_NO_ASSERT(so3ToRPY(m10x10.block(0, 0, 3, 3))); // ok (is also a valid rotation matrix)!
+    REQUIRE_NO_ASSERT(so3ToRpy(m10x10.block(0, 0, 3, 3))); // ok (is also a valid rotation matrix)!
 
-    REQUIRE_ASSERT(so3ToRPY(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 3)));
-    REQUIRE_ASSERT(so3ToRPY(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 1)));
+    REQUIRE_ASSERT(so3ToRpy(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 3)));
+    REQUIRE_ASSERT(so3ToRpy(Eigen::MatrixX<S>(4, 4).block(0, 0, 2, 1)));
   }
 
   if (csLie::Asserts::isAssertParanoidEnabled()) {
-    REQUIRE_ASSERT(so3ToRPY(Eigen::Matrix3<S>::Zero())); // throws, zero is not a rotation matrix
+    REQUIRE_ASSERT(so3ToRpy(Eigen::Matrix3<S>::Zero())); // throws, zero is not a rotation matrix
   }
 }
 

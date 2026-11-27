@@ -28,7 +28,8 @@ template <class S> ExpCoeffs<S> expCoeffs(S const theta) {
   return {h * cos(half), S(0.5) * h * h};
 }
 
-/// @brief the coefficients of the SO3 left jacobian and of its inverse, also of SE2 and SE3 (W = skewSymm(omega), theta = |omega|):
+/// @brief the coefficients of the SO3 left jacobian and of its inverse, also of SE2 and SE3
+/// (W = skewSymm(omega), theta = |omega|):
 /// J = I + B W + C W^2 = A I + B W + C omega omega^T, J^-1 = I - W / 2 + D W^2 = K I - W / 2 + D omega omega^T
 template <class S> struct JCoeffs {
   S A; ///< sin(theta) / theta
@@ -83,7 +84,7 @@ template <class S> JCoeffs<S> jCoeffs(S const theta) {
   S const h = half > S(0) ? sinHalf / half : S(1);             // A(theta / 2)
   S const hq = quarter > S(0) ? sin(quarter) / quarter : S(1); // A(theta / 4)
   S const bHalf = S(0.5) * hq * hq;                            // B(theta / 2)
-  S const cHalf = coeffC(half, sinHalf);                    // C(theta / 2)
+  S const cHalf = coeffC(half, sinHalf);                       // C(theta / 2)
   return {h * cosHalf, S(0.5) * h * h, (cHalf + h * bHalf) / S(4), (bHalf - cHalf) / (S(4) * h), cosHalf / h};
 }
 

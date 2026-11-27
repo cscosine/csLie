@@ -56,6 +56,14 @@ template <class S> auto const &so3JlInvCases() {
   }
 }
 
+template <class S> auto const &rpyCases() {
+  if constexpr (std::is_same_v<S, float32_t>) {
+    return testReference::rpyCasesF32;
+  } else {
+    return testReference::rpyCasesF64;
+  }
+}
+
 template <class S> auto const &coeffCases() {
   if constexpr (std::is_same_v<S, float32_t>) {
     return testReference::coeffCasesF32;
@@ -192,6 +200,86 @@ TEMPLATE_TEST_CASE("SO3 jacobian coefficients accuracy", "[SO3][accuracy]", floa
     CHECK(errD <= coeffDTolerance);
     CHECK(errK <= coeffTolerance);
   }
+}
+
+namespace {
+
+/// the error of an angle, in (-pi, pi], in epsilon of S
+template <class S> double angleError(S const got, double const exact) {
+  double const d = static_cast<double>(got) - exact;
+  return std::abs(std::atan2(std::sin(d), std::cos(d))) / static_cast<double>(Constants<S>::epsilon);
+}
+
+/// the largest error of the entries of a rotation, in epsilon of S
+template <class S> double rotationError(SO3<S> const &got, SO3<S> const &exact) {
+  return static_cast<double>((got - exact).cwiseAbs().maxCoeff()) / static_cast<double>(Constants<S>::epsilon);
+}
+
+constexpr double rpyToSo3Tolerance = 3.0;
+// so3ToRpy: rpyToSo3 of its result against its input (a few roundings of each), the pitch against the exact one
+constexpr double so3ToRpyRoundTripTolerance = 6.0;
+constexpr double so3ToRpyPitchTolerance = 3.0;
+// roll and yaw each alone are conditioned by 1 / cos(pitch): the error times cos(pitch)
+constexpr double so3ToRpyAngleTolerance = 4.0;
+
+/// checks so3ToRpy<P> on every case: the round trip and the pitch; away from the gimbal lock (cos(pitch) > epsilon)
+/// roll and yaw; at the gimbal lock the angle P names is 0; so3ToRpyChecked empty below sqrt(epsilon)
+template <class S, GimbalPolicy P> void checkSo3ToRpy() {
+  double maxRoundTrip = 0;
+  for (auto const &c : rpyCases<S>()) {
+    SO3<S> R;
+    for (int i = 0; i < 9; ++i)
+      R(i / 3, i % 3) = static_cast<S>(c.R[i]);
+    Eigen::Vector3<S> const rpy = so3ToRpy<P>(R);
+    double const roundTrip = rotationError<S>(rpyToSo3(rpy), R);
+    double const errPitch = angleError(rpy(1), c.rpy[1]);
+    double const cosPitch = std::cos(c.rpy[1]);
+    bool const gimbal = !(static_cast<S>(cosPitch) > Constants<S>::epsilon);
+    bool const checkedGimbal = !(static_cast<S>(cosPitch) > rpyCheckedGimbalTolerance<S>());
+    maxRoundTrip = std::max(maxRoundTrip, roundTrip);
+    INFO(c.label << ": rpy " << rpy.transpose() << ", round trip " << roundTrip << " eps, pitch " << errPitch
+                 << " eps, gimbal " << gimbal);
+    CHECK(rpy.allFinite());
+    CHECK(roundTrip <= so3ToRpyRoundTripTolerance);
+    CHECK(errPitch <= so3ToRpyPitchTolerance);
+    if (gimbal) {
+      CHECK(std::fpclassify(rpy(P == GimbalPolicy::kRollZero ? 0 : 2)) == FP_ZERO);
+    } else {
+      CHECK(angleError(rpy(0), c.rpy[0]) * cosPitch <= so3ToRpyAngleTolerance);
+      CHECK(angleError(rpy(2), c.rpy[2]) * cosPitch <= so3ToRpyAngleTolerance);
+    }
+    CHECK(so3ToRpyChecked(R).has_value() == !checkedGimbal);
+  }
+  INFO("max round trip error " << maxRoundTrip << " eps");
+  SUCCEED();
+}
+
+} // namespace
+
+TEMPLATE_TEST_CASE("SO3 rpyToSo3 accuracy", "[SO3][accuracy]", float32_t, float64_t) {
+  using S = TestType;
+  double maxErr = 0;
+  for (auto const &c : rpyCases<S>()) {
+    Eigen::Vector3<S> const rpy(static_cast<S>(c.rpy[0]), static_cast<S>(c.rpy[1]), static_cast<S>(c.rpy[2]));
+    SO3<S> const R = rpyToSo3(rpy);
+    double err = 0;
+    for (int i = 0; i < 9; ++i)
+      err = std::max(err, std::abs(static_cast<double>(R(i / 3, i % 3)) - c.R[i]));
+    err /= static_cast<double>(Constants<S>::epsilon);
+    maxErr = std::max(maxErr, err);
+    INFO(c.label << ": error " << err << " eps");
+    CHECK(err <= rpyToSo3Tolerance);
+  }
+  INFO("max error " << maxErr << " eps");
+  SUCCEED();
+}
+
+TEMPLATE_TEST_CASE("SO3 so3ToRpy accuracy (roll zero at gimbal lock)", "[SO3][accuracy]", float32_t, float64_t) {
+  checkSo3ToRpy<TestType, GimbalPolicy::kRollZero>();
+}
+
+TEMPLATE_TEST_CASE("SO3 so3ToRpy accuracy (yaw zero at gimbal lock)", "[SO3][accuracy]", float32_t, float64_t) {
+  checkSo3ToRpy<TestType, GimbalPolicy::kYawZero>();
 }
 
 } // namespace csLie

@@ -151,6 +151,16 @@ inline V3 so3Log(M3 const &R) {
   return o;
 }
 
+// R = rotZ(yaw) rotY(pitch) rotX(roll)
+inline M3 rpyToSo3(Q roll, Q pitch, Q yaw) {
+  Q const cr = cosq(roll), sr = sinq(roll), cp = cosq(pitch), sp = sinq(pitch), cy = cosq(yaw), sy = sinq(yaw);
+  M3 R;
+  R(0, 0) = cy * cp, R(0, 1) = cy * sp * sr - sy * cr, R(0, 2) = cy * sp * cr + sy * sr;
+  R(1, 0) = sy * cp, R(1, 1) = sy * sp * sr + cy * cr, R(1, 2) = sy * sp * cr - cy * sr;
+  R(2, 0) = -sp, R(2, 1) = cp * sr, R(2, 2) = cp * cr;
+  return R;
+}
+
 // ---- SE3: tangent [rho; omega], T = [R, Jl(omega) rho] ----
 struct SE3q {
   M3 R;

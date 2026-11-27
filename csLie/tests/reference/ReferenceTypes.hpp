@@ -32,6 +32,14 @@ struct CoeffCase {
   double K;
 };
 
+/// roll, pitch, yaw (exactly representable in the tested precision) and the exact rotation
+/// rotZ(yaw) rotY(pitch) rotX(roll) (row major)
+struct RpyCase {
+  char const *label;
+  double rpy[3];
+  double R[9];
+};
+
 /// a se2 algebra vector (x, y, theta; exactly representable in the tested precision) and its exact exp (row major)
 struct Se2ExpCase {
   char const *label;

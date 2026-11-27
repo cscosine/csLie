@@ -41,28 +41,43 @@ TEMPLATE_TEST_CASE("SE2 test - base", "[SE2]", float32_t, float64_t) {
   REQUIRE((exp90.matrix() - exp90_gt.matrix()).isZero());
 }
 
-TEMPLATE_TEST_CASE("SE2 test - from/to xyY", "[SE2]", float32_t, float64_t) {
+TEMPLATE_TEST_CASE("SE2 test - from/to xyYaw", "[SE2]", float32_t, float64_t) {
   using S = TestType;
 
   S const x = 10;
   S const y = 20;
   S const theta = csCore::math::degToRad(S(90.0));
 
-  Eigen::Vector3<S> xyY_gt(x, y, theta);
+  Eigen::Vector3<S> xyYaw_gt(x, y, theta);
 
   SE2<S> transf_gt = SE2<S>::Identity();
   transf_gt.translation() << x, y;
   transf_gt.linear() << 0, -1, 1, 0;
 
-  SE2<S> transf = xyYToSe2(xyY_gt);
+  SE2<S> transf = xyYawToSe2(xyYaw_gt);
 
-  Eigen::Vector3<S> xyY = se2ToxyY(transf_gt);
-  Eigen::Vector3<S> xyY_transf = se2ToxyY(transf_gt.matrix());
+  Eigen::Vector3<S> xyYaw = se2ToXyYaw(transf_gt);
+  Eigen::Vector3<S> xyYaw_transf = se2ToXyYaw(transf_gt.matrix());
 
   REQUIRE((transf_gt.matrix() - transf.matrix()).isZero());
 
-  REQUIRE((xyY_gt - xyY).isZero());
-  REQUIRE((xyY_gt - xyY_transf).isZero());
+  REQUIRE((xyYaw_gt - xyYaw).isZero());
+  REQUIRE((xyYaw_gt - xyYaw_transf).isZero());
+
+  // the overloads (x, y, yaw) and (xy, yaw) give the same
+  REQUIRE((xyYawToSe2(x, y, theta).matrix() - transf_gt.matrix()).isZero());
+  REQUIRE((xyYawToSe2(Eigen::Vector2<S>(x, y), theta).matrix() - transf_gt.matrix()).isZero());
+
+  // the yaw comes back in (-pi, pi]
+  S const yaw = S(4);
+  Eigen::Vector3<S> const back = se2ToXyYaw(xyYawToSe2(x, y, yaw));
+  REQUIRE(back(2) <= Constants<S>::pi);
+  REQUIRE(back(2) > -Constants<S>::pi);
+  REQUIRE((xyYawToSe2(back).matrix() - xyYawToSe2(x, y, yaw).matrix()).isZero());
+
+  // not the se2 exp: equal only at yaw = 0
+  REQUIRE(!(xyYawToSe2(x, y, theta).matrix() - se2Exp(SE2Alg<S>(x, y, theta)).matrix()).isZero());
+  REQUIRE((xyYawToSe2(x, y, S(0)).matrix() - se2Exp(SE2Alg<S>(x, y, S(0))).matrix()).isZero());
 }
 
 TEMPLATE_TEST_CASE("SE2 test - log", "[SE2]", float32_t, float64_t) {
@@ -125,42 +140,53 @@ TEMPLATE_TEST_CASE("SE2 test - log, transf wrong", "[SE2]", float32_t, float64_t
   }
 }
 
-TEMPLATE_TEST_CASE("SE2 test - xyYToSe2, xyY wrong size", "[SE2]", float32_t, float64_t) {
+TEMPLATE_TEST_CASE("SE2 test - xyYawToSe2, xyYaw wrong size", "[SE2]", float32_t, float64_t) {
   using S = TestType;
 
-  // xyYToSe2(Eigen::Matrix<S,4,1>()); // does not compile
+  // xyYawToSe2(Eigen::Matrix<S,4,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
-    REQUIRE_NO_ASSERT(xyYToSe2(Eigen::MatrixX<S>(3, 1)));
-    REQUIRE_ASSERT(xyYToSe2(Eigen::MatrixX<S>(1, 2))); // throws, wrong size
-    REQUIRE_ASSERT(xyYToSe2(Eigen::MatrixX<S>(2, 1))); // throws, wrong size
+    REQUIRE_NO_ASSERT(xyYawToSe2(Eigen::MatrixX<S>(3, 1)));
+    REQUIRE_ASSERT(xyYawToSe2(Eigen::MatrixX<S>(1, 2))); // throws, wrong size
+    REQUIRE_ASSERT(xyYawToSe2(Eigen::MatrixX<S>(2, 1))); // throws, wrong size
 
-    REQUIRE_NO_ASSERT(xyYToSe2(Eigen::MatrixX<S>(4, 5).block(0, 0, 3, 1)));
-    REQUIRE_NO_ASSERT(xyYToSe2(Eigen::VectorX<S>(10).segment(0, 3)));
-    REQUIRE_ASSERT(xyYToSe2(Eigen::MatrixX<S>(6, 10).block(0, 0, 1, 2)));
-    REQUIRE_ASSERT(xyYToSe2(Eigen::MatrixX<S>(2, 2).block(0, 0, 2, 1)));
-    REQUIRE_ASSERT(xyYToSe2(Eigen::VectorX<S>(10).segment(0, 2)));
+    REQUIRE_NO_ASSERT(xyYawToSe2(Eigen::MatrixX<S>(4, 5).block(0, 0, 3, 1)));
+    REQUIRE_NO_ASSERT(xyYawToSe2(Eigen::VectorX<S>(10).segment(0, 3)));
+    REQUIRE_ASSERT(xyYawToSe2(Eigen::MatrixX<S>(6, 10).block(0, 0, 1, 2)));
+    REQUIRE_ASSERT(xyYawToSe2(Eigen::MatrixX<S>(2, 2).block(0, 0, 2, 1)));
+    REQUIRE_ASSERT(xyYawToSe2(Eigen::VectorX<S>(10).segment(0, 2)));
   }
 }
 
-TEMPLATE_TEST_CASE("SE2 test - se2ToxyY, se2 wrong", "[SE2]", float32_t, float64_t) {
+TEMPLATE_TEST_CASE("SE2 test - xyYawToSe2 (xy and yaw), xy wrong size", "[SE2]", float32_t, float64_t) {
   using S = TestType;
 
-  // se2ToxyY(Eigen::Matrix<S,4,1>()); // does not compile
   if (csLie::Asserts::isAssertDebugEnabled()) {
-    REQUIRE_NO_ASSERT(se2ToxyY(Eigen::MatrixX<S>::Identity(3, 3)));
-    REQUIRE_ASSERT(se2ToxyY(Eigen::MatrixX<S>(1, 2))); // throws, wrong size
-    REQUIRE_ASSERT(se2ToxyY(Eigen::MatrixX<S>(2, 1))); // throws, wrong size
+    REQUIRE_NO_ASSERT(xyYawToSe2(Eigen::MatrixX<S>(2, 1), S(0)));
+    REQUIRE_ASSERT(xyYawToSe2(Eigen::MatrixX<S>(1, 2), S(0))); // throws, wrong size
+    REQUIRE_ASSERT(xyYawToSe2(Eigen::MatrixX<S>(3, 1), S(0))); // throws, wrong size
+    REQUIRE_NO_ASSERT(xyYawToSe2(Eigen::VectorX<S>(10).segment(0, 2), S(0)));
+  }
+}
+
+TEMPLATE_TEST_CASE("SE2 test - se2ToXyYaw, se2 wrong", "[SE2]", float32_t, float64_t) {
+  using S = TestType;
+
+  // se2ToXyYaw(Eigen::Matrix<S,4,1>()); // does not compile
+  if (csLie::Asserts::isAssertDebugEnabled()) {
+    REQUIRE_NO_ASSERT(se2ToXyYaw(Eigen::MatrixX<S>::Identity(3, 3)));
+    REQUIRE_ASSERT(se2ToXyYaw(Eigen::MatrixX<S>(1, 2))); // throws, wrong size
+    REQUIRE_ASSERT(se2ToXyYaw(Eigen::MatrixX<S>(2, 1))); // throws, wrong size
 
     Eigen::MatrixX<S> m44 = Eigen::MatrixX<S>::Identity(4, 4);
-    REQUIRE_NO_ASSERT(se2ToxyY(m44.block(0, 0, 3, 3)));
-    REQUIRE_ASSERT(se2ToxyY(Eigen::MatrixX<S>(6, 10).block(0, 0, 1, 2)));
-    REQUIRE_ASSERT(se2ToxyY(Eigen::MatrixX<S>(2, 2).block(0, 0, 2, 1)));
+    REQUIRE_NO_ASSERT(se2ToXyYaw(m44.block(0, 0, 3, 3)));
+    REQUIRE_ASSERT(se2ToXyYaw(Eigen::MatrixX<S>(6, 10).block(0, 0, 1, 2)));
+    REQUIRE_ASSERT(se2ToXyYaw(Eigen::MatrixX<S>(2, 2).block(0, 0, 2, 1)));
   }
 
   if (csLie::Asserts::isAssertParanoidEnabled()) {
     SE2<S> tmp = SE2<S>::Identity();
     tmp(2, 2) = 0.0;
-    REQUIRE_ASSERT(se2ToxyY(tmp));
+    REQUIRE_ASSERT(se2ToXyYaw(tmp));
   }
 }
 

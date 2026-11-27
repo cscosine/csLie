@@ -28,26 +28,45 @@ template <class Derived> SE2Alg<typename Derived::Scalar> se2Log(Eigen::MatrixBa
 /// @throw if transf is not a valid isometry within default precision (PARANOID)
 template <class S> SE2Alg<S> se2Log(SE2<S> const &transf);
 
-/// @brief create a SE2 transformation from translation (x y) and angle (Y)
+/// @brief create a SE2 rototranslation from a position (x, y) and a yaw angle in radians (around Z, counterclockwise):
+/// R = so2Exp(yaw), t = (x, y). Not the se2 algebra: se2Exp((x, y, theta)) has a translation V (x, y) (an arc), equal
+/// only at theta = 0
 /// @tparam Derived template to support generic matrix
-/// @param xyY a 3d vector representing the xy translation and the Y angle (YAW,
-/// is around Z axis)
-/// @return the rototranslation matrix in SE2
-/// @throw if xyY is not a 3x1 matrix
-template <class Derived> SE2<typename Derived::Scalar> xyYToSe2(Eigen::MatrixBase<Derived> const &xyY);
+/// @param xyYaw a 3d vector (x, y, yaw), yaw in radians
+/// @return the rototranslation in SE2
+/// @throw if xyYaw is not a 3x1 matrix (DEBUG only)
+template <class Derived> SE2<typename Derived::Scalar> xyYawToSe2(Eigen::MatrixBase<Derived> const &xyYaw);
 
-/// @brief extract translation (x y) and angle (Y) from a se2
+/// @brief create a SE2 rototranslation from a position (x, y) and a yaw angle in radians, as xyYawToSe2(Vector3)
 /// @tparam Derived template to support generic matrix
-/// @param transf a 3x3 matrix representing a isometry
-/// @return the xyY vector, with a two element translation followed by the angle
-/// @throw if transf is not a 3x3 valid isometry transformation
-template <class Derived> Eigen::Vector3<typename Derived::Scalar> se2ToxyY(Eigen::MatrixBase<Derived> const &transf);
+/// @param xy a 2d vector, the position
+/// @param yawRad the yaw angle in radians
+/// @return the rototranslation in SE2
+/// @throw if xy is not a 2x1 matrix (DEBUG only)
+template <class Derived>
+SE2<typename Derived::Scalar> xyYawToSe2(Eigen::MatrixBase<Derived> const &xy, typename Derived::Scalar yawRad);
 
-/// @brief extract translation (x y) and angle (Y) from a se2
+/// @brief create a SE2 rototranslation from a position (x, y) and a yaw angle in radians, as xyYawToSe2(Vector3)
+/// @tparam S the scalar type
+/// @param x, y the position
+/// @param yawRad the yaw angle in radians
+/// @return the rototranslation in SE2
+template <class S> std::enable_if_t<std::is_floating_point<S>::value, SE2<S>> xyYawToSe2(S x, S y, S yawRad);
+
+/// @brief the position (x, y) and the yaw angle in radians, in (-pi, pi], of a SE2 rototranslation: the inverse of
+/// xyYawToSe2 (not the se2 log)
+/// @tparam Derived template to support generic matrix
+/// @param transf a 3x3 matrix representing an isometry
+/// @return the vector (x, y, yaw)
+/// @throw if transf is not a 3x3 matrix (DEBUG only), if transf is not a valid isometry (PARANOID)
+template <class Derived> Eigen::Vector3<typename Derived::Scalar> se2ToXyYaw(Eigen::MatrixBase<Derived> const &transf);
+
+/// @brief the position (x, y) and the yaw angle in radians, in (-pi, pi], of a SE2 rototranslation, as
+/// se2ToXyYaw(matrix)
 /// @tparam S the scalar type
 /// @param transf a SE2, i.e., a Eigen::Transform<2, Isometry>
-/// @return the xyY vector, with a two element translation followed by the angle
-/// @throw if transf is not a 3x3 valid isometry transformation
-template <class S> Eigen::Vector3<S> se2ToxyY(SE2<S> const &transf);
+/// @return the vector (x, y, yaw)
+/// @throw if transf is not a valid isometry (PARANOID)
+template <class S> Eigen::Vector3<S> se2ToXyYaw(SE2<S> const &transf);
 
 } // namespace csLie

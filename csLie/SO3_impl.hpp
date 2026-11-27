@@ -153,35 +153,69 @@ template <class Derived> SO3Jinv<typename Derived::Scalar> so3Jinv(Eigen::Matrix
   return ret;
 }
 
-// reference for RPY conversion
-// https://eecs.qmul.ac.uk/~gslabaugh/publications/euler.pdf
-template <class Derived> Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRPY(Eigen::MatrixBase<Derived> const &rot) {
+template <class S> S rpyCheckedGimbalTolerance() {
+  using std::sqrt;
+  return sqrt(Constants<S>::epsilon);
+}
+
+namespace _private {
+
+/// @brief the RPY angles of rot, R = rotZ(yaw) rotY(pitch) rotX(roll); at gimbal lock (cos(pitch) <= gimbalTolerance)
+/// the angle P names is 0, or empty when checked. Pitch from atan2 (asin(-R(2, 0)) is inaccurate near +-pi / 2); one
+/// of roll and yaw directly, the other from rot with the first removed (as in Day, "Extracting Euler Angles from a
+/// Rotation Matrix", 2014): rpyToSo3 of the result gives rot back to a few epsilon at every pitch
+template <GimbalPolicy P, bool CHECKED, class Derived>
+std::optional<Eigen::Matrix<typename Derived::Scalar, 3, 1>>
+so3ToRpyImpl(Eigen::MatrixBase<Derived> const &rot, typename Derived::Scalar const gimbalTolerance) {
   using S = typename Derived::Scalar;
+  using std::atan2;
+  using std::cos;
+  using std::hypot;
+  using std::sin;
 
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(rot, SO3<S>()), "rot required to be 3x3");
   CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidRotationMatrix3D(rot), "rot is not a valid rotation matrix");
 
-  const S sin_pitch{rot(2, 0)};
-  if (std::abs(std::abs(sin_pitch) - static_cast<S>(1.0)) > Constants<S>::epsilon) {
-    const S pitch{-std::asin(rot(2, 0))};
-    const S cos_pitch{std::cos(pitch)}; // can we extract it from the matrix?
-
-    const S roll{std::atan2(rot(2, 1) / cos_pitch, rot(2, 2) / cos_pitch)};
-    const S yaw{std::atan2(rot(1, 0) / cos_pitch, rot(0, 0) / cos_pitch)};
-    return Eigen::Matrix<S, 3, 1>(roll, pitch, yaw);
-  } else {
-    if (sin_pitch < 0) { // ~= -1
-      const S pitch{Constants<S>::pi / static_cast<S>(2.0)};
-      const S yaw = 0;
-      const S roll = std::atan2(rot(0, 1), rot(0, 2));
-      return Eigen::Matrix<S, 3, 1>(roll, pitch, yaw);
-    } else { // ~= 1
-      const S pitch{-Constants<S>::pi / static_cast<S>(2.0)};
-      const S yaw = 0;
-      const S roll = std::atan2(-rot(0, 1), -rot(0, 2));
-      return Eigen::Matrix<S, 3, 1>(roll, pitch, yaw);
+  // R(:, 0) = (cos(yaw) cos(pitch), sin(yaw) cos(pitch), -sin(pitch)), R(2, :) = (., cos(pitch) sin(roll),
+  // cos(pitch) cos(roll))
+  S const cosPitch = hypot(rot(0, 0), rot(1, 0));
+  S const pitch = atan2(-rot(2, 0), cosPitch);
+  bool const gimbal = !(cosPitch > gimbalTolerance);
+  if constexpr (CHECKED) {
+    if (gimbal) {
+      return std::nullopt;
     }
   }
+
+  if constexpr (P == GimbalPolicy::kRollZero) {
+    // roll, then yaw from R rotX(roll)^T = rotZ(yaw) rotY(pitch), whose column 1 is (-sin(yaw), cos(yaw), 0)
+    S const roll = gimbal ? S(0) : atan2(rot(2, 1), rot(2, 2));
+    S const c = cos(roll);
+    S const s = sin(roll);
+    S const yaw = atan2(s * rot(0, 2) - c * rot(0, 1), c * rot(1, 1) - s * rot(1, 2));
+    return Eigen::Matrix<S, 3, 1>(roll, pitch, yaw);
+  } else {
+    // yaw, then roll from rotZ(yaw)^T R = rotY(pitch) rotX(roll), whose row 1 is (0, cos(roll), -sin(roll))
+    S const yaw = gimbal ? S(0) : atan2(rot(1, 0), rot(0, 0));
+    S const c = cos(yaw);
+    S const s = sin(yaw);
+    S const roll = atan2(s * rot(0, 2) - c * rot(1, 2), c * rot(1, 1) - s * rot(0, 1));
+    return Eigen::Matrix<S, 3, 1>(roll, pitch, yaw);
+  }
+}
+
+} // namespace _private
+
+template <GimbalPolicy P, class Derived>
+Eigen::Matrix<typename Derived::Scalar, 3, 1> so3ToRpy(Eigen::MatrixBase<Derived> const &rot,
+                                                       typename Derived::Scalar const gimbalTolerance) {
+  return *_private::so3ToRpyImpl<P, false>(rot, gimbalTolerance);
+}
+
+template <class Derived>
+std::optional<Eigen::Matrix<typename Derived::Scalar, 3, 1>>
+so3ToRpyChecked(Eigen::MatrixBase<Derived> const &rot, typename Derived::Scalar const gimbalTolerance) {
+  return _private::so3ToRpyImpl<GimbalPolicy::kRollZero, true>(rot, gimbalTolerance);
 }
 
 template <class Derived> SO3<typename Derived::Scalar> rpyToSo3(Eigen::MatrixBase<Derived> const &rpy) {

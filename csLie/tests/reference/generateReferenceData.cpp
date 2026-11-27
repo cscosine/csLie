@@ -241,6 +241,40 @@ template <class T> void se2LogCases(char const *name) {
   std::fprintf(out, "};\n\n");
 }
 
+// RPY: pitches from 0 to the gimbal lock (exactly +-pi / 2, rounded) and pairs of roll, yaw
+template <class T> void rpyCases(char const *name) {
+  std::fprintf(out, "inline constexpr RpyCase %s[] = {\n", name);
+  std::vector<Angle> const pitches{
+      {"0", 0},
+      {"0.3", Q(0.3)},
+      {"1.2", Q(1.2)},
+      {"pi/2-1e-2", ref::PI / 2 - Q(1e-2)},
+      {"pi/2-1e-4", ref::PI / 2 - Q(1e-4)},
+      {"pi/2-1e-6", ref::PI / 2 - Q(1e-6)},
+      {"pi/2-1e-8", ref::PI / 2 - Q(1e-8)},
+      {"pi/2", ref::PI / 2},
+  };
+  std::vector<std::pair<char const *, std::array<Q, 2>>> const rollYaw{
+      {"r0.2 y-0.7", {Q(0.2), Q(-0.7)}},
+      {"r-2.9 y3", {Q(-2.9), Q(3)}},
+      {"r1.1 y0", {Q(1.1), 0}},
+      {"r0 y-1.9", {0, Q(-1.9)}},
+  };
+  for (auto const &p : pitches)
+    for (Q const sign : {Q(1), Q(-1)}) {
+      for (auto const &[label, ry] : rollYaw) {
+        Q const roll = roundTo<T>(ry[0]), pitch = roundTo<T>(sign * p.theta), yaw = roundTo<T>(ry[1]);
+        ref::V3 rpy;
+        rpy(0, 0) = roll, rpy(1, 0) = pitch, rpy(2, 0) = yaw;
+        std::fprintf(out, "    {\"p%s%s %s\", {%s}, {%s}},\n", sign < 0 ? "-" : "", p.label, label, list(rpy).c_str(),
+                     list(ref::rpyToSo3(roll, pitch, yaw)).c_str());
+      }
+      if (!(p.theta > 0))
+        break; // one zero is enough
+    }
+  std::fprintf(out, "};\n\n");
+}
+
 // writes <folder>/<group>.hpp: the header, the tables written by body, the footer
 template <class Body> bool writeGroup(std::string const &folder, char const *group, Body body) {
   std::string const path = folder + "/" + group + ".hpp";
@@ -279,6 +313,8 @@ int main(int argc, char **argv) {
     so3MatrixCases<double>("so3JlCasesF64", ref::so3Jl);
     so3MatrixCases<float>("so3JlInvCasesF32", ref::so3JlInv);
     so3MatrixCases<double>("so3JlInvCasesF64", ref::so3JlInv);
+    rpyCases<float>("rpyCasesF32");
+    rpyCases<double>("rpyCasesF64");
     coeffCases<float>("coeffCasesF32");
     coeffCases<double>("coeffCasesF64");
   });

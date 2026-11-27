@@ -52,40 +52,40 @@ template <class Derived> SE2Alg<typename Derived::Scalar> se2Log(Eigen::MatrixBa
 
 template <class S> SE2Alg<S> se2Log(SE2<S> const &transf) { return se2Log(transf.matrix()); }
 
-template <class Derived> SE2<typename Derived::Scalar> xyYToSe2(Eigen::MatrixBase<Derived> const &xyY) {
-  using S = typename Derived::Scalar;
-
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(xyY, Eigen::Matrix<S, 3, 1>()),
-                     "xyY required to be 3x1");
-
+template <class S> std::enable_if_t<std::is_floating_point<S>::value, SE2<S>> xyYawToSe2(S x, S y, S yawRad) {
   SE2<S> Rt{};
-
-  // rotation
-  S const theta{xyY(2, 0)};
-  Rt.linear() = so2Exp<S>(theta);
-
-  // translation
-  Rt(0, 2) = xyY(0, 0);
-  Rt(1, 2) = xyY(1, 0);
-  // bottom row
+  Rt.linear() = so2Exp<S>(yawRad);
+  Rt(0, 2) = x;
+  Rt(1, 2) = y;
   Rt(2, 0) = 0;
   Rt(2, 1) = 0;
   Rt(2, 2) = 1;
   return Rt;
 }
 
-template <class Derived> Eigen::Vector3<typename Derived::Scalar> se2ToxyY(Eigen::MatrixBase<Derived> const &transf) {
+template <class Derived> SE2<typename Derived::Scalar> xyYawToSe2(Eigen::MatrixBase<Derived> const &xyYaw) {
   using S = typename Derived::Scalar;
-
-  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE2Matrix<S>()),
-                     "transf required to be 3x3");
-
-  CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix2D(transf), "transf is not a valid isometry matrix");
-
-  Eigen::Vector3<S> xyY{transf(0, 2), transf(1, 2), so2Log(transf.template topLeftCorner<2, 2>())};
-  return xyY;
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(xyYaw, Eigen::Matrix<S, 3, 1>()),
+                     "xyYaw required to be 3x1");
+  return xyYawToSe2<S>(xyYaw(0, 0), xyYaw(1, 0), xyYaw(2, 0));
 }
 
-template <class S> Eigen::Vector3<S> se2ToxyY(SE2<S> const &transf) { return se2ToxyY(transf.matrix()); }
+template <class Derived>
+SE2<typename Derived::Scalar> xyYawToSe2(Eigen::MatrixBase<Derived> const &xy, typename Derived::Scalar const yawRad) {
+  using S = typename Derived::Scalar;
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(xy, Eigen::Matrix<S, 2, 1>()),
+                     "xy required to be 2x1");
+  return xyYawToSe2<S>(xy(0, 0), xy(1, 0), yawRad);
+}
+
+template <class Derived> Eigen::Vector3<typename Derived::Scalar> se2ToXyYaw(Eigen::MatrixBase<Derived> const &transf) {
+  using S = typename Derived::Scalar;
+  CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(transf, SE2Matrix<S>()),
+                     "transf required to be 3x3");
+  CSLIE_ASSERT_PARANOID(csCore::eigenUtils::isValidIsometryMatrix2D(transf), "transf is not a valid isometry matrix");
+  return Eigen::Vector3<S>(transf(0, 2), transf(1, 2), so2Log(transf.template topLeftCorner<2, 2>()));
+}
+
+template <class S> Eigen::Vector3<S> se2ToXyYaw(SE2<S> const &transf) { return se2ToXyYaw(transf.matrix()); }
 
 } // namespace csLie
