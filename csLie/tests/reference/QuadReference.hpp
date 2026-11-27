@@ -244,8 +244,11 @@ inline V2 s2OplusInverse(V3 const &v, V3 const &w) {
   M3 const R = s2Frame(v);
   Q const c = dot3(v, w);
   Q t1 = 0, t2 = 0;
-  for (int i = 0; i < 3; ++i) // b1, b2 orthogonal to v: w - v (exact zero at w = v)
-    t1 += R(i, 1) * (w(i, 0) - v(i, 0)), t2 += R(i, 2) * (w(i, 0) - v(i, 0));
+  // b1, b2 orthogonal to v: b . w = b . (w - v) = b . (w + v), exactly 0 at w = v and at w = -v (b . v is 0 only up
+  // to the rounding of quad, in no direction: w = -v would get a direction from noise)
+  Q const sgn = c >= 0 ? Q(-1) : Q(1);
+  for (int i = 0; i < 3; ++i)
+    t1 += R(i, 1) * (w(i, 0) + sgn * v(i, 0)), t2 += R(i, 2) * (w(i, 0) + sgn * v(i, 0));
   Q const s = sqrtq(t1 * t1 + t2 * t2);
   V2 o;
   if (!(s > 0)) {

@@ -56,10 +56,13 @@ if(CSLIE_HAS_QUADMATH)
   cs_add_executable(csLieGenerateReferenceData)
   cs_target_sources(csLieGenerateReferenceData PRIVATE reference/generateReferenceData.cpp)
   cs_target_link_libraries(csLieGenerateReferenceData PRIVATE quadmath)
+  cs_add_executable(csLieCompareReferenceData)
+  cs_target_sources(csLieCompareReferenceData PRIVATE reference/compareReferenceData.cpp)
 
   set(
     reference_args
     -DGENERATOR=$<TARGET_FILE:csLieGenerateReferenceData>
+    -DCOMPARATOR=$<TARGET_FILE:csLieCompareReferenceData>
     -DREFERENCE=${CMAKE_CURRENT_SOURCE_DIR}/reference/data
     -DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/referenceData
   )
@@ -70,7 +73,7 @@ if(CSLIE_HAS_QUADMATH)
   add_custom_target(
     csLieRegenerateReferenceData
     COMMAND ${CMAKE_COMMAND} ${reference_args} -DMODE=WRITE -P ${CMAKE_CURRENT_SOURCE_DIR}/reference/ReferenceData.cmake
-    DEPENDS csLieGenerateReferenceData
+    DEPENDS csLieGenerateReferenceData csLieCompareReferenceData
     COMMENT "Regenerating csLie/tests/reference/data/"
     VERBATIM
   )

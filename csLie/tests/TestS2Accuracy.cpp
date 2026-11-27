@@ -111,7 +111,8 @@ TEMPLATE_TEST_CASE("S2 oplus inverse accuracy", "[S2][accuracy]", float32_t, flo
     double const err =
         std::hypot(static_cast<double>(delta(0)) - c.delta[0], static_cast<double>(delta(1)) - c.delta[1]) /
         std::max(theta, 1e-300) / conditioning / static_cast<double>(Constants<S>::epsilon);
-    bool const antipodal = !(std::sin(theta) > 0) && theta > 0;
+    bool const antipodal = std::fpclassify(c.w[0] + c.v[0]) == FP_ZERO && std::fpclassify(c.w[1] + c.v[1]) == FP_ZERO &&
+                           std::fpclassify(c.w[2] + c.v[2]) == FP_ZERO;
     double const roundTrip = absError(S2<S>(s2Oplus(v, delta)), c.w);
     maxErr = std::max(maxErr, antipodal ? 0.0 : err);
     maxRoundTrip = std::max(maxRoundTrip, roundTrip);

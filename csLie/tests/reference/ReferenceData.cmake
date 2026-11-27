@@ -1,9 +1,10 @@
 # Runs the reference generator (generateReferenceData.cpp) and compares its output with the committed data/ folder
 # (MODE CHECK, the test "csLie reference data up to date") or writes it there (MODE WRITE, the target
-# csLieRegenerateReferenceData).
+# csLieRegenerateReferenceData). The comparison (compareReferenceData.cpp) allows one unit in the last place per
+# number: libquadmath's last bit differs between GCC versions.
 #
-#   cmake -DGENERATOR=<executable> -DREFERENCE=<data folder> -DOUTPUT=<folder> -DMODE=CHECK|WRITE
-#     -P ReferenceData.cmake
+#   cmake -DGENERATOR=<executable> -DCOMPARATOR=<executable> -DREFERENCE=<data folder> -DOUTPUT=<folder>
+#     -DMODE=CHECK|WRITE -P ReferenceData.cmake
 #
 # OUTPUT: the folder the generator writes first (in the build folder), emptied before.
 
@@ -11,7 +12,14 @@
 # and does not treat IN_LIST as an operator (CMake 4 always does). Same version as the top-level CMakeLists.txt.
 cmake_minimum_required(VERSION 3.31)
 
-foreach(var GENERATOR REFERENCE OUTPUT MODE)
+foreach(
+  var
+  GENERATOR
+  COMPARATOR
+  REFERENCE
+  OUTPUT
+  MODE
+)
   if(NOT DEFINED ${var})
     message(FATAL_ERROR "ReferenceData.cmake: ${var} is required")
   endif()
@@ -37,11 +45,13 @@ if(MODE STREQUAL "CHECK")
       continue()
     endif()
     execute_process(
-      COMMAND "${CMAKE_COMMAND}" -E compare_files "${OUTPUT}/${name}" "${REFERENCE}/${name}"
+      COMMAND "${COMPARATOR}" "${REFERENCE}/${name}" "${OUTPUT}/${name}"
       RESULT_VARIABLE different
+      ERROR_VARIABLE comparison
     )
     if(different)
-      list(APPEND differences "${name}: differs")
+      string(STRIP "${comparison}" comparison)
+      list(APPEND differences "${name}: differs (${comparison})")
       # the first lines that differ, where diff exists (it does on the CI runners and on Unix)
       find_program(REFERENCE_DATA_DIFF diff)
       if(REFERENCE_DATA_DIFF)

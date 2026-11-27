@@ -71,13 +71,15 @@ S2Tangent<typename Derived1::Scalar> s2OplusInverse(Eigen::MatrixBase<Derived1> 
                 "s2OplusInverse needs equal scalar types");
   CSLIE_ASSERT_DEBUG(csCore::eigenUtils::isSameSizeStaticOrDynamic(w, S2<S>()), "w required to be 3x1");
 
-  // w in the frame of v: (cos(theta), sin(theta) d) with d the unit direction of delta. The tangent part from w - v
-  // (exact for w near v, and b1, b2 orthogonal to v), accurate to a few epsilon of |delta| at small angles
+  // w in the frame of v: (cos(theta), sin(theta) d) with d the unit direction of delta. b1, b2 are orthogonal to v, so
+  // the tangent part is b . (w - v) = b . (w + v) = b . w: from w - v on the side of v (c >= 0), from w + v on the
+  // other side; each is exact where it is small, so the tangent part is accurate near v, and near -v, exactly 0 at w =
+  // -v
   S2<S> const vv = v; // read once
   S2<S> const ww = w;
   SO3<S> const R = s2Frame(vv);
-  S2<S> const wv = ww - vv;
   S const c = vv.dot(ww);
+  S2<S> const wv = c >= S(0) ? S2<S>(ww - vv) : S2<S>(ww + vv);
   S const t1 = R.col(1).dot(wv);
   S const t2 = R.col(2).dot(wv);
   S const sinTheta = hypot(t1, t2);
